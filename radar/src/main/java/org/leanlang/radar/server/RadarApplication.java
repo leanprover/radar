@@ -1,5 +1,6 @@
 package org.leanlang.radar.server;
 
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
@@ -18,11 +19,13 @@ public class RadarApplication extends Application<RadarConfiguration> {
 
     @Override
     public void initialize(final Bootstrap<RadarConfiguration> bootstrap) {
-        // TODO: application initialization
+        bootstrap.addBundle(new AssetsBundle("/radar-ui/", "/", "index.html", "ui-assets"));
+        bootstrap.addBundle(new NotFoundRedirectBundle("ui-assets", "/index.html", "ui-assets-redirect"));
     }
 
     @Override
     public void run(final RadarConfiguration configuration, final Environment environment) {
+        environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResDebug());
     }
 }

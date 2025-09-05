@@ -38,6 +38,10 @@
       <artifactId>dropwizard-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-assets</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
     </dependency>
@@ -60,6 +64,20 @@
   </dependencies>
 
   <build>
+    <resources>
+
+      <!-- Normal resources -->
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+
+      <!-- Include web ui files in jar -->
+      <resource>
+        <targetPath>radar-ui</targetPath>
+        <directory>../radar-ui/dist</directory>
+      </resource>
+
+    </resources>
     <plugins>
 
       <!-- Creating an executable jar -->
@@ -67,6 +85,14 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
           <createDependencyReducedPom>false</createDependencyReducedPom>
           <transformers>
@@ -87,14 +113,6 @@
             </filter>
           </filters>
         </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <!-- Setting the java version (see properties) -->

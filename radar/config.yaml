@@ -1,0 +1,12 @@
+logging:
+  level: INFO
+  loggers:
+    org.leanlang.radar: DEBUG
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
