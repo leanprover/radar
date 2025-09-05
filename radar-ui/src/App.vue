@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/vue-query";
 import * as api from "@/api.ts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { computed, ref } from "vue";
+import CColorMode from "@/components/CColorMode.vue";
 
 const repos = useQuery({ queryKey: ["repos"], queryFn: api.getRepos });
 
@@ -36,6 +37,7 @@ const repo = ref<string>();
           </SelectItem>
         </SelectContent>
       </Select>
+      <div class="flex grow justify-end"><CColorMode></CColorMode></div>
     </div>
     <div
       v-if="!repo"
