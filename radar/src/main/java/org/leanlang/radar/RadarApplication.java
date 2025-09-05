@@ -21,9 +21,7 @@ public class RadarApplication extends Application<RadarConfiguration> {
     }
 
     @Override
-    public void run(final RadarConfiguration configuration,
-                    final Environment environment) {
+    public void run(final RadarConfiguration configuration, final Environment environment) {
         // TODO: implement application
     }
-
 }
