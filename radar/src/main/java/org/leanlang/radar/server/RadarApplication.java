@@ -26,6 +26,6 @@ public class RadarApplication extends Application<RadarConfiguration> {
     @Override
     public void run(final RadarConfiguration configuration, final Environment environment) {
         environment.jersey().setUrlPattern("/api/*");
-        environment.jersey().register(new ResDebug());
+        environment.jersey().register(new ResDebug(configuration.getDebug()));
     }
 }
