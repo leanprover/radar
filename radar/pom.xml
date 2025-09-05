@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.release>21</maven.compiler.release>
-    <mainClass>org.leanlang.radar.RadarApplication</mainClass>
+    <mainClass>org.leanlang.radar.Main</mainClass>
   </properties>
 
   <dependencyManagement>
@@ -31,6 +31,8 @@
   </dependencyManagement>
 
   <dependencies>
+
+    <!-- Dropwizard -->
     <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-core</artifactId>

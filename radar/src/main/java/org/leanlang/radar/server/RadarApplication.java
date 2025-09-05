@@ -1,4 +1,4 @@
-package org.leanlang.radar;
+package org.leanlang.radar.server;
 
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
