@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+pushd radar-ui
+pnpm install
+pnpm run fmt
+popd
+
 pushd radar
 mvn spotless:apply
 popd
