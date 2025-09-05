@@ -12,3 +12,11 @@ server:
       port: 8081
 
 debug: Hello world, from the config file!
+
+repos:
+  lean4:
+    url: https://github.com/leanprover/lean4
+    description: The Lean 4 programming language and theorem prover
+  mathlib4:
+    url: https://github.com/leanprover-community/mathlib4
+    description: The math library of Lean 4

@@ -5,6 +5,7 @@ import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import org.leanlang.radar.server.api.ResDebug;
+import org.leanlang.radar.server.api.ResRepos;
 
 public class RadarApplication extends Application<RadarConfiguration> {
 
@@ -27,5 +28,6 @@ public class RadarApplication extends Application<RadarConfiguration> {
     public void run(final RadarConfiguration configuration, final Environment environment) {
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResDebug(configuration.getDebug()));
+        environment.jersey().register(new ResRepos(configuration.getRepos()));
     }
 }
