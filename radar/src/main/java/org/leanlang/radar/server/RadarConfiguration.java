@@ -3,7 +3,6 @@ package org.leanlang.radar.server;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.core.Configuration;
 import jakarta.validation.constraints.NotEmpty;
-
 import java.util.Map;
 
 public class RadarConfiguration extends Configuration {

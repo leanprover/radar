@@ -4,10 +4,9 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.leanlang.radar.server.RepoConfig;
-
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.leanlang.radar.server.RepoConfig;
 
 @Path("/repos")
 @Produces(MediaType.APPLICATION_JSON)
