@@ -3,6 +3,7 @@ package org.leanlang.radar.server;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
+import org.leanlang.radar.server.api.ResDebug;
 
 public class RadarApplication extends Application<RadarConfiguration> {
 
@@ -22,6 +23,6 @@ public class RadarApplication extends Application<RadarConfiguration> {
 
     @Override
     public void run(final RadarConfiguration configuration, final Environment environment) {
-        // TODO: implement application
+        environment.jersey().register(new ResDebug());
     }
 }
