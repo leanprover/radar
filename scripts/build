@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+pushd radar-ui
+pnpm install
+pnpm run build
+popd
+
+pushd radar
+mvn clean package
+popd
+
+echo
+echo The jar is located at radar/target/radar-*.jar
