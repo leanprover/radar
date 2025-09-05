@@ -1,30 +1,32 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/vue-query";
 
-const text = ref<string>();
-
-async function fetchText(): Promise<void> {
-  await new Promise((r) => setTimeout(r, 1000));
-  const res = await fetch("/api/debug");
-  const data = await res.json();
-  text.value = data["text"];
-}
-
-fetchText();
+const { isPending, isError, data, error } = useQuery({
+  queryKey: ["debug"],
+  queryFn: (): Promise<string> =>
+    fetch("/api/debug")
+      .then((it) => it.json())
+      .then((it) => it["text"])
+      .then((it) => {
+        console.log(it);
+        return it;
+      }),
+});
 </script>
 
 <template>
-  <div class="flex h-dvh items-center justify-center">
+  <div class="flex h-dvh items-start justify-center p-6">
     <Card :class="['w-[300px]']">
       <CardHeader>
         <CardTitle>Some text</CardTitle>
         <CardDescription>... from the server config</CardDescription>
       </CardHeader>
       <CardContent>
-        <div v-if="text === undefined" class="text-muted-foreground italic">No text yet</div>
+        <div v-if="isPending" class="text-muted-foreground italic">No text yet</div>
+        <div v-else-if="isError" class="text-destructive-foreground">Error: {{ error }}</div>
         <div v-else>
-          The text is: <span class="italic">{{ text }}</span>
+          Text: <span class="italic">{{ data }}</span>
         </div>
       </CardContent>
     </Card>
