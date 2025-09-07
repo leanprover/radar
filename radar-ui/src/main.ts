@@ -11,7 +11,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/", name: "root", component: CRepoNoneSelected },
-    { path: "/repo/:repo/", name: "repo-overview", component: CRepoOverview },
+    { path: "/repo/:repo/", name: "overview", component: CRepoOverview },
     { path: "/queue/", name: "queue", component: CQueue },
   ],
 });

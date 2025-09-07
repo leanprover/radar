@@ -33,8 +33,18 @@ setSelectedToRoute();
 </script>
 
 <template>
-  <div class="flex items-center border-b p-2">
+  <div class="flex items-center gap-4 border-b p-2">
     <CNavbarRepoSelect v-model="selected"></CNavbarRepoSelect>
-    <div class="flex grow justify-end"><CColorMode></CColorMode></div>
+
+    <RouterLink v-if="selected !== undefined" :to="{ name: 'overview', params: { repo: selected } }">
+      Overview
+    </RouterLink>
+    <div v-else class="text-muted-foreground">Overview</div>
+
+    <RouterLink class="hover:underline" :to="{ name: 'queue' }">Queue</RouterLink>
+
+    <div class="flex grow justify-end">
+      <CColorMode />
+    </div>
   </div>
 </template>
