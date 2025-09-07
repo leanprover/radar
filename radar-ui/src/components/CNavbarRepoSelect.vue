@@ -1,24 +1,21 @@
 <script setup lang="ts">
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery } from "@tanstack/vue-query";
-import * as api from "@/api.ts";
+import { useRepos } from "@/composables/useRepos.ts";
 
-const repos = useQuery({ queryKey: ["repos"], queryFn: api.getRepos });
+const { isPending, isSuccess, isError, data, error } = useRepos();
 const selected = defineModel<string>();
 </script>
 
 <template>
-  <Select v-model="selected" :disabled="!repos.isSuccess.value">
-    <SelectTrigger :title="repos.error.value?.message" class="min-w-50">
-      <SelectValue v-if="repos.isPending.value">Loading repos...</SelectValue>
-      <SelectValue v-else-if="repos.isError.value" title="Hello" class="text-destructive">
-        Error loading repos.
-      </SelectValue>
-      <SelectValue v-else-if="!selected" placeholder="Select a repo"></SelectValue>
+  <Select v-model="selected" :disabled="!isSuccess">
+    <SelectTrigger :title="error?.message" class="min-w-50">
+      <SelectValue v-if="isPending">Loading repos...</SelectValue>
+      <SelectValue v-else-if="isError" title="Hello" class="text-destructive">Error loading repos.</SelectValue>
+      <SelectValue v-else-if="!selected" placeholder="Select a repo" />
       <SelectValue v-else>{{ selected }}</SelectValue>
     </SelectTrigger>
-    <SelectContent v-if="repos.isSuccess.value">
-      <SelectItem :value="repo.name" :key="repo.name" v-for="repo of repos.data.value">
+    <SelectContent v-if="isSuccess">
+      <SelectItem :value="repo.name" :key="repo.name" v-for="repo of data">
         <div class="flex flex-col">
           <div>{{ repo.name }}</div>
           <div class="text-muted-foreground">{{ repo.description }}</div>
