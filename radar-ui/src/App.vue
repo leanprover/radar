@@ -5,6 +5,8 @@ import CNavbar from "@/components/CNavbar.vue";
 <template>
   <div class="flex min-h-dvh flex-col">
     <CNavbar />
-    <RouterView />
+    <div class="p-2">
+      <RouterView />
+    </div>
   </div>
 </template>
