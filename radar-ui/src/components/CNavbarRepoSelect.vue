@@ -9,7 +9,7 @@ const selected = defineModel<string>();
 
 <template>
   <Select v-model="selected" :disabled="!repos.isSuccess.value">
-    <SelectTrigger :title="repos.error.value?.message">
+    <SelectTrigger :title="repos.error.value?.message" class="min-w-50">
       <SelectValue v-if="repos.isPending.value">Loading repos...</SelectValue>
       <SelectValue v-else-if="repos.isError.value" title="Hello" class="text-destructive">
         Error loading repos.
