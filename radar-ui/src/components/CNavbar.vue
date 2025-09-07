@@ -14,15 +14,32 @@ const selected = ref<string>();
 
 function setSelectedToRoute() {
   const repo = route.params["repo"];
-  if (typeof repo !== "string") return;
+  if (typeof repo !== "string") {
+    // The route doesn't have a "repo" param, so we're just going to do nothing.
+    // We don't want to clear the selected repo when looking at the queue
+    // or other non-repo-related routes.
+    return;
+  }
+
   if (selected.value === repo) return;
   selected.value = repo;
 }
 
 function setRouteToSelected() {
+  if (selected.value === undefined) {
+    // This shouldn't normally happen, so we're just going to ignore it.
+    return;
+  }
+
   const repo = route.params["repo"];
-  if (typeof repo !== "string") return;
+  if (typeof repo !== "string") {
+    // Our route doesn't contain a "repo" param.
+    router.push({ name: "overview", params: { repo: selected.value } });
+    return;
+  }
+
   if (selected.value === repo) return;
+
   const params = Object.assign({}, route.params, { repo: selected.value });
   router.push({ name: route.name, params: params });
 }
