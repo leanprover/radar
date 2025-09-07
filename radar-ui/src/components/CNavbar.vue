@@ -3,6 +3,7 @@ import CColorMode from "@/components/CColorMode.vue";
 import CNavbarRepoSelect from "@/components/CNavbarRepoSelect.vue";
 import { useRoute, useRouter } from "vue-router";
 import { ref, watch } from "vue";
+import { Button } from "@/components/ui/button";
 
 const router = useRouter();
 const route = useRoute();
@@ -55,15 +56,17 @@ setSelectedToRoute();
 </script>
 
 <template>
-  <div class="flex items-center gap-4 border-b p-2">
+  <div class="flex items-center gap-2 border-b bg-white p-2">
     <CNavbarRepoSelect v-model="selected"></CNavbarRepoSelect>
 
-    <RouterLink v-if="selected !== undefined" :to="{ name: '/repo/[repo]', params: { repo: selected } }">
-      Overview
+    <RouterLink v-if="selected" :to="{ name: '/repo/[repo]', params: { repo: selected } }">
+      <Button :variant="route.name === '/repo/[repo]' ? 'secondary' : 'ghost'">Overview</Button>
     </RouterLink>
-    <div v-else class="text-muted-foreground">Overview</div>
+    <Button v-else variant="ghost" disabled>Overview</Button>
 
-    <RouterLink class="hover:underline" :to="{ name: '/queue' }">Queue</RouterLink>
+    <RouterLink :to="{ name: '/queue' }">
+      <Button :variant="route.name === '/queue' ? 'secondary' : 'ghost'">Queue</Button>
+    </RouterLink>
 
     <div class="flex grow justify-end">
       <CColorMode />
