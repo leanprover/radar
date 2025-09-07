@@ -5,7 +5,7 @@ import CNavbar from "@/components/CNavbar.vue";
 <template>
   <div class="flex min-h-dvh flex-col">
     <CNavbar />
-    <div class="bg-muted flex grow flex-col p-6">
+    <div class="flex grow flex-col p-6">
       <RouterView />
     </div>
   </div>
