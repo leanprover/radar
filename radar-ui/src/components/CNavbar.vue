@@ -12,9 +12,14 @@ const selected = ref<string>();
 // For any route which includes exactly one param named "repo",
 // said param will be synchronized with the repo selector.
 
+function getRepoParam(): string | undefined {
+  if ("repo" in route.params) return route.params.repo;
+  return undefined;
+}
+
 function setSelectedToRoute() {
-  const repo = route.params["repo"];
-  if (typeof repo !== "string") {
+  const repo = getRepoParam();
+  if (repo === undefined) {
     // The route doesn't have a "repo" param, so we're just going to do nothing.
     // We don't want to clear the selected repo when looking at the queue
     // or other non-repo-related routes.
@@ -31,10 +36,10 @@ function setRouteToSelected() {
     return;
   }
 
-  const repo = route.params["repo"];
-  if (typeof repo !== "string") {
+  const repo = getRepoParam();
+  if (repo === undefined) {
     // Our route doesn't contain a "repo" param.
-    router.push({ name: "overview", params: { repo: selected.value } });
+    router.push({ name: "/repo/[repo]", params: { repo: selected.value } });
     return;
   }
 
@@ -53,12 +58,12 @@ setSelectedToRoute();
   <div class="flex items-center gap-4 border-b p-2">
     <CNavbarRepoSelect v-model="selected"></CNavbarRepoSelect>
 
-    <RouterLink v-if="selected !== undefined" :to="{ name: 'overview', params: { repo: selected } }">
+    <RouterLink v-if="selected !== undefined" :to="{ name: '/repo/[repo]', params: { repo: selected } }">
       Overview
     </RouterLink>
     <div v-else class="text-muted-foreground">Overview</div>
 
-    <RouterLink class="hover:underline" :to="{ name: 'queue' }">Queue</RouterLink>
+    <RouterLink class="hover:underline" :to="{ name: '/queue' }">Queue</RouterLink>
 
     <div class="flex grow justify-end">
       <CColorMode />
