@@ -10,7 +10,6 @@ async function fetchJson<S extends z.Schema>(url: string, schema: S): Promise<z.
 
   const json = await result.json();
   const parsed = schema.safeParse(json);
-  console.log(json);
   if (parsed.error) throw new Error(`Failed to fetch ${url}: ${parsed.error.message}`);
   return parsed.data;
 }
