@@ -1,3 +1,3 @@
 package org.leanlang.radar.server;
 
-public record RepoConfig(String url, String description) {}
+public record RepoConfig(String name, String url, String description) {}

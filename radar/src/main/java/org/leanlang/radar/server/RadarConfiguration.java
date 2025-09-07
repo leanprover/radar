@@ -3,14 +3,15 @@ package org.leanlang.radar.server;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.core.Configuration;
 import jakarta.validation.constraints.NotEmpty;
-import java.util.Map;
+import java.util.List;
 
 public class RadarConfiguration extends Configuration {
     @NotEmpty
     private String debug;
 
+    // TODO Ensure somehow that repo names are unique
     @NotEmpty
-    private Map<String, RepoConfig> repos;
+    private List<RepoConfig> repos;
 
     @JsonProperty
     public String getDebug() {
@@ -23,12 +24,12 @@ public class RadarConfiguration extends Configuration {
     }
 
     @JsonProperty
-    public Map<String, RepoConfig> getRepos() {
+    public List<RepoConfig> getRepos() {
         return repos;
     }
 
     @JsonProperty
-    public void setRepos(Map<String, RepoConfig> repos) {
+    public void setRepos(List<RepoConfig> repos) {
         this.repos = repos;
     }
 }

@@ -17,13 +17,11 @@ async function fetchJson<S extends z.Schema>(url: string, schema: S): Promise<z.
 
 export type JsonRepo = z.infer<typeof JsonRepo>;
 export const JsonRepo = z.object({
+  name: z.string(),
   url: z.url(),
   description: z.string(),
 });
 
-export async function getRepos(): Promise<Map<string, JsonRepo>> {
-  return await fetchJson(
-    "/repos",
-    z.record(z.string(), JsonRepo).transform((it) => new Map(Object.entries(it))),
-  );
+export async function getRepos(): Promise<JsonRepo[]> {
+  return await fetchJson("/repos", z.array(JsonRepo));
 }
