@@ -11,8 +11,6 @@ server:
     - type: http
       port: 8081
 
-debug: Hello world, from the config file!
-
 repos:
   - name: lean4
     url: https://github.com/leanprover/lean4

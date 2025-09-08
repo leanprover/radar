@@ -7,10 +7,10 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path("/debug")
 @Produces(MediaType.APPLICATION_JSON)
-public record ResDebug(String text) {
+public record ResDebug() {
 
     @GET
     public JsonDebug debug() {
-        return new JsonDebug(text);
+        return new JsonDebug("Hello world");
     }
 }

@@ -13,20 +13,7 @@ public class RadarConfiguration extends Configuration {
     private static final Logger log = LoggerFactory.getLogger(RadarConfiguration.class);
 
     @NotEmpty
-    private String debug;
-
-    @NotEmpty
     private List<RepoConfig> repos;
-
-    @JsonProperty
-    public String getDebug() {
-        return debug;
-    }
-
-    @JsonProperty
-    public void setDebug(String debug) {
-        this.debug = debug;
-    }
 
     @JsonProperty
     public List<RepoConfig> getRepos() {

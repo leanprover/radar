@@ -29,7 +29,7 @@ public class RadarApplication extends Application<RadarConfiguration> {
         configuration.validate();
 
         environment.jersey().setUrlPattern("/api/*");
-        environment.jersey().register(new ResDebug(configuration.getDebug()));
+        environment.jersey().register(new ResDebug());
         environment.jersey().register(new ResRepos(configuration.getRepos()));
     }
 }
