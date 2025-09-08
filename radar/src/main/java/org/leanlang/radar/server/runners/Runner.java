@@ -17,8 +17,9 @@ public class Runner {
         return config;
     }
 
-    public synchronized void see() {
+    public synchronized Instant see() {
         lastSeen = Instant.now();
+        return lastSeen;
     }
 
     public synchronized Optional<Instant> lastSeen() {
