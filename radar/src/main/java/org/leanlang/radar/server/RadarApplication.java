@@ -35,7 +35,7 @@ public class RadarApplication extends Application<RadarConfig> {
         environment.jersey().register(new ResRepos(configuration.repos));
     }
 
-    private static void configureDummyHealthCheck(Environment environment) {
+    private static void configureDummyHealthCheck(final Environment environment) {
         environment.healthChecks().register("dummy", new HealthCheck() {
             @Override
             protected Result check() {

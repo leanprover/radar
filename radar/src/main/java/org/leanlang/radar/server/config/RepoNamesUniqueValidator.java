@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class RepoNamesUniqueValidator implements ConstraintValidator<RepoNamesUnique, List<RadarConfigRepo>> {
 
     @Override
-    public boolean isValid(List<RadarConfigRepo> value, ConstraintValidatorContext context) {
+    public boolean isValid(final List<RadarConfigRepo> value, final ConstraintValidatorContext context) {
         var uniqueNames = value.stream().map(RadarConfigRepo::name).collect(Collectors.toSet());
         return uniqueNames.size() == value.size();
     }
