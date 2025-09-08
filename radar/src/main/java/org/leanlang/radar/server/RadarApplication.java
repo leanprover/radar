@@ -10,10 +10,11 @@ import org.leanlang.radar.server.api.ResRepos;
 import org.leanlang.radar.server.config.RadarConfig;
 
 public class RadarApplication extends Application<RadarConfig> {
+    public static final String NAME = "Radar Server";
 
     @Override
     public String getName() {
-        return "Radar";
+        return NAME;
     }
 
     @Override

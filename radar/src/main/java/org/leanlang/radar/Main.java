@@ -17,7 +17,8 @@ public class Main {
     }
 
     @Command(name = "runner", description = "Start the runner.")
-    void runRunner(@Parameters(index = "0", description = "Path to the config file.") final Path configFile) {
+    void runRunner(@Parameters(index = "0", description = "Path to the config file.") final Path configFile)
+            throws Exception {
         new RunnerMain(configFile).run();
     }
 
