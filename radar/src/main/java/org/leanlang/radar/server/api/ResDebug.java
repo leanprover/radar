@@ -11,7 +11,7 @@ import org.leanlang.radar.server.runners.Runners;
 @Produces(MediaType.APPLICATION_JSON)
 public record ResDebug(Runners runners) {
 
-    record JsonGet(List<String> runners) {}
+    public record JsonGet(List<String> runners) {}
 
     @GET
     public JsonGet debug() {

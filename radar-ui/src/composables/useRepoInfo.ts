@@ -1,13 +1,12 @@
-import { computed, type Ref, toValue } from "vue";
-import { type JsonRepo } from "@/api.ts";
+import { computed, toValue } from "vue";
 import { useRepos } from "@/composables/useRepos.ts";
 import type { MaybeRefOrGetter } from "@vueuse/core";
 
-export function useRepoInfo(repo: MaybeRefOrGetter<string>): Ref<JsonRepo | undefined> {
+export function useRepoInfo(repo: MaybeRefOrGetter<string>) {
   const { data } = useRepos();
 
   return computed(() => {
     const repoValue = toValue(repo);
-    return data.value?.find((it) => it.name === repoValue);
+    return data.value?.repos.find((it) => it.name === repoValue);
   });
 }

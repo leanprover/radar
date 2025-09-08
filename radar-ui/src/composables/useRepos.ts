@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/vue-query";
-import * as api from "@/api.ts";
+import { getRepos } from "@/api/repos.ts";
 
 // See also https://github.com/TanStack/query/issues/5418
 export function useRepos() {
-  return useQuery({ queryKey: ["repos"], queryFn: api.getRepos });
+  return useQuery({ queryKey: ["repos"], queryFn: getRepos });
 }
