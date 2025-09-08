@@ -1,5 +1,6 @@
 package org.leanlang.radar.server;
 
+import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
@@ -27,8 +28,19 @@ public class RadarApplication extends Application<RadarConfig> {
 
     @Override
     public void run(final RadarConfig configuration, final Environment environment) {
+        configureDummyHealthCheck(environment);
+
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResDebug());
         environment.jersey().register(new ResRepos(configuration.repos));
+    }
+
+    private static void configureDummyHealthCheck(Environment environment) {
+        environment.healthChecks().register("dummy", new HealthCheck() {
+            @Override
+            protected Result check() {
+                return Result.healthy();
+            }
+        });
     }
 }
