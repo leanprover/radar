@@ -11,10 +11,6 @@ import org.leanlang.radar.server.config.RadarConfig;
 
 public class RadarApplication extends Application<RadarConfig> {
 
-    public static void main(final String[] args) throws Exception {
-        new RadarApplication().run(args);
-    }
-
     @Override
     public String getName() {
         return "Radar";
