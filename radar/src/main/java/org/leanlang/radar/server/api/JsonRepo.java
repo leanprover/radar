@@ -1,9 +1,9 @@
 package org.leanlang.radar.server.api;
 
-import org.leanlang.radar.server.RepoConfig;
+import org.leanlang.radar.server.config.RadarConfigRepo;
 
 public record JsonRepo(String name, String url, String description) {
-    public static JsonRepo fromRepoConfig(RepoConfig repo) {
-        return new JsonRepo(repo.name(), repo.url(), repo.description());
+    public static JsonRepo fromConfig(RadarConfigRepo repo) {
+        return new JsonRepo(repo.name(), repo.url().toString(), repo.description());
     }
 }

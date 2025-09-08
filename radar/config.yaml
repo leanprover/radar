@@ -11,6 +11,11 @@ server:
     - type: http
       port: 8081
 
+dirs:
+  data: ../../radar-server/data/
+  cache: ../../radar-server/cache/
+  tmp: ../../radar-server/tmp/
+
 repos:
   - name: lean4
     url: https://github.com/leanprover/lean4

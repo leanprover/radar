@@ -5,14 +5,14 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
-import org.leanlang.radar.server.RepoConfig;
+import org.leanlang.radar.server.config.RadarConfigRepo;
 
 @Path("/repos")
 @Produces(MediaType.APPLICATION_JSON)
-public record ResRepos(List<RepoConfig> repos) {
+public record ResRepos(List<RadarConfigRepo> repos) {
 
     @GET
     public List<JsonRepo> debug() {
-        return repos.stream().map(JsonRepo::fromRepoConfig).toList();
+        return repos.stream().map(JsonRepo::fromConfig).toList();
     }
 }
