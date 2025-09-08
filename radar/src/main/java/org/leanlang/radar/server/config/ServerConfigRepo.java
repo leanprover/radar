@@ -4,4 +4,4 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 
-public record RadarConfigRepo(@NotEmpty String name, @NotNull URI url, @NotEmpty String description) {}
+public record ServerConfigRepo(@NotEmpty String name, @NotNull URI url, @NotEmpty String description) {}

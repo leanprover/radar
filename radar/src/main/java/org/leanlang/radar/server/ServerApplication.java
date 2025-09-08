@@ -7,9 +7,9 @@ import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResRepos;
-import org.leanlang.radar.server.config.RadarConfig;
+import org.leanlang.radar.server.config.ServerConfig;
 
-public class RadarApplication extends Application<RadarConfig> {
+public class ServerApplication extends Application<ServerConfig> {
     public static final String NAME = "Radar Server";
 
     @Override
@@ -18,13 +18,13 @@ public class RadarApplication extends Application<RadarConfig> {
     }
 
     @Override
-    public void initialize(final Bootstrap<RadarConfig> bootstrap) {
+    public void initialize(final Bootstrap<ServerConfig> bootstrap) {
         bootstrap.addBundle(new AssetsBundle("/radar-ui/", "/", "index.html", "ui-assets"));
         bootstrap.addBundle(new NotFoundRedirectBundle("ui-assets", "/index.html", "ui-assets-redirect"));
     }
 
     @Override
-    public void run(final RadarConfig configuration, final Environment environment) {
+    public void run(final ServerConfig configuration, final Environment environment) {
         configureDummyHealthCheck(environment);
 
         environment.jersey().setUrlPattern("/api/*");

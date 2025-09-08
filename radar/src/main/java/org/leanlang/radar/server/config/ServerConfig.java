@@ -6,14 +6,14 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
-public class RadarConfig extends Configuration {
+public class ServerConfig extends Configuration {
 
     @Valid
     @NotNull
-    public RadarConfigDirs dirs;
+    public ServerConfigDirs dirs;
 
     @Valid
     @NotEmpty
     @RepoNamesUnique
-    public List<RadarConfigRepo> repos;
+    public List<ServerConfigRepo> repos;
 }
