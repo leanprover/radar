@@ -13,3 +13,5 @@ export async function fetchJson<S extends z.Schema>(url: string, schema: S): Pro
   if (parsed.error) throw new Error(`Failed to fetch ${url}: ${parsed.error.message}`);
   return parsed.data;
 }
+
+export const Timestamp = z.number().transform((it) => new Date(it * 1000));

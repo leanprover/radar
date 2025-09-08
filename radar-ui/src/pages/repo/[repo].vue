@@ -9,8 +9,7 @@ const info = useRepoInfo(() => route.params.repo);
 </script>
 
 <template>
-  <!-- Margin for visual balance -->
-  <Card class="mt-1">
+  <Card>
     <CardHeader>
       <CardTitle>{{ route.params.repo }}</CardTitle>
       <CardDescription>{{ info?.description ?? "This repo does not exist." }}</CardDescription>
@@ -30,5 +29,3 @@ const info = useRepoInfo(() => route.params.repo);
     </CardContent>
   </Card>
 </template>
-
-<style scoped></style>
