@@ -8,6 +8,7 @@ import io.dropwizard.core.setup.Environment;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResRepos;
 import org.leanlang.radar.server.config.ServerConfig;
+import org.leanlang.radar.server.runners.Runners;
 
 public class ServerApplication extends Application<ServerConfig> {
     public static final String NAME = "Radar Server";
@@ -27,8 +28,10 @@ public class ServerApplication extends Application<ServerConfig> {
     public void run(final ServerConfig configuration, final Environment environment) {
         configureDummyHealthCheck(environment);
 
+        var runners = new Runners(configuration.runners);
+
         environment.jersey().setUrlPattern("/api/*");
-        environment.jersey().register(new ResDebug());
+        environment.jersey().register(new ResDebug(runners));
         environment.jersey().register(new ResRepos(configuration.repos));
     }
 
