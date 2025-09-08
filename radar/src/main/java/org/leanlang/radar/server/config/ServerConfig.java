@@ -16,4 +16,9 @@ public class ServerConfig extends Configuration {
     @NotEmpty
     @RepoNamesUnique
     public List<ServerConfigRepo> repos;
+
+    @Valid
+    @NotNull
+    @RunnerNamesUnique
+    public List<ServerConfigRunner> runners;
 }

@@ -23,3 +23,7 @@ repos:
   - name: mathlib4
     url: https://github.com/leanprover-community/mathlib4
     description: The math library of Lean 4
+
+runners:
+  - name: testrunner
+    token: testrunnertoken
