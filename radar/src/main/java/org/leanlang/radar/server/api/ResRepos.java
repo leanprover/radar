@@ -9,7 +9,6 @@ import java.util.List;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 
 @Path("/repos")
-@Produces(MediaType.APPLICATION_JSON)
 public record ResRepos(List<ServerConfigRepo> repos) {
 
     public record JsonRepo(String name, URI url, String description) {}
@@ -17,7 +16,8 @@ public record ResRepos(List<ServerConfigRepo> repos) {
     public record JsonGet(List<JsonRepo> repos) {}
 
     @GET
-    public JsonGet debug() {
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonGet get() {
         List<JsonRepo> repos = this.repos.stream()
                 .map(it -> new JsonRepo(it.name(), it.url(), it.description()))
                 .toList();

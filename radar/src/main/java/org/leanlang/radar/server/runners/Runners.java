@@ -17,4 +17,20 @@ public class Runners {
     public synchronized List<Runner> getRunners() {
         return runners.values().stream().toList();
     }
+
+    public synchronized Runner getRunner(String name) {
+        final var runner = runners.get(name);
+        if (runner == null) {
+            throw new IllegalArgumentException("No runner named " + name);
+        }
+        return runner;
+    }
+
+    public synchronized Runner getRunner(String name, String token) {
+        final var runner = getRunner(name);
+        if (!runner.getConfig().token().equals(token)) {
+            throw new IllegalArgumentException("Invalid token for runner " + name);
+        }
+        return runner;
+    }
 }

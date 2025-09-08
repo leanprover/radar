@@ -6,7 +6,9 @@ import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import org.leanlang.radar.server.api.ResDebug;
+import org.leanlang.radar.server.api.ResQueue;
 import org.leanlang.radar.server.api.ResRepos;
+import org.leanlang.radar.server.api.ResRunners;
 import org.leanlang.radar.server.config.ServerConfig;
 import org.leanlang.radar.server.runners.Runners;
 
@@ -32,7 +34,9 @@ public class ServerApplication extends Application<ServerConfig> {
 
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResDebug(runners));
+        environment.jersey().register(new ResQueue(runners));
         environment.jersey().register(new ResRepos(configuration.repos));
+        environment.jersey().register(new ResRunners(runners));
     }
 
     private static void configureDummyHealthCheck(final Environment environment) {
