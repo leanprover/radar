@@ -18,8 +18,29 @@
     <mainClass>org.leanlang.radar.Main</mainClass>
     <db.url>jdbc:sqlite:${project.build.directory}/data.db</db.url>
 
+    <!-- https://mvnrepository.com/artifact/io.dropwizard/dropwizard-dependencies -->
+    <dropwizard.version>4.0.16</dropwizard.version>
+    <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
     <flyway.version>11.12.0</flyway.version>
+    <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+    <hikaricp.version>7.0.2</hikaricp.version>
+    <!-- https://mvnrepository.com/artifact/org.jooq/jooq -->
     <jooq.version>3.20.6</jooq.version>
+    <!-- https://mvnrepository.com/artifact/info.picocli/picocli -->
+    <picocli.version>4.7.7</picocli.version>
+    <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
+    <sqlite-jdbc.version>3.50.3.0</sqlite-jdbc.version>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-antrun-plugin -->
+    <maven-plugin-antrun.version>3.1.0</maven-plugin-antrun.version>
+    <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
+    <maven-plugin-compiler.version>3.14.0</maven-plugin-compiler.version>
+    <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
+    <maven-plugin-shade.version>3.6.0</maven-plugin-shade.version>
+    <!-- https://mvnrepository.com/artifact/com.diffplug.spotless/spotless-maven-plugin -->
+    <maven-plugin-spotless.version>2.46.1</maven-plugin-spotless.version>
+    <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin -->
+    <maven-plugin-surefire.version>3.5.3</maven-plugin-surefire.version>
   </properties>
 
   <dependencyManagement>
@@ -27,7 +48,7 @@
       <dependency>
         <groupId>io.dropwizard</groupId>
         <artifactId>dropwizard-dependencies</artifactId>
-        <version>4.0.16</version>
+        <version>${dropwizard.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -66,21 +87,21 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
-      <version>4.7.7</version>
+      <version>${picocli.version}</version>
     </dependency>
 
     <!-- SQLite -->
     <dependency>
       <groupId>org.xerial</groupId>
       <artifactId>sqlite-jdbc</artifactId>
-      <version>3.50.3.0</version>
+      <version>${sqlite-jdbc.version}</version>
     </dependency>
 
     <!-- Connection pool -->
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
-      <version>7.0.2</version>
+      <version>${hikaricp.version}</version>
     </dependency>
 
     <!-- Flyway -->
@@ -120,7 +141,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>${maven-plugin-shade.version}</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -155,7 +176,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.14.0</version>
+        <version>${maven-plugin-compiler.version}</version>
       </plugin>
 
       <!-- Ensure target dir exists (for Flyway) -->
@@ -163,7 +184,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>${maven-plugin-antrun.version}</version>
         <executions>
           <execution>
             <phase>generate-sources</phase>
@@ -236,14 +257,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.3</version>
+        <version>${maven-plugin-surefire.version}</version>
       </plugin>
 
       <!-- Formatting -->
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>2.46.1</version>
+        <version>${maven-plugin-spotless.version}</version>
         <configuration>
           <java>
             <palantirJavaFormat/>
