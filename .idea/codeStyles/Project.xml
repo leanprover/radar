@@ -11,6 +11,14 @@
         </value>
       </option>
     </JavaCodeStyleSettings>
+    <SqlCodeStyleSettings version="7">
+      <option name="KEYWORD_CASE" value="2" />
+      <option name="IDENTIFIER_CASE" value="1" />
+      <option name="TYPE_CASE" value="3" />
+      <option name="TABLE_OPENING" value="1" />
+      <option name="TABLE_CONTENT" value="2" />
+      <option name="TABLE_CLOSING" value="2" />
+    </SqlCodeStyleSettings>
     <XML>
       <option name="XML_KEEP_LINE_BREAKS" value="false" />
       <option name="XML_KEEP_LINE_BREAKS_IN_TEXT" value="false" />
