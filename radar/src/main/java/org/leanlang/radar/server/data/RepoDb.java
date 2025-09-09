@@ -1,0 +1,87 @@
+package org.leanlang.radar.server.data;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.flywaydb.core.Flyway;
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteDataSource;
+
+public class RepoDb implements Closeable {
+    private static final Logger log = LoggerFactory.getLogger(RepoDb.class);
+
+    private final Path path;
+    private final HikariDataSource hikariDataSource;
+    private final DSLContext dslContext;
+
+    public RepoDb(final Path path, final String name) throws IOException {
+        log.info("Opening repo DB at {}", path);
+        this.path = path;
+
+        // Configure DB connection
+        final String jdbcUrl = "jdbc:sqlite:file:" + path.toAbsolutePath();
+        final SQLiteDataSource sqLiteDataSource = new SQLiteDataSource(buildSqliteConfig());
+        sqLiteDataSource.setUrl(jdbcUrl);
+
+        // Configure DB connection pool
+        final HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setDataSource(sqLiteDataSource);
+        hikariConfig.setPoolName("db-pool-" + name);
+
+        // Create and migrate DB file
+        Files.createDirectories(path.getParent());
+        Flyway.configure().dataSource(sqLiteDataSource).load().migrate();
+
+        // Connect to DB
+        this.hikariDataSource = new HikariDataSource(hikariConfig);
+        this.dslContext = DSL.using(hikariDataSource, SQLDialect.SQLITE);
+    }
+
+    static SQLiteConfig buildSqliteConfig() {
+        // See also https://briandouglas.ie/sqlite-defaults/
+        final SQLiteConfig sqliteConfig = new SQLiteConfig();
+
+        // TODO Open PR for these?
+        // No auto_vacuum, see https://github.com/xerial/sqlite-jdbc/issues/580
+        // No trusted_schema = false, see https://github.com/xerial/sqlite-jdbc/issues/891
+
+        // https://www.sqlite.org/pragma.html#pragma_foreign_keys
+        sqliteConfig.enforceForeignKeys(true);
+
+        // https://www.sqlite.org/pragma.html#pragma_journal_mode
+        sqliteConfig.setJournalMode(SQLiteConfig.JournalMode.WAL);
+
+        // https://www.sqlite.org/pragma.html#pragma_synchronous
+        // "WAL mode is safe from corruption with synchronous=NORMAL"
+        // "WAL mode is always consistent with synchronous=NORMAL
+        sqliteConfig.setSynchronous(SQLiteConfig.SynchronousMode.NORMAL);
+
+        // https://www.sqlite.org/pragma.html#pragma_cache_size
+        // When negative, specified in kibibytes
+        sqliteConfig.setCacheSize(-32 * 1024); // 32 MiB
+
+        // https://www.sqlite.org/pragma.html#pragma_journal_size_limit
+        // Otherwise the WAL file can grow pretty large
+        sqliteConfig.setJournalSizeLimit(32 * 1024 * 1024); // 32 MiB
+
+        return sqliteConfig;
+    }
+
+    @Override
+    public void close() {
+        log.info("Closing repo DB at {}", path);
+        hikariDataSource.close();
+    }
+
+    public DSLContext dsl() {
+        return dslContext;
+    }
+}

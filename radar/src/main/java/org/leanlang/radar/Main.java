@@ -13,7 +13,7 @@ public class Main {
     @Command(name = "server", description = "Start the server.")
     void runServer(@Parameters(index = "0", description = "Path to the config file.") final Path configFile)
             throws Exception {
-        new ServerApplication().run("server", configFile.toString());
+        new ServerApplication(configFile).run();
     }
 
     @Command(name = "runner", description = "Start the runner.")
