@@ -6,9 +6,13 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.flywaydb.core.Flyway;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.TransactionalCallable;
+import org.jooq.TransactionalRunnable;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +25,7 @@ public class RepoDb implements Closeable {
     private final Path path;
     private final HikariDataSource hikariDataSource;
     private final DSLContext dslContext;
+    private final Lock writeLock = new ReentrantLock();
 
     public RepoDb(final Path path, final String name) throws IOException {
         log.info("Opening repo DB at {}", path);
@@ -81,7 +86,31 @@ public class RepoDb implements Closeable {
         hikariDataSource.close();
     }
 
-    public DSLContext dsl() {
-        return dslContext;
+    public RepoDbRead read() {
+        return new RepoDbRead(dslContext);
+    }
+
+    public void readTransaction(TransactionalRunnable transaction) {
+        dslContext.transaction(transaction);
+    }
+
+    public <T> T readTransactionResult(TransactionalCallable<T> transaction) {
+        return dslContext.transactionResult(transaction);
+    }
+
+    public RepoDbWrite write() {
+        return new RepoDbWrite(dslContext, writeLock);
+    }
+
+    public void writeTransaction(TransactionalRunnable transaction) {
+        try (var write = write()) {
+            write.dsl().transaction(transaction);
+        }
+    }
+
+    public <T> T writeTransactionResult(TransactionalCallable<T> transaction) {
+        try (var write = write()) {
+            return write.dsl().transactionResult(transaction);
+        }
     }
 }
