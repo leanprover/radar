@@ -22,14 +22,14 @@ import org.sqlite.SQLiteDataSource;
 public class RepoDb implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(RepoDb.class);
 
-    private final Path path;
+    private final String name;
     private final HikariDataSource hikariDataSource;
     private final DSLContext dslContext;
     private final Lock writeLock = new ReentrantLock();
 
-    public RepoDb(final Path path, final String name) throws IOException {
-        log.info("Opening repo DB at {}", path);
-        this.path = path;
+    public RepoDb(final String name, final Path path) throws IOException {
+        log.info("Opening DB for {}", name);
+        this.name = name;
 
         // Configure DB connection
         final String jdbcUrl = "jdbc:sqlite:file:" + path.toAbsolutePath();
@@ -82,7 +82,7 @@ public class RepoDb implements Closeable {
 
     @Override
     public void close() {
-        log.info("Closing repo DB at {}", path);
+        log.info("Closing DB for {}", name);
         hikariDataSource.close();
     }
 

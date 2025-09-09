@@ -9,15 +9,18 @@ public class Repo implements Closeable {
 
     private final ServerConfigRepo config;
     private final RepoDb db;
+    private final RepoGit git;
 
     public Repo(final Dirs dirs, final ServerConfigRepo config) throws IOException {
         this.config = config;
-        this.db = new RepoDb(dirs.repoDb(config.name()), config.name());
+        this.db = new RepoDb(config.name(), dirs.repoDb(config.name()));
+        this.git = new RepoGit(config.name(), dirs.repoGit(config.name()), config.url());
     }
 
     @Override
     public void close() {
         db.close();
+        git.close();
     }
 
     public ServerConfigRepo getConfig() {
@@ -26,5 +29,9 @@ public class Repo implements Closeable {
 
     public RepoDb getDb() {
         return db;
+    }
+
+    public RepoGit getGit() {
+        return git;
     }
 }

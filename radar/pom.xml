@@ -24,6 +24,8 @@
     <flyway.version>11.12.0</flyway.version>
     <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
     <hikaricp.version>7.0.2</hikaricp.version>
+    <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
+    <jgit.version>7.3.0.202506031305-r</jgit.version>
     <!-- https://mvnrepository.com/artifact/org.jooq/jooq -->
     <jooq.version>3.20.6</jooq.version>
     <!-- https://mvnrepository.com/artifact/info.picocli/picocli -->
@@ -88,6 +90,13 @@
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
       <version>${picocli.version}</version>
+    </dependency>
+
+    <!-- JGit -->
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>${jgit.version}</version>
     </dependency>
 
     <!-- SQLite -->

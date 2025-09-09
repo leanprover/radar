@@ -17,4 +17,8 @@ public class Dirs {
     public Path repoDb(final String name) {
         return data.resolve(name).resolve("data.db");
     }
+
+    public Path repoGit(final String name) {
+        return cache.resolve("repos").resolve(name + ".git");
+    }
 }
