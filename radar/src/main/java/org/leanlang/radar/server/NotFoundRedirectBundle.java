@@ -23,9 +23,15 @@ public record NotFoundRedirectBundle(String servlet, String target, String name)
                     @Override
                     protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
                             throws IOException, ServletException {
+
                         super.doFilter(req, res, chain);
-                        if (res.getStatus() == HttpServletResponse.SC_NOT_FOUND)
-                            req.getRequestDispatcher(target).forward(req, res);
+
+                        if (req.getPathInfo().equals(target)) return; // No infinite loops if target does not exist, plz
+                        if (res.getStatus() != HttpServletResponse.SC_NOT_FOUND) return;
+
+                        // Try again, this time with our target instead of the original URL.
+                        res.setStatus(HttpServletResponse.SC_OK); // Is not reset automatically
+                        req.getRequestDispatcher(target).forward(req, res);
                     }
                 })
                 .addMappingForServletNames(EnumSet.allOf(DispatcherType.class), true, servlet);
