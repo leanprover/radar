@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.config.ServerConfigRunner;
 
-public class Runner {
+public final class Runner {
     private final ServerConfigRunner config;
     private @Nullable Instant lastSeen;
 

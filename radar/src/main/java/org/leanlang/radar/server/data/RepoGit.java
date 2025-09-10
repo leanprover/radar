@@ -15,7 +15,7 @@ import org.eclipse.jgit.transport.TagOpt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RepoGit implements AutoCloseable {
+public final class RepoGit implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(RepoGit.class);
 
     private final String name;
@@ -24,7 +24,7 @@ public class RepoGit implements AutoCloseable {
     private final Repository repo;
     private final Git git;
 
-    public RepoGit(final String name, final Path path, final URI url) throws IOException {
+    public RepoGit(String name, Path path, URI url) throws IOException {
         log.info("Opening repo {}", name);
         this.name = name;
         this.path = path;

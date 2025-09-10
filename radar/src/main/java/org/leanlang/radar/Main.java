@@ -8,16 +8,16 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 @Command()
-public class Main {
+public final class Main {
 
     @Command(name = "server", description = "Start the server.")
-    void runServer(@Parameters(index = "0", description = "Path to the config file.") final Path configFile)
+    void runServer(@Parameters(index = "0", description = "Path to the config file.") Path configFile)
             throws Exception {
         new ServerApplication(configFile).run();
     }
 
     @Command(name = "runner", description = "Start the runner.")
-    void runRunner(@Parameters(index = "0", description = "Path to the config file.") final Path configFile)
+    void runRunner(@Parameters(index = "0", description = "Path to the config file.") Path configFile)
             throws Exception {
         new RunnerMain(configFile).run();
     }

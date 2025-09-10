@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
-public class RunnerNamesUniqueValidator implements ConstraintValidator<RunnerNamesUnique, List<ServerConfigRunner>> {
+public final class RunnerNamesUniqueValidator
+        implements ConstraintValidator<RunnerNamesUnique, List<ServerConfigRunner>> {
 
     @Override
-    public boolean isValid(@Nullable final List<ServerConfigRunner> value, final ConstraintValidatorContext context) {
+    public boolean isValid(@Nullable List<ServerConfigRunner> value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
         }

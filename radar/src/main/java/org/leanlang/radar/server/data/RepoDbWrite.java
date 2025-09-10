@@ -3,7 +3,7 @@ package org.leanlang.radar.server.data;
 import java.util.concurrent.locks.Lock;
 import org.jooq.DSLContext;
 
-public class RepoDbWrite implements AutoCloseable {
+public final class RepoDbWrite implements AutoCloseable {
     private final DSLContext dsl;
     private final Lock lock;
 

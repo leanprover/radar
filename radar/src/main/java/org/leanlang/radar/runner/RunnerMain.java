@@ -35,7 +35,7 @@ public final class RunnerMain {
     public RunnerMain(Path configFile) throws Exception {
         BootstrapLogging.bootstrap(Level.WARN); // No hibernate debug prints, please
 
-        final Environment environment = new Environment(
+        Environment environment = new Environment(
                 NAME,
                 Jackson.newObjectMapper(),
                 Validators.newValidatorFactory(),
@@ -70,10 +70,10 @@ public final class RunnerMain {
     }
 
     public void run() {
-        final URI url = config.url().resolve("runners/").resolve(config.name());
+        URI url = config.url().resolve("runners/").resolve(config.name());
 
         while (true) {
-            final var response = client.target(url)
+            var response = client.target(url)
                     .request(MediaType.APPLICATION_JSON_TYPE)
                     .post(Entity.json(new ResRunners.JsonPostInput(config.token())), ResRunners.JsonPost.class);
 

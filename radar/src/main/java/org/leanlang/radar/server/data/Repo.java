@@ -5,13 +5,13 @@ import java.io.IOException;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 
-public class Repo implements Closeable {
+public final class Repo implements Closeable {
 
     private final ServerConfigRepo config;
     private final RepoDb db;
     private final RepoGit git;
 
-    public Repo(final Dirs dirs, final ServerConfigRepo config) throws IOException {
+    public Repo(Dirs dirs, ServerConfigRepo config) throws IOException {
         this.config = config;
         this.db = new RepoDb(config.name(), dirs.repoDb(config.name()));
         this.git = new RepoGit(config.name(), dirs.repoGit(config.name()), config.url());

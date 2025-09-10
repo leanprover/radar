@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.leanlang.radar.server.config.ServerConfigRunner;
 
-public class Runners {
+public final class Runners {
     private final Map<String, Runner> runners;
 
     public Runners(List<ServerConfigRunner> runnerList) {
@@ -19,7 +19,7 @@ public class Runners {
     }
 
     public Runner getRunner(String name) {
-        final var runner = runners.get(name);
+        var runner = runners.get(name);
         if (runner == null) {
             throw new IllegalArgumentException("No runner named " + name);
         }
@@ -27,7 +27,7 @@ public class Runners {
     }
 
     public Runner getRunner(String name, String token) {
-        final var runner = getRunner(name);
+        var runner = getRunner(name);
         if (!runner.getConfig().token().equals(token)) {
             throw new IllegalArgumentException("Invalid token for runner " + name);
         }

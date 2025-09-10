@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
-public class RepoNamesUniqueValidator implements ConstraintValidator<RepoNamesUnique, List<ServerConfigRepo>> {
+public final class RepoNamesUniqueValidator implements ConstraintValidator<RepoNamesUnique, List<ServerConfigRepo>> {
 
     @Override
-    public boolean isValid(@Nullable final List<ServerConfigRepo> value, final ConstraintValidatorContext context) {
+    public boolean isValid(@Nullable List<ServerConfigRepo> value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
         }

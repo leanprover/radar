@@ -2,10 +2,10 @@ package org.leanlang.radar.server.data;
 
 import org.jooq.DSLContext;
 
-public class RepoDbRead {
+public final class RepoDbRead {
     private final DSLContext dsl;
 
-    public RepoDbRead(final DSLContext dsl) {
+    public RepoDbRead(DSLContext dsl) {
         this.dsl = dsl;
     }
 

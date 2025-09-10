@@ -9,11 +9,11 @@ import java.util.Map;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 
-public class Repos implements Managed {
+public final class Repos implements Managed {
     private final List<String> repoNames;
     private final Map<String, Repo> repos;
 
-    public Repos(final Dirs dirs, final List<ServerConfigRepo> repoList) throws IOException {
+    public Repos(Dirs dirs, List<ServerConfigRepo> repoList) throws IOException {
         repoNames = new ArrayList<>();
         repos = new HashMap<>();
         for (ServerConfigRepo repo : repoList) {
@@ -34,7 +34,7 @@ public class Repos implements Managed {
     }
 
     public Repo getRepo(String name) {
-        final var repo = repos.get(name);
+        var repo = repos.get(name);
         if (repo == null) {
             throw new IllegalArgumentException("No repo named " + name);
         }

@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
-public class RepoDb implements Closeable {
+public final class RepoDb implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(RepoDb.class);
 
     private final String name;
@@ -27,17 +27,17 @@ public class RepoDb implements Closeable {
     private final DSLContext dslContext;
     private final Lock writeLock = new ReentrantLock();
 
-    public RepoDb(final String name, final Path path) throws IOException {
+    public RepoDb(String name, Path path) throws IOException {
         log.info("Opening DB for {}", name);
         this.name = name;
 
         // Configure DB connection
-        final String jdbcUrl = "jdbc:sqlite:file:" + path.toAbsolutePath();
-        final SQLiteDataSource sqLiteDataSource = new SQLiteDataSource(buildSqliteConfig());
+        String jdbcUrl = "jdbc:sqlite:file:" + path.toAbsolutePath();
+        SQLiteDataSource sqLiteDataSource = new SQLiteDataSource(buildSqliteConfig());
         sqLiteDataSource.setUrl(jdbcUrl);
 
         // Configure DB connection pool
-        final HikariConfig hikariConfig = new HikariConfig();
+        HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setDataSource(sqLiteDataSource);
         hikariConfig.setPoolName("db-pool-" + name);
 
@@ -52,7 +52,7 @@ public class RepoDb implements Closeable {
 
     static SQLiteConfig buildSqliteConfig() {
         // See also https://briandouglas.ie/sqlite-defaults/
-        final SQLiteConfig sqliteConfig = new SQLiteConfig();
+        SQLiteConfig sqliteConfig = new SQLiteConfig();
 
         // TODO Open PR for these?
         // No auto_vacuum, see https://github.com/xerial/sqlite-jdbc/issues/580
