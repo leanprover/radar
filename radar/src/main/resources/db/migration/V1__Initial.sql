@@ -37,6 +37,7 @@ CREATE TABLE history (
 CREATE TABLE queue (
     chash       TEXT NOT NULL PRIMARY KEY,
     queued_time TEXT NOT NULL,
+    bumped_time TEXT NOT NULL,
     priority    INT  NOT NULL DEFAULT 0,
     FOREIGN KEY (chash) REFERENCES commits (chash)
 ) STRICT;

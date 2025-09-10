@@ -1,10 +1,12 @@
 package org.leanlang.radar.server.busser;
 
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
+import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.REFS;
 import static org.leanlang.radar.codegen.jooq.tables.Commits.COMMITS;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +21,7 @@ import org.jooq.Configuration;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
+import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RefsRecord;
 import org.leanlang.radar.server.data.Repo;
 import org.slf4j.Logger;
@@ -130,5 +133,24 @@ public record DbUpdater(Repo repo) {
         tx.dsl().deleteFrom(HISTORY).execute();
         tx.dsl().batchInsert(records).execute();
         log.info("Updated {} history commits", records.size());
+    }
+
+    public void updateQueue() {
+        repo.db().writeTransaction(tx -> {
+            Set<String> toEnqueue = tx.dsl()
+                    .selectFrom(HISTORY.join(COMMITS).onKey())
+                    .where(COMMITS.SEEN.eq(0))
+                    .andNotExists(tx.dsl().selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
+                    .fetchSet(HISTORY.CHASH);
+
+            List<QueueRecord> records = new ArrayList<>();
+            for (String chash : toEnqueue) {
+                Instant now = Instant.now();
+                records.add(new QueueRecord(chash, now, now, 0));
+            }
+
+            tx.dsl().batchInsert(records).execute();
+            log.info("Added {} commits to queue", records.size());
+        });
     }
 }

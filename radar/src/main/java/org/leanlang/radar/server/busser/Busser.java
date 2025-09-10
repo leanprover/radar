@@ -58,5 +58,6 @@ public final class Busser implements Managed {
         updater.updateRepoData();
 
         log.debug("Step 3: Update queue");
+        updater.updateQueue();
     }
 }
