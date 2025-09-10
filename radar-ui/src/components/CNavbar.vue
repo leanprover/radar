@@ -2,12 +2,13 @@
 import CColorMode from "@/components/CColorMode.vue";
 import CNavbarRepoSelect from "@/components/CNavbarRepoSelect.vue";
 import { useRoute, useRouter } from "vue-router";
-import { ref, watch } from "vue";
+import { watch } from "vue";
 import { Button } from "@/components/ui/button";
+import { useRepoStore } from "@/stores/useRepoStore.ts";
 
 const router = useRouter();
 const route = useRoute();
-const selected = ref<string>();
+const repo = useRepoStore();
 
 // Two-way binding between the route and the repo selector.
 // For any route which includes exactly one param named "repo",
@@ -19,47 +20,47 @@ function getRepoParam(): string | undefined {
 }
 
 function setSelectedToRoute() {
-  const repo = getRepoParam();
-  if (repo === undefined) {
+  const repoParam = getRepoParam();
+  if (repoParam === undefined) {
     // The route doesn't have a "repo" param, so we're just going to do nothing.
     // We don't want to clear the selected repo when looking at the queue
     // or other non-repo-related routes.
     return;
   }
 
-  if (selected.value === repo) return;
-  selected.value = repo;
+  if (repo.selected === repoParam) return;
+  repo.selected = repoParam;
 }
 
 function setRouteToSelected() {
-  if (selected.value === undefined) {
+  if (repo.selected === undefined) {
     // This shouldn't normally happen, so we're just going to ignore it.
     return;
   }
 
-  const repo = getRepoParam();
-  if (repo === undefined) {
+  const repoParam = getRepoParam();
+  if (repoParam === undefined) {
     // Our route doesn't contain a "repo" param.
-    router.push({ name: "/repo/[repo]", params: { repo: selected.value } });
+    router.push({ name: "/repo/[repo]", params: { repo: repo.selected } });
     return;
   }
 
-  if (selected.value === repo) return;
+  if (repo.selected === repoParam) return;
 
-  const params = Object.assign({}, route.params, { repo: selected.value });
+  const params = Object.assign({}, route.params, { repo: repo.selected });
   router.push({ name: route.name, params: params });
 }
 
 watch(route, () => setSelectedToRoute());
-watch(selected, () => setRouteToSelected());
+watch(repo, () => setRouteToSelected());
 setSelectedToRoute();
 </script>
 
 <template>
   <div class="flex items-center gap-2 border-b bg-white p-2">
-    <CNavbarRepoSelect v-model="selected"></CNavbarRepoSelect>
+    <CNavbarRepoSelect v-model="repo.selected"></CNavbarRepoSelect>
 
-    <RouterLink v-if="selected" :to="{ name: '/repo/[repo]', params: { repo: selected } }">
+    <RouterLink v-if="repo.selected" :to="{ name: '/repo/[repo]', params: { repo: repo.selected } }">
       <Button :variant="route.name === '/repo/[repo]' ? 'secondary' : 'ghost'">Overview</Button>
     </RouterLink>
     <Button v-else variant="ghost" disabled>Overview</Button>
