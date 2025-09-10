@@ -23,15 +23,19 @@ public final class Repo implements Closeable {
         git.close();
     }
 
-    public ServerConfigRepo getConfig() {
+    public String name() {
+        return config.name();
+    }
+
+    public ServerConfigRepo config() {
         return config;
     }
 
-    public RepoDb getDb() {
+    public RepoDb db() {
         return db;
     }
 
-    public RepoGit getGit() {
+    public RepoGit git() {
         return git;
     }
 }

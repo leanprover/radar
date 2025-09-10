@@ -5,6 +5,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
+import org.leanlang.radar.server.runners.Runner;
 import org.leanlang.radar.server.runners.Runners;
 
 @Path("/debug")
@@ -15,9 +16,6 @@ public record ResDebug(Runners runners) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public JsonGet get() {
-        return new JsonGet(runners.getRunners().stream()
-                .map(it -> it.getConfig().name())
-                .sorted()
-                .toList());
+        return new JsonGet(runners.runners().stream().map(Runner::name).sorted().toList());
     }
 }

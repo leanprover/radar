@@ -29,11 +29,11 @@ public final class Repos implements Managed {
         }
     }
 
-    public List<Repo> getRepos() {
+    public List<Repo> repos() {
         return repoNames.stream().map(repos::get).toList();
     }
 
-    public Repo getRepo(String name) {
+    public Repo repo(String name) {
         var repo = repos.get(name);
         if (repo == null) {
             throw new IllegalArgumentException("No repo named " + name);

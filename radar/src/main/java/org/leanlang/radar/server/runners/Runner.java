@@ -13,7 +13,11 @@ public final class Runner {
         this.config = config;
     }
 
-    public ServerConfigRunner getConfig() {
+    public String name() {
+        return config.name();
+    }
+
+    public ServerConfigRunner config() {
         return config;
     }
 

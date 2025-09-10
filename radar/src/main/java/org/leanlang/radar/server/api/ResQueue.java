@@ -21,9 +21,9 @@ public record ResQueue(Runners runners) {
     @Produces(MediaType.APPLICATION_JSON)
     public JsonGet get() {
         Instant connectedCutoff = Instant.now().minus(Duration.ofSeconds(10));
-        return new JsonGet(this.runners.getRunners().stream()
+        return new JsonGet(this.runners.runners().stream()
                 .map(runner -> new JsonRunner(
-                        runner.getConfig().name(),
+                        runner.name(),
                         runner.lastSeen(),
                         runner.lastSeen()
                                 .filter(lastActive -> lastActive.isAfter(connectedCutoff))

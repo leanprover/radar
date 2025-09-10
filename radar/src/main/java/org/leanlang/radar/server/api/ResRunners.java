@@ -21,7 +21,7 @@ public record ResRunners(Runners runners) {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public JsonPost post(@PathParam("name") String name, JsonPostInput input) {
-        var runner = runners.getRunner(name, input.token);
+        var runner = runners.runner(name, input.token);
         var lastSeen = runner.lastSeen();
         var seen = runner.see();
         return new JsonPost(seen, lastSeen);

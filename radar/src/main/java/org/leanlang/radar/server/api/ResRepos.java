@@ -18,11 +18,9 @@ public record ResRepos(Repos repos) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public JsonGet get() {
-        List<JsonRepo> repos = this.repos.getRepos().stream()
+        List<JsonRepo> repos = this.repos.repos().stream()
                 .map(it -> new JsonRepo(
-                        it.getConfig().name(),
-                        it.getConfig().url(),
-                        it.getConfig().description()))
+                        it.config().name(), it.config().url(), it.config().description()))
                 .toList();
 
         return new JsonGet(repos);

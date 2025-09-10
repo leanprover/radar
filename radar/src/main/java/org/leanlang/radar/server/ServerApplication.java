@@ -61,9 +61,9 @@ public final class ServerApplication extends Application<ServerConfig> {
 
         // TODO Fetch and update DB in some sort of listener
         Thread.sleep(2000);
-        for (Repo repo : repos.getRepos()) {
-            System.out.println(repo.getConfig().name());
-            repo.getGit().fetch();
+        for (Repo repo : repos.repos()) {
+            System.out.println(repo.name());
+            repo.git().fetch();
         }
     }
 

@@ -84,4 +84,12 @@ public final class RepoGit implements AutoCloseable {
         log.info("Closing Git repo {}", name);
         repo.close();
     }
+
+    public Repository plumbing() {
+        return repo;
+    }
+
+    public Git porcelain() {
+        return git;
+    }
 }

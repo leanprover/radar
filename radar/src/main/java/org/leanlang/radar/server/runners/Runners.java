@@ -9,16 +9,14 @@ public final class Runners {
     private final Map<String, Runner> runners;
 
     public Runners(List<ServerConfigRunner> runnerList) {
-        runners = runnerList.stream()
-                .map(Runner::new)
-                .collect(Collectors.toMap(it -> it.getConfig().name(), it -> it));
+        runners = runnerList.stream().map(Runner::new).collect(Collectors.toMap(Runner::name, it -> it));
     }
 
-    public List<Runner> getRunners() {
+    public List<Runner> runners() {
         return runners.values().stream().toList();
     }
 
-    public Runner getRunner(String name) {
+    public Runner runner(String name) {
         var runner = runners.get(name);
         if (runner == null) {
             throw new IllegalArgumentException("No runner named " + name);
@@ -26,9 +24,9 @@ public final class Runners {
         return runner;
     }
 
-    public Runner getRunner(String name, String token) {
-        var runner = getRunner(name);
-        if (!runner.getConfig().token().equals(token)) {
+    public Runner runner(String name, String token) {
+        var runner = runner(name);
+        if (!runner.config().token().equals(token)) {
             throw new IllegalArgumentException("Invalid token for runner " + name);
         }
         return runner;
