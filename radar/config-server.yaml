@@ -17,12 +17,22 @@ dirs:
   tmp: ../../radar-server/tmp/
 
 repos:
+  - name: radar-test-dummy
+    url: https://github.com/Garmelon/radar-test-dummy
+    description: Dummy test data
+    track: [ master ]
+  - name: velcom
+    url: https://github.com/leanprover/velcom
+    description: Continuous benchmarking
+    track: [ main ]
   - name: lean4
     url: https://github.com/leanprover/lean4
     description: The Lean 4 programming language and theorem prover
+    track: [ master ]
   - name: mathlib4
     url: https://github.com/leanprover-community/mathlib4
     description: The math library of Lean 4
+    track: [ master ]
 
 runners:
   - name: testrunner
