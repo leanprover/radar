@@ -20,11 +20,11 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
   <Card>
     <CardHeader>
       <CardTitle>
-        <CSkeleton v-if="!repos.isSuccess" :is-error="repos.isError" class="h-4 w-[8ch]" />
+        <CSkeleton v-if="!repos.isSuccess" :error="repos.error" class="h-4 w-[8ch]" />
         <template v-else>{{ route.params.repo }}</template>
       </CardTitle>
       <CardDescription>
-        <CSkeleton v-if="!repos.isSuccess" :is-error="repos.isError" class="my-1 h-3 w-[24ch] pt-2" />
+        <CSkeleton v-if="!repos.isSuccess" :error="repos.error" class="my-1 h-3 w-[24ch] pt-2" />
         <template v-else-if="info">{{ info.description }}</template>
         <template v-else>This repo does not exist.</template>
       </CardDescription>
@@ -32,7 +32,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     <CardContent>
       <div class="flex flex-col items-start">
         <template v-if="repos.isSuccess && !info" />
-        <CSkeleton v-else-if="!repos.isSuccess || !info" :is-error="repos.isError" class="h-7 w-[30ch] border" />
+        <CSkeleton v-else-if="!repos.isSuccess || !info" :error="repos.error" class="h-7 w-[30ch] border" />
         <a
           v-else
           class="flex gap-2 rounded-md border px-2 py-1 text-sm hover:underline"
@@ -53,10 +53,10 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     </CardHeader>
     <CardContent>
       <div v-if="!history.isSuccess" class="flex items-center gap-2">
-        <CSkeleton :is-error="history.isError" class="h-8 w-8 rounded-full" />
+        <CSkeleton :error="history.error" class="h-8 w-8 rounded-full" />
         <div class="flex flex-col">
-          <CSkeleton :is-error="history.isError" class="my-1 h-4 w-[30ch]" />
-          <CSkeleton :is-error="history.isError" class="my-1 h-3 w-[20ch]" />
+          <CSkeleton :error="history.error" class="my-1 h-4 w-[30ch]" />
+          <CSkeleton :error="history.error" class="my-1 h-3 w-[20ch]" />
         </div>
       </div>
       <div v-else class="flex flex-col gap-4">

@@ -3,14 +3,14 @@ import type { HTMLAttributes } from "vue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils.ts";
 
-const { class: clazz, isError = false } = defineProps<{
-  isError?: boolean;
+const { class: clazz, error } = defineProps<{
+  error: Error | null | undefined;
   class?: HTMLAttributes["class"];
 }>();
 </script>
 
 <template>
-  <Skeleton :class="cn(clazz, { 'bg-destructive': isError })" />
+  <Skeleton :class="cn(clazz, { 'bg-destructive': error })" :title="error?.message" />
 </template>
 
 <style scoped></style>
