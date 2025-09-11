@@ -14,11 +14,12 @@ CREATE TABLE commits (
 ) STRICT;
 
 CREATE TABLE commit_relationships (
-    parent TEXT NOT NULL,
-    child  TEXT NOT NULL,
-    PRIMARY KEY (parent, child),
-    FOREIGN KEY (parent) REFERENCES commits (chash) ON DELETE CASCADE,
-    FOREIGN KEY (child) REFERENCES commits (chash) ON DELETE CASCADE
+    child           TEXT NOT NULL,
+    parent          TEXT NOT NULL,
+    parent_position INT  NOT NULL,
+    PRIMARY KEY (child, parent),
+    FOREIGN KEY (child) REFERENCES commits (chash) ON DELETE CASCADE,
+    FOREIGN KEY (parent) REFERENCES commits (chash) ON DELETE CASCADE
 ) STRICT;
 
 CREATE TABLE refs (

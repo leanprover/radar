@@ -76,8 +76,9 @@ public record DbUpdater(Repo repo) {
 
                 commitsToInsert.add(commitRecord);
 
-                for (RevCommit parent : commit.getParents()) {
-                    relationshipsToInsert.add(new CommitRelationshipsRecord(parent.name(), commit.name()));
+                RevCommit[] parents = commit.getParents();
+                for (int i = 0; i < parents.length; i++) {
+                    relationshipsToInsert.add(new CommitRelationshipsRecord(commit.name(), parents[i].name(), i));
                 }
             }
         }
