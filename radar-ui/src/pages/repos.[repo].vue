@@ -66,7 +66,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
           :key="commit.chash"
           class="group flex items-center gap-2"
         >
-          <GitCommitVerticalIcon :size="32" />
+          <GitCommitVerticalIcon :size="32" class="shrink-0" />
           <div class="flex flex-col">
             <div class="group-hover:underline">{{ commit.title }}</div>
             <div class="text-muted-foreground text-sm">
@@ -79,7 +79,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
             </div>
           </div>
         </RouterLink>
-        <EllipsisVerticalIcon :size="32" v-if="history.data.nextAt !== null" />
+        <EllipsisVerticalIcon :size="32" v-if="history.data.nextAt !== null" class="shrink-0" />
       </div>
     </CardContent>
   </Card>
