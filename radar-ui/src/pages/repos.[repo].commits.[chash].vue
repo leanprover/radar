@@ -52,7 +52,7 @@ const commit = reactive(
               })
             "
           >
-            <ChevronLeftIcon :size="20" class="shrink-0" />
+            <ChevronLeftIcon :size="20" class="relative top-1/16 shrink-0" />
             <div class="line-clamp-1 text-sm break-all">{{ commit.title }}</div>
           </RouterLink>
         </div>
@@ -67,7 +67,7 @@ const commit = reactive(
             "
           >
             <div class="line-clamp-1 text-sm break-all">{{ commit.title }}</div>
-            <ChevronRightIcon :size="20" class="shrink-0" />
+            <ChevronRightIcon :size="20" class="relative top-1/16 shrink-0" />
           </RouterLink>
         </div>
       </div>
