@@ -70,8 +70,8 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
           <div class="flex flex-col">
             <div class="group-hover:underline">{{ commit.title }}</div>
             <div class="text-muted-foreground text-sm">
-              <span :title="useDateFormat(commit.committerTime * 1000, 'YYYY-MM-DD HH:mm:ss').value">
-                {{ useTimeAgo(commit.committerTime * 1000) }}
+              <span :title="useDateFormat(commit.committerTime, 'YYYY-MM-DD HH:mm:ss').value">
+                {{ useTimeAgo(commit.committerTime) }}
               </span>
               by {{ commit.author }}
             </div>

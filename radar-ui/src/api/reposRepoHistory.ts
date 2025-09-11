@@ -1,11 +1,11 @@
 import * as z from "zod";
-import { enc, fetchJson } from "@/api/utils.ts";
+import { enc, fetchJson, Timestamp } from "@/api/utils.ts";
 
 const JsonCommit = z.object({
   chash: z.string(),
   title: z.string(),
   author: z.string(),
-  committerTime: z.number(),
+  committerTime: Timestamp,
 });
 
 const JsonGet = z.object({

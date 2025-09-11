@@ -1,10 +1,10 @@
 import * as z from "zod";
-import { enc, fetchJson } from "@/api/utils.ts";
+import { enc, fetchJson, Timestamp } from "@/api/utils.ts";
 
 const JsonPersonIdent = z.object({
   name: z.string(),
   email: z.string(),
-  time: z.number(),
+  time: Timestamp,
   offset: z.int(),
 });
 
