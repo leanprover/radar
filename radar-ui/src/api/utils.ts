@@ -20,4 +20,6 @@ export async function fetchJson<S extends z.Schema>(
   return parsed.data;
 }
 
+export const enc = encodeURIComponent;
+
 export const Timestamp = z.number().transform((it) => new Date(it * 1000));

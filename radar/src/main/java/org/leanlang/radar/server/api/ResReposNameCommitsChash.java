@@ -14,8 +14,8 @@ import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 
-@Path("/repos/{name}/commit/{chash}")
-public record ResReposNameCommitChash(Repos repos) {
+@Path("/repos/{name}/commits/{chash}")
+public record ResReposNameCommitsChash(Repos repos) {
 
     public record JsonPersonIdent(String name, String email, Instant time, int offset) {}
 

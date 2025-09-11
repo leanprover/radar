@@ -8,7 +8,7 @@ import { reactive } from "vue";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import { GitCommitVerticalIcon, EllipsisVerticalIcon } from "lucide-vue-next";
 
-const route = useRoute("/repo/[repo]");
+const route = useRoute("/repos.[repo]");
 const info = useRepoInfo(() => route.params.repo);
 const history = reactive(useRepoHistory(() => route.params.repo));
 </script>
@@ -43,7 +43,7 @@ const history = reactive(useRepoHistory(() => route.params.repo));
       <div v-if="!history.isSuccess" class="text-muted-foreground italic">Loading...</div>
       <div v-else class="flex flex-col gap-4">
         <RouterLink
-          to="/"
+          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: commit.chash } }"
           v-for="commit in history.data.commits"
           :key="commit.chash"
           class="group flex items-center gap-2"

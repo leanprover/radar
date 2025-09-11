@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResQueue;
 import org.leanlang.radar.server.api.ResRepos;
-import org.leanlang.radar.server.api.ResReposNameCommitChash;
+import org.leanlang.radar.server.api.ResReposNameCommitsChash;
 import org.leanlang.radar.server.api.ResReposNameHistory;
 import org.leanlang.radar.server.api.ResRunners;
 import org.leanlang.radar.server.busser.Busser;
@@ -59,7 +59,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().register(new ResDebug(runners));
         environment.jersey().register(new ResQueue(runners));
         environment.jersey().register(new ResRepos(repos));
-        environment.jersey().register(new ResReposNameCommitChash(repos));
+        environment.jersey().register(new ResReposNameCommitsChash(repos));
         environment.jersey().register(new ResReposNameHistory(repos));
         environment.jersey().register(new ResRunners(runners));
     }

@@ -19,8 +19,10 @@ declare module 'vue-router/auto-routes' {
    */
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
+    '/[...path]': RouteRecordInfo<'/[...path]', '/:path(.*)', { path: ParamValue<true> }, { path: ParamValue<false> }>,
     '/queue': RouteRecordInfo<'/queue', '/queue', Record<never, never>, Record<never, never>>,
-    '/repo/[repo]': RouteRecordInfo<'/repo/[repo]', '/repo/:repo', { repo: ParamValue<true> }, { repo: ParamValue<false> }>,
+    '/repos.[repo]': RouteRecordInfo<'/repos.[repo]', '/repos/:repo', { repo: ParamValue<true> }, { repo: ParamValue<false> }>,
+    '/repos.[repo].commits.[chash]': RouteRecordInfo<'/repos.[repo].commits.[chash]', '/repos/:repo/commits/:chash', { repo: ParamValue<true>, chash: ParamValue<true> }, { repo: ParamValue<false>, chash: ParamValue<false> }>,
   }
 
   /**
@@ -38,12 +40,20 @@ declare module 'vue-router/auto-routes' {
       routes: '/'
       views: never
     }
+    'src/pages/[...path].vue': {
+      routes: '/[...path]'
+      views: never
+    }
     'src/pages/queue.vue': {
       routes: '/queue'
       views: never
     }
-    'src/pages/repo/[repo].vue': {
-      routes: '/repo/[repo]'
+    'src/pages/repos.[repo].vue': {
+      routes: '/repos.[repo]'
+      views: never
+    }
+    'src/pages/repos.[repo].commits.[chash].vue': {
+      routes: '/repos.[repo].commits.[chash]'
       views: never
     }
   }
