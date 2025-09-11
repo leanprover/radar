@@ -13,7 +13,7 @@ const JsonGet = z.object({
   author: JsonPersonIdent,
   committer: JsonPersonIdent,
   title: z.string(),
-  body: z.string(),
+  body: z.string().nullable(),
   parents: z.string().array(),
   children: z.string().array(),
 });

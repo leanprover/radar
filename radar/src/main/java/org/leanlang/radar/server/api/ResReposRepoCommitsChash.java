@@ -10,6 +10,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.time.Instant;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
@@ -24,7 +25,7 @@ public record ResReposRepoCommitsChash(Repos repos) {
             JsonPersonIdent author,
             JsonPersonIdent committer,
             String title,
-            String body,
+            @Nullable String body,
             List<String> parents,
             List<String> children) {}
 
