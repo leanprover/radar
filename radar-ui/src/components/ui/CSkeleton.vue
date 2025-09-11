@@ -10,7 +10,5 @@ const { class: clazz, error } = defineProps<{
 </script>
 
 <template>
-  <Skeleton :class="cn(clazz, { 'bg-destructive': error })" :title="error?.message" />
+  <Skeleton :class="cn(clazz, { 'bg-destructive animate-none': error })" :title="error?.message" />
 </template>
-
-<style scoped></style>
