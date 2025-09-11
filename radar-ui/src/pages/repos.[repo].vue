@@ -7,7 +7,7 @@ import { computed, reactive } from "vue";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import { EllipsisVerticalIcon, GitCommitVerticalIcon } from "lucide-vue-next";
 import { useRepos } from "@/composables/useRepos.ts";
-import CSkeleton from "@/components/ui/CSkeleton.vue";
+import CSkeleton from "@/components/CSkeleton.vue";
 
 const route = useRoute("/repos.[repo]");
 const repos = reactive(useRepos());

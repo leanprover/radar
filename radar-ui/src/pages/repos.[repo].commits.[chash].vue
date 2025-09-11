@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useRoute } from "vue-router";
 import { reactive } from "vue";
 import { useCommitInfo } from "@/composables/useCommitInfo.ts";
-import CSkeleton from "@/components/ui/CSkeleton.vue";
+import CSkeleton from "@/components/CSkeleton.vue";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import { cn } from "@/lib/utils.ts";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-vue-next";
