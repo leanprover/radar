@@ -18,6 +18,6 @@ const JsonGet = z.object({
   children: z.string().array(),
 });
 
-export async function getReposNameCommitsChash(name: string, chash: string) {
-  return await fetchJson(JsonGet, `/repos/${enc(name)}/commits/${enc(chash)}`);
+export async function getReposRepoCommitsChash(repo: string, chash: string) {
+  return await fetchJson(JsonGet, `/repos/${enc(repo)}/commits/${enc(chash)}`);
 }

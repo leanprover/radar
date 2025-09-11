@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
-import org.leanlang.radar.server.api.ResRunners;
+import org.leanlang.radar.server.api.ResRunnersRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +75,9 @@ public final class RunnerMain {
         while (true) {
             var response = client.target(url)
                     .request(MediaType.APPLICATION_JSON_TYPE)
-                    .post(Entity.json(new ResRunners.JsonPostInput(config.token())), ResRunners.JsonPost.class);
+                    .post(
+                            Entity.json(new ResRunnersRunner.JsonPostInput(config.token())),
+                            ResRunnersRunner.JsonPost.class);
 
             log.info("Seen: {}", response);
 

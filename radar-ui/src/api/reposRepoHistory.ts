@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { fetchJson } from "@/api/utils.ts";
+import { enc, fetchJson } from "@/api/utils.ts";
 
 const JsonCommit = z.object({
   chash: z.string(),
@@ -14,6 +14,6 @@ const JsonGet = z.object({
   nextAt: z.int().nullable(),
 });
 
-export async function getRepoNameHistory(name: string, params?: { n?: number; at?: number }) {
-  return await fetchJson(JsonGet, `/repos/${encodeURIComponent(name)}/history`, params);
+export async function getReposRepoHistory(repo: string, params?: { n?: number; at?: number }) {
+  return await fetchJson(JsonGet, `/repos/${enc(repo)}/history`, params);
 }

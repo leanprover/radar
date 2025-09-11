@@ -15,8 +15,8 @@ import java.util.Optional;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 
-@Path("/repos/{name}/history")
-public record ResReposNameHistory(Repos repos) {
+@Path("/repos/{repo}/history")
+public record ResReposRepoHistory(Repos repos) {
 
     public record JsonCommit(String chash, String title, String author, String committer, Instant committerTime) {}
 
@@ -25,7 +25,7 @@ public record ResReposNameHistory(Repos repos) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public JsonGet get(
-            @PathParam("name") String name,
+            @PathParam("repo") String name,
             @QueryParam("n") Optional<Integer> nOptional,
             @QueryParam("at") Optional<Integer> atOptional) {
 

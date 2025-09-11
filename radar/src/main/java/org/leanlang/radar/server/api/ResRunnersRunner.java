@@ -10,8 +10,8 @@ import java.time.Instant;
 import java.util.Optional;
 import org.leanlang.radar.server.runners.Runners;
 
-@Path("/runners/{name}")
-public record ResRunners(Runners runners) {
+@Path("/runners/{runner}")
+public record ResRunnersRunner(Runners runners) {
 
     public record JsonPostInput(String token) {}
 
@@ -20,7 +20,7 @@ public record ResRunners(Runners runners) {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonPost post(@PathParam("name") String name, JsonPostInput input) {
+    public JsonPost post(@PathParam("runner") String name, JsonPostInput input) {
         var runner = runners.runner(name, input.token);
         var lastSeen = runner.lastSeen();
         var seen = runner.see();
