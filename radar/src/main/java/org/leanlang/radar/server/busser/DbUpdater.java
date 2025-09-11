@@ -63,9 +63,9 @@ public record DbUpdater(Repo repo) {
 
                 String[] parts = commit.getFullMessage().split("\n\n", 2);
                 assert parts.length >= 1 && parts.length <= 2;
-                String title = parts[0].stripTrailing();
+                String title = parts[0].strip();
                 String body = null;
-                if (parts.length > 1) body = parts[1].stripTrailing();
+                if (parts.length > 1) body = parts[1].strip();
                 commitRecord.setMessageTitle(title);
                 commitRecord.setMessageBody(body);
 
