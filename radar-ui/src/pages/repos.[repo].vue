@@ -73,9 +73,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
               <span :title="useDateFormat(commit.committerTime * 1000, 'YYYY-MM-DD HH:mm:ss').value">
                 {{ useTimeAgo(commit.committerTime * 1000) }}
               </span>
-              by
-              <template v-if="commit.author === commit.committer">{{ commit.author }}</template>
-              <template v-else>{{ commit.author }}, {{ commit.committer }}</template>
+              by {{ commit.author }}
             </div>
           </div>
         </RouterLink>

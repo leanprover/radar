@@ -18,7 +18,7 @@ import org.leanlang.radar.server.data.Repos;
 @Path("/repos/{repo}/history")
 public record ResReposRepoHistory(Repos repos) {
 
-    public record JsonCommit(String chash, String title, String author, String committer, Instant committerTime) {}
+    public record JsonCommit(String chash, String title, String author, Instant committerTime) {}
 
     public record JsonGet(List<JsonCommit> commits, Optional<Integer> nextAt) {}
 
@@ -42,7 +42,6 @@ public record ResReposRepoHistory(Repos repos) {
                         COMMITS.CHASH,
                         COMMITS.MESSAGE_TITLE,
                         COMMITS.AUTHOR_NAME,
-                        COMMITS.COMMITTER_NAME,
                         COMMITS.COMMITTER_TIME)
                 .from(HISTORY.join(COMMITS).onKey())
                 .where(HISTORY.POSITION.lt(at))
@@ -52,8 +51,7 @@ public record ResReposRepoHistory(Repos repos) {
                 .toList();
 
         List<JsonCommit> commits = history.stream()
-                .map(it -> new JsonCommit(
-                        it.component2(), it.component3(), it.component4(), it.component5(), it.component6()))
+                .map(it -> new JsonCommit(it.component2(), it.component3(), it.component4(), it.component5()))
                 .toList();
 
         Optional<Integer> nextAt = Optional.of(history)

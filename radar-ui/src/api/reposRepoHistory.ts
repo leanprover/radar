@@ -5,7 +5,6 @@ const JsonCommit = z.object({
   chash: z.string(),
   title: z.string(),
   author: z.string(),
-  committer: z.string(),
   committerTime: z.number(),
 });
 
