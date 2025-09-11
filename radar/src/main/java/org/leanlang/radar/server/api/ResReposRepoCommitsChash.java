@@ -72,6 +72,7 @@ public record ResReposRepoCommitsChash(Repos repos) {
                         .leftJoin(HISTORY)
                         .onKey())
                 .where(COMMIT_RELATIONSHIPS.PARENT.eq(chash))
+                .orderBy(HISTORY.CHASH.isNotNull().desc())
                 .stream()
                 .map(it -> new JsonLinkedCommit(it.component1(), it.component2(), it.component3()))
                 .toList();
