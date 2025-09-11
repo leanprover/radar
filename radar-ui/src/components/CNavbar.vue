@@ -39,16 +39,10 @@ function setRouteToSelected() {
   }
 
   const repoParam = getRepoParam();
-  if (repoParam === undefined) {
-    // Our route doesn't contain a "repo" param.
-    router.push({ name: "/repos.[repo]", params: { repo: repo.selected } });
-    return;
-  }
+  if (repoParam === repo.selected) return;
 
-  if (repo.selected === repoParam) return;
-
-  const params = Object.assign({}, route.params, { repo: repo.selected });
-  router.push({ name: route.name, params } as any);
+  router.push({ name: "/repos.[repo]", params: { repo: repo.selected } });
+  return;
 }
 
 watch(route, () => setSelectedToRoute());
