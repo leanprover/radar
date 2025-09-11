@@ -11,12 +11,12 @@ export async function fetchJson<S extends z.Schema>(
 
   const result = await fetch(url);
   if (!result.ok) {
-    throw new Error(`Failed to fetch ${url}: ${result.statusText}`);
+    throw new Error(`Failed to fetch ${url}:\n${result.statusText}`);
   }
 
   const json = await result.json();
   const parsed = schema.safeParse(json);
-  if (parsed.error) throw new Error(`Failed to fetch ${url}: ${parsed.error.message}`);
+  if (parsed.error) throw new Error(`Failed to fetch ${url}:\n${z.prettifyError(parsed.error)}`);
   return parsed.data;
 }
 
