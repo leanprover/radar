@@ -2,6 +2,7 @@ package org.leanlang.radar.server.api;
 
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.COMMIT_RELATIONSHIPS;
+import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -20,14 +21,16 @@ public record ResReposRepoCommitsChash(Repos repos) {
 
     public record JsonPersonIdent(String name, String email, Instant time, int offset) {}
 
+    public record JsonLinkedCommit(String chash, String title, boolean tracked) {}
+
     public record JsonGet(
             String chash,
             JsonPersonIdent author,
             JsonPersonIdent committer,
             String title,
             @Nullable String body,
-            List<String> parents,
-            List<String> children) {}
+            List<JsonLinkedCommit> parents,
+            List<JsonLinkedCommit> children) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -42,19 +45,35 @@ public record ResReposRepoCommitsChash(Repos repos) {
                 .fetchOne();
         if (commit == null) throw new IllegalArgumentException("commit not found");
 
-        List<String> parents = repo.db()
+        List<JsonLinkedCommit> parents = repo
+                .db()
                 .read()
                 .dsl()
-                .selectFrom(COMMIT_RELATIONSHIPS)
+                .select(COMMITS.CHASH, COMMITS.MESSAGE_TITLE, HISTORY.CHASH.isNotNull())
+                .from(COMMIT_RELATIONSHIPS
+                        .join(COMMITS)
+                        .on(COMMITS.CHASH.eq(COMMIT_RELATIONSHIPS.PARENT))
+                        .leftJoin(HISTORY)
+                        .onKey())
                 .where(COMMIT_RELATIONSHIPS.CHILD.eq(chash))
-                .fetch(COMMIT_RELATIONSHIPS.PARENT);
+                .stream()
+                .map(it -> new JsonLinkedCommit(it.component1(), it.component2(), it.component3()))
+                .toList();
 
-        List<String> children = repo.db()
+        List<JsonLinkedCommit> children = repo
+                .db()
                 .read()
                 .dsl()
-                .selectFrom(COMMIT_RELATIONSHIPS)
+                .select(COMMITS.CHASH, COMMITS.MESSAGE_TITLE, HISTORY.CHASH.isNotNull())
+                .from(COMMIT_RELATIONSHIPS
+                        .join(COMMITS)
+                        .on(COMMITS.CHASH.eq(COMMIT_RELATIONSHIPS.CHILD))
+                        .leftJoin(HISTORY)
+                        .onKey())
                 .where(COMMIT_RELATIONSHIPS.PARENT.eq(chash))
-                .fetch(COMMIT_RELATIONSHIPS.CHILD);
+                .stream()
+                .map(it -> new JsonLinkedCommit(it.component1(), it.component2(), it.component3()))
+                .toList();
 
         JsonPersonIdent author = new JsonPersonIdent(
                 commit.getAuthorName(), commit.getAuthorEmail(), commit.getAuthorTime(), commit.getAuthorOffset());

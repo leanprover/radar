@@ -8,14 +8,20 @@ const JsonPersonIdent = z.object({
   offset: z.int(),
 });
 
+const JsonLinkedCommit = z.object({
+  chash: z.string(),
+  title: z.string(),
+  tracked: z.boolean(),
+});
+
 const JsonGet = z.object({
   chash: z.string(),
   author: JsonPersonIdent,
   committer: JsonPersonIdent,
   title: z.string(),
   body: z.string().nullable(),
-  parents: z.string().array(),
-  children: z.string().array(),
+  parents: z.array(JsonLinkedCommit),
+  children: z.array(JsonLinkedCommit),
 });
 
 export async function getReposRepoCommitsChash(repo: string, chash: string) {
