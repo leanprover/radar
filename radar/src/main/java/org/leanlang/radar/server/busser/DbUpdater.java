@@ -1,9 +1,9 @@
 package org.leanlang.radar.server.busser;
 
+import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.REFS;
-import static org.leanlang.radar.codegen.jooq.tables.Commits.COMMITS;
 
 import java.io.IOException;
 import java.time.Instant;

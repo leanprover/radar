@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
   <TooltipProvider>
     <div class="flex min-h-dvh flex-col">
       <CNavbar />
-      <div class="flex grow flex-col p-6">
+      <div class="flex grow flex-col gap-6 p-6">
         <RouterView />
       </div>
     </div>

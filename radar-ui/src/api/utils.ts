@@ -1,9 +1,15 @@
 import * as z from "zod";
 
-export async function fetchJson<S extends z.Schema>(url: string, schema: S): Promise<z.infer<S>> {
-  if (!url.startsWith("/")) url = "/" + url;
+export async function fetchJson<S extends z.Schema>(
+  schema: S,
+  path: string,
+  queryParams?: Record<string, any>,
+): Promise<z.infer<S>> {
+  if (!path.startsWith("/")) throw new Error("path must start with /");
+  const params = new URLSearchParams(queryParams);
+  const url = params.size == 0 ? `/api${path}` : `/api${path}?${params}`;
 
-  const result = await fetch(`/api${url}`);
+  const result = await fetch(url);
   if (!result.ok) {
     throw new Error(`Failed to fetch ${url}: ${result.statusText}`);
   }

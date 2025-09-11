@@ -1,7 +1,7 @@
 package org.leanlang.radar.server.api;
 
-import static org.leanlang.radar.codegen.jooq.tables.CommitRelationships.COMMIT_RELATIONSHIPS;
-import static org.leanlang.radar.codegen.jooq.tables.Commits.COMMITS;
+import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
+import static org.leanlang.radar.codegen.jooq.Tables.COMMIT_RELATIONSHIPS;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
