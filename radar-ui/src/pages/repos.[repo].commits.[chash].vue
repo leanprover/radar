@@ -40,8 +40,8 @@ const commit = reactive(
         commit.data.body
       }}</pre>
     </CardContent>
-    <CardFooter class="flex flex-col items-stretch">
-      <div class="flex gap-8" v-if="commit.isSuccess">
+    <CardFooter class="flex flex-col items-stretch" v-if="commit.isSuccess">
+      <div class="flex gap-8">
         <div class="flex flex-1 flex-col items-start gap-1">
           <RouterLink
             v-for="commit in commit.data.parents"
