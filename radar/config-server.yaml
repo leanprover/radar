@@ -18,21 +18,44 @@ dirs:
 
 repos:
   - name: radar-test-dummy
-    url: https://github.com/Garmelon/radar-test-dummy
     description: Dummy test data
+    url: https://github.com/Garmelon/radar-test-dummy
     track: [ master ]
+    benchUrl: https://github.com/Garmelon/radar-bench-loc
+    benchRef: master
+    benchRuns:
+      - runner: testrunner
+        script: main.py
+
   - name: velcom
-    url: https://github.com/leanprover/velcom
     description: Continuous benchmarking
+    url: https://github.com/leanprover/velcom
     track: [ main ]
+    benchUrl: https://github.com/Garmelon/radar-bench-loc
+    benchRef: master
+    benchRuns:
+      - runner: testrunner
+        script: main.py
+
   - name: lean4
-    url: https://github.com/leanprover/lean4
     description: The Lean 4 programming language and theorem prover
+    url: https://github.com/leanprover/lean4
     track: [ master ]
+    benchUrl: https://github.com/Garmelon/radar-bench-loc
+    benchRef: master
+    benchRuns:
+      - runner: testrunner
+        script: main.py
+
   - name: mathlib4
     url: https://github.com/leanprover-community/mathlib4
-    description: The math library of Lean 4
     track: [ master ]
+    description: The math library of Lean 4
+    benchUrl: https://github.com/Garmelon/radar-bench-loc
+    benchRef: master
+    benchRuns:
+      - runner: testrunner
+        script: main.py
 
 runners:
   - name: testrunner
