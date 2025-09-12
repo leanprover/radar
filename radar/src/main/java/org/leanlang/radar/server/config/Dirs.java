@@ -21,4 +21,8 @@ public final class Dirs {
     public Path repoGit(String name) {
         return cache.resolve("repos").resolve(name + ".git");
     }
+
+    public Path repoGitBench(String name) {
+        return cache.resolve("benchrepos").resolve(name + ".git");
+    }
 }

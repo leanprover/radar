@@ -10,17 +10,20 @@ public final class Repo implements Closeable {
     private final ServerConfigRepo config;
     private final RepoDb db;
     private final RepoGit git;
+    private final RepoGit gitBench;
 
     public Repo(Dirs dirs, ServerConfigRepo config) throws IOException {
         this.config = config;
         this.db = new RepoDb(config.name(), dirs.repoDb(config.name()));
-        this.git = new RepoGit(config.name(), dirs.repoGit(config.name()), config.url());
+        this.git = new RepoGit(dirs.repoGit(config.name()), config.url());
+        this.gitBench = new RepoGit(dirs.repoGitBench(config.name()), config.benchUrl());
     }
 
     @Override
     public void close() {
         db.close();
         git.close();
+        gitBench.close();
     }
 
     public String name() {
@@ -37,5 +40,9 @@ public final class Repo implements Closeable {
 
     public RepoGit git() {
         return git;
+    }
+
+    public RepoGit gitBench() {
+        return gitBench;
     }
 }

@@ -49,15 +49,11 @@ public final class Busser implements Managed {
     }
 
     private void updateRepo(Repo repo) throws GitAPIException {
-        DbUpdater updater = new DbUpdater(repo);
-
-        log.debug("Step 1: Fetch new commits");
         repo.git().fetch();
+        repo.gitBench().fetch();
 
-        log.debug("Step 2: Update repo info in db");
+        DbUpdater updater = new DbUpdater(repo);
         updater.updateRepoData();
-
-        log.debug("Step 3: Update queue");
         updater.updateQueue();
     }
 }

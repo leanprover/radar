@@ -18,15 +18,13 @@ import org.slf4j.LoggerFactory;
 public final class RepoGit implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(RepoGit.class);
 
-    private final String name;
     private final Path path;
     private final URI url;
     private final Repository repo;
     private final Git git;
 
-    public RepoGit(String name, Path path, URI url) throws IOException {
-        log.info("Opening repo {}", name);
-        this.name = name;
+    public RepoGit(Path path, URI url) throws IOException {
+        log.info("Opening repo {}", path);
         this.path = path;
         this.url = url;
 
@@ -42,8 +40,14 @@ public final class RepoGit implements AutoCloseable {
         }
     }
 
+    @Override
+    public void close() {
+        log.info("Closing repo {}", path);
+        repo.close();
+    }
+
     public void fetch() throws GitAPIException {
-        log.info("Fetching repo {} (this may take a while)", name);
+        log.info("Fetching repo {} (this may take a while)", path);
         git.fetch()
                 .setRemote(url.toString())
                 .setRefSpecs(new RefSpec("+refs/heads/*:refs/heads/*"))
@@ -53,18 +57,18 @@ public final class RepoGit implements AutoCloseable {
                 .setProgressMonitor(new BatchingProgressMonitor() {
                     @Override
                     protected void onUpdate(String taskName, int workCurr, Duration duration) {
-                        log.info("Fetching repo {}: {}: ({})", name, taskName, workCurr);
+                        log.info("Fetching repo {}: {}: ({})", path, taskName, workCurr);
                     }
 
                     @Override
                     protected void onEndTask(String taskName, int workCurr, Duration duration) {
-                        log.info("Fetching repo {}: {}: ({}), done.", name, taskName, workCurr);
+                        log.info("Fetching repo {}: {}: ({}), done.", path, taskName, workCurr);
                     }
 
                     @Override
                     protected void onUpdate(
                             String taskName, int workCurr, int workTotal, int percentDone, Duration duration) {
-                        log.info("Fetching repo {}: {}: {}% ({}/{})", name, taskName, percentDone, workCurr, workTotal);
+                        log.info("Fetching repo {}: {}: {}% ({}/{})", path, taskName, percentDone, workCurr, workTotal);
                     }
 
                     @Override
@@ -72,17 +76,11 @@ public final class RepoGit implements AutoCloseable {
                             String taskName, int workCurr, int workTotal, int percentDone, Duration duration) {
                         log.info(
                                 "Fetching repo {}: {}: {}% ({}/{}), done.",
-                                name, taskName, percentDone, workCurr, workTotal);
+                                path, taskName, percentDone, workCurr, workTotal);
                     }
                 })
                 .call();
-        log.info("Finished fetching repo {}", name);
-    }
-
-    @Override
-    public void close() {
-        log.info("Closing Git repo {}", name);
-        repo.close();
+        log.info("Finished fetching repo {}", path);
     }
 
     public Repository plumbing() {
