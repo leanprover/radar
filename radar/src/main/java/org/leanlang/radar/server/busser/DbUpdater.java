@@ -3,7 +3,6 @@ package org.leanlang.radar.server.busser;
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
-import static org.leanlang.radar.codegen.jooq.Tables.REFS;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -22,7 +21,6 @@ import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
-import org.leanlang.radar.codegen.jooq.tables.records.RefsRecord;
 import org.leanlang.radar.server.data.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +31,6 @@ public record DbUpdater(Repo repo) {
     public void updateRepoData() {
         repo.db().writeTransaction(tx -> {
             insertNewCommits(tx);
-            updateBranches(tx);
             updateHistory(tx);
         });
     }
@@ -86,28 +83,6 @@ public record DbUpdater(Repo repo) {
         tx.dsl().batchInsert(commitsToInsert).execute();
         tx.dsl().batchInsert(relationshipsToInsert).execute();
         log.info("Inserted {} commits and {} relationships", commitsToInsert.size(), relationshipsToInsert.size());
-    }
-
-    private void updateBranches(Configuration tx) throws GitAPIException {
-        Set<String> tracked = repo.config().track();
-
-        List<RefsRecord> refs = repo.git().porcelain().branchList().call().stream()
-                .map(it -> {
-                    RefsRecord record = new RefsRecord();
-                    record.setName(it.getName());
-
-                    ObjectId id = it.getPeeledObjectId();
-                    if (id == null) id = it.getObjectId();
-                    record.setChash(id.name());
-
-                    record.setTracked(tracked.contains(it.getName()) ? 1 : 0);
-                    return record;
-                })
-                .toList();
-
-        tx.dsl().deleteFrom(REFS).execute();
-        tx.dsl().batchInsert(refs).execute();
-        log.info("Updated {} refs", refs.size());
     }
 
     private void updateHistory(Configuration tx) throws IOException, GitAPIException {

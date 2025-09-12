@@ -22,13 +22,6 @@ CREATE TABLE commit_relationships (
     FOREIGN KEY (parent) REFERENCES commits (chash) ON DELETE CASCADE
 ) STRICT;
 
-CREATE TABLE refs (
-    name    TEXT NOT NULL PRIMARY KEY,
-    chash   TEXT NOT NULL,
-    tracked INT  NOT NULL,
-    FOREIGN KEY (chash) REFERENCES commits (chash) ON DELETE CASCADE
-) STRICT;
-
 CREATE TABLE history (
     position INT  NOT NULL PRIMARY KEY,
     chash    TEXT NOT NULL UNIQUE,
