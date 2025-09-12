@@ -12,4 +12,10 @@ public record RunnerConfig(
         @NotEmpty String name,
         @NotNull URI url,
         @NotEmpty String token,
-        @Valid @NotNull RunnerConfigDirs dirs) {}
+        @Valid @NotNull RunnerConfigDirs dirs) {
+
+    URI apiUrl(String path) {
+        if (path.startsWith("/")) path = path.substring(1);
+        return url.resolve(path);
+    }
+}

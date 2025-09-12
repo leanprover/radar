@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
-import org.leanlang.radar.server.api.ResRunnersRunner;
+import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,14 +70,14 @@ public final class RunnerMain {
     }
 
     public void run() {
-        URI url = config.url().resolve("runners/").resolve(config.name());
+        URI url = config.apiUrl(ResQueueRunnerStatus.PATH);
 
         while (true) {
             var response = client.target(url)
                     .request(MediaType.APPLICATION_JSON_TYPE)
                     .post(
-                            Entity.json(new ResRunnersRunner.JsonPostInput(config.token())),
-                            ResRunnersRunner.JsonPost.class);
+                            Entity.json(new ResQueueRunnerStatus.JsonPostInput(config.name(), config.token())),
+                            ResQueueRunnerStatus.JsonPost.class);
 
             log.info("Seen: {}", response);
 

@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResQueue;
+import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.leanlang.radar.server.api.ResRepos;
 import org.leanlang.radar.server.api.ResReposRepoCommitsChash;
 import org.leanlang.radar.server.api.ResReposRepoHistory;
-import org.leanlang.radar.server.api.ResRunnersRunner;
 import org.leanlang.radar.server.busser.Busser;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfig;
@@ -63,7 +63,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().register(new ResRepos(repos));
         environment.jersey().register(new ResReposRepoCommitsChash(repos));
         environment.jersey().register(new ResReposRepoHistory(repos));
-        environment.jersey().register(new ResRunnersRunner(runners));
+        environment.jersey().register(new ResQueueRunnerStatus(runners));
     }
 
     private static void configureDummyHealthCheck(Environment environment) {
