@@ -17,6 +17,7 @@ import org.leanlang.radar.server.busser.Busser;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfig;
 import org.leanlang.radar.server.data.Repos;
+import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.runners.Runners;
 
 public final class ServerApplication extends Application<ServerConfig> {
@@ -50,6 +51,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         var dirs = new Dirs(configFile, configuration.dirs);
         var repos = new Repos(dirs, configuration.repos);
         var runners = new Runners(configuration.runners);
+        var queue = new Queue(repos, runners);
         var busser = new Busser(repos);
 
         environment.lifecycle().manage(repos);
@@ -57,7 +59,7 @@ public final class ServerApplication extends Application<ServerConfig> {
 
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResDebug(runners));
-        environment.jersey().register(new ResQueue(runners));
+        environment.jersey().register(new ResQueue(runners, queue));
         environment.jersey().register(new ResRepos(repos));
         environment.jersey().register(new ResReposRepoCommitsChash(repos));
         environment.jersey().register(new ResReposRepoHistory(repos));
