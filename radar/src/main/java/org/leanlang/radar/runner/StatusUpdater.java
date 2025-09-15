@@ -14,15 +14,18 @@ public record StatusUpdater(RunnerConfig config, Supervisor supervisor, Client c
 
     public void run() {
         try {
-            Optional<ResQueueRunnerStatus.JsonRun> activeRun =
-                    supervisor.status().map(it -> new ResQueueRunnerStatus.JsonRun(it.repo(), it.chash(), it.script()));
-
-            client.target(config.apiUrl(ResQueueRunnerStatus.PATH))
-                    .request(MediaType.APPLICATION_JSON_TYPE)
-                    .post(Entity.json(
-                            new ResQueueRunnerStatus.JsonPostInput(config.name(), config.token(), activeRun)));
+            runAndThrow();
         } catch (Exception e) {
             log.error("Failed to update status", e);
         }
+    }
+
+    public void runAndThrow() {
+        Optional<ResQueueRunnerStatus.JsonRun> activeRun =
+                supervisor.status().map(it -> new ResQueueRunnerStatus.JsonRun(it.repo(), it.chash(), it.script()));
+
+        client.target(config.apiUrl(ResQueueRunnerStatus.PATH))
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.json(new ResQueueRunnerStatus.JsonPostInput(config.name(), config.token(), activeRun)));
     }
 }

@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.runner.Dirs;
 import org.leanlang.radar.runner.RunnerConfig;
+import org.leanlang.radar.runner.StatusUpdater;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsTake;
 import org.leanlang.radar.server.data.RepoGit;
@@ -68,6 +69,12 @@ public class Supervisor {
             fetchAndCloneRepo(job);
             fetchAndCloneBenchRepo(job);
             JsonRunResult result = runBenchScript(job);
+
+            // We need to prevent the situation where we send a status update telling the server we're still working on
+            // our run after we've already submitted the results. Otherwise, the run will land on the queue again.
+            setStatus(null);
+            new StatusUpdater(config, this, client).runAndThrow();
+
             submitResult(result);
             return true;
         } finally {
