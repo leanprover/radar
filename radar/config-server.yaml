@@ -27,9 +27,9 @@ repos:
       - runner: testrunner
         script: main.py
 
-  - name: velcom
-    description: Continuous benchmarking
-    url: https://github.com/leanprover/velcom
+  - name: radar
+    description: Do you know how fast you were going?
+    url: https://github.com/leanprover/radar
     track: [ main ]
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
