@@ -83,7 +83,7 @@ public final class RunnerMain {
                     while (supervisor.run())
                         ;
                 } catch (Exception e) {
-                    log.error(e.getMessage());
+                    log.error("Error while running supervisor", e);
                 }
 
                 try {

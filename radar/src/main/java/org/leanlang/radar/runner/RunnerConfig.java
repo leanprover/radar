@@ -14,7 +14,7 @@ public record RunnerConfig(
         @NotEmpty String token,
         @Valid @NotNull RunnerConfigDirs dirs) {
 
-    URI apiUrl(String path) {
+    public URI apiUrl(String path) {
         if (path.startsWith("/")) path = path.substring(1);
         return url.resolve(path);
     }

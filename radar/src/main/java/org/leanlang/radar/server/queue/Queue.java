@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
@@ -28,8 +29,9 @@ public final class Queue {
         return activeTasks.stream().toList();
     }
 
-    public synchronized List<Task> getQueuedTasks() {
-        Set<TaskId> activeTaskIds = activeTasks.stream().map(ActiveTask::id).collect(Collectors.toUnmodifiableSet());
+    public List<Task> getQueuedTasks() {
+        Set<TaskId> activeTaskIds =
+                getActiveTasks().stream().map(ActiveTask::id).collect(Collectors.toUnmodifiableSet());
 
         List<Task> result = new ArrayList<>();
         for (Repo repo : repos.repos()) {
@@ -49,9 +51,45 @@ public final class Queue {
         return result;
     }
 
-    public synchronized void ensureActiveTaskExists(TaskId id) throws IOException {
-        if (activeTasks.stream().anyMatch(it -> it.id().equals(id))) return;
-        ActiveTask task = new ActiveTask(repos.repo(id.repo()), id.chash());
-        activeTasks.add(task);
+    public synchronized ActiveTask ensureActiveTaskExists(TaskId id) throws IOException {
+        Optional<ActiveTask> existingTask =
+                activeTasks.stream().filter(it -> it.id().equals(id)).findFirst();
+        if (existingTask.isPresent()) return existingTask.get();
+
+        ActiveTask newTask = new ActiveTask(repos.repo(id.repo()), id.chash());
+        activeTasks.add(newTask);
+        return newTask;
+    }
+
+    private Job jobFromActiveTask(ActiveTask task, String script) {
+        return new Job(
+                task.repo().name(),
+                task.repo().config().url(),
+                task.chash(),
+                task.repo().config().benchUrl(),
+                task.benchChash(),
+                script);
+    }
+
+    public Optional<Job> takeJob(String runner) throws IOException {
+        // Look in active tasks, FIFO
+        for (ActiveTask activeTask : getActiveTasks()) {
+            for (Run run : activeTask.uncompletedRuns()) {
+                if (!run.runner().equals(runner)) continue;
+                return Optional.of(jobFromActiveTask(activeTask, run.script()));
+            }
+        }
+
+        // Look in remaining queue
+        for (Task task : getQueuedTasks()) {
+            for (Run run : task.runs()) {
+                if (!run.runner().equals(runner)) continue;
+                TaskId id = new TaskId(task.repo(), task.chash());
+                ActiveTask activeTask = ensureActiveTaskExists(id);
+                return Optional.of(jobFromActiveTask(activeTask, run.script()));
+            }
+        }
+
+        return Optional.empty();
     }
 }

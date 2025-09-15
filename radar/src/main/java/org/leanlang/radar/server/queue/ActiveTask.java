@@ -3,6 +3,8 @@ package org.leanlang.radar.server.queue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.leanlang.radar.server.data.Repo;
 
 public class ActiveTask {
@@ -52,5 +54,14 @@ public class ActiveTask {
 
     public synchronized void addResult(RunResult result) {
         results.add(result);
+    }
+
+    public Set<Run> completedRuns() {
+        return results().stream().map(it -> new Run(it.runner(), it.script())).collect(Collectors.toUnmodifiableSet());
+    }
+
+    public List<Run> uncompletedRuns() {
+        Set<Run> completed = completedRuns();
+        return runs.stream().filter(it -> !completed.contains(it)).toList();
     }
 }

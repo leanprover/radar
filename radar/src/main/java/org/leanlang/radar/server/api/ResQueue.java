@@ -20,12 +20,17 @@ import org.leanlang.radar.server.queue.Run;
 import org.leanlang.radar.server.queue.RunResult;
 import org.leanlang.radar.server.queue.Task;
 import org.leanlang.radar.server.runners.RunnerStatus;
+import org.leanlang.radar.server.runners.RunnerStatusRun;
 import org.leanlang.radar.server.runners.Runners;
 
 @Path("/queue")
 public record ResQueue(Repos repos, Runners runners, Queue queue) {
 
-    public record JsonActiveRun(String repo, String chash, String script) {}
+    public record JsonActiveRun(String repo, String chash, String script) {
+        public JsonActiveRun(RunnerStatusRun run) {
+            this(run.repo(), run.chash(), run.script());
+        }
+    }
 
     public record JsonRunner(
             String name, boolean connected, Optional<Instant> lastSeen, Optional<JsonActiveRun> activeRun) {}
@@ -48,9 +53,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
                                 .map(it -> it.from().isAfter(connectedCutoff))
                                 .orElse(false),
                         runner.status().map(RunnerStatus::from),
-                        runner.status()
-                                .flatMap(RunnerStatus::activeRun)
-                                .map(run -> new JsonActiveRun(run.repo(), run.chash(), run.script()))))
+                        runner.status().flatMap(RunnerStatus::activeRun).map(JsonActiveRun::new)))
                 .toList();
 
         List<JsonTask> tasks = new ArrayList<>();
