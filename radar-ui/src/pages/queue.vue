@@ -103,32 +103,37 @@ function runsWithState(task: {
     </CardHeader>
     <CardContent class="flex flex-col gap-2">
       <CSkeleton v-if="!queue.isSuccess" :error="queue.error" class="h-24" />
-      <div v-else v-for="task in queue.data.tasks" class="flex flex-col gap-2 rounded-lg border p-2">
-        <RouterLink
-          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: task.repo, chash: task.chash } }"
-          class="group flex flex-col"
-        >
-          <div class="group-hover:underline">{{ task.title }}</div>
-          <div class="text-muted-foreground text-sm">{{ task.repo }}</div>
-        </RouterLink>
-        <div class="flex">
-          <div
-            v-for="run in runsWithState(task)"
-            :class="
-              cn('flex items-center gap-1 rounded-md border px-2 pl-1', {
-                'border-destructive-foreground text-destructive-foreground': run.state === 'error',
-              })
-            "
-            :title="`Running ${run.script}`"
+      <template v-else>
+        <div v-if="queue.data.tasks.length === 0" class="text-muted-foreground text-lg font-light italic">
+          🙛 Queue empty 🙙
+        </div>
+        <div v-for="task in queue.data.tasks" class="flex flex-col gap-2 rounded-lg border p-2">
+          <RouterLink
+            :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: task.repo, chash: task.chash } }"
+            class="group flex flex-col"
           >
-            <CircleDashedIcon v-if="run.state === 'ready'" :size="16" class="shrink-0" />
-            <LoaderCircleIcon v-if="run.state === 'running'" :size="16" class="shrink-0 animate-spin" />
-            <CircleCheckIcon v-if="run.state === 'success'" :size="16" class="shrink-0" />
-            <CircleAlertIcon v-if="run.state === 'error'" :size="16" class="shrink-0" />
-            <div>{{ run.runner }}</div>
+            <div class="group-hover:underline">{{ task.title }}</div>
+            <div class="text-muted-foreground text-sm">{{ task.repo }}</div>
+          </RouterLink>
+          <div class="flex">
+            <div
+              v-for="run in runsWithState(task)"
+              :class="
+                cn('flex items-center gap-1 rounded-md border px-2 pl-1', {
+                  'border-destructive-foreground text-destructive-foreground': run.state === 'error',
+                })
+              "
+              :title="`Running ${run.script}`"
+            >
+              <CircleDashedIcon v-if="run.state === 'ready'" :size="16" class="shrink-0" />
+              <LoaderCircleIcon v-if="run.state === 'running'" :size="16" class="shrink-0 animate-spin" />
+              <CircleCheckIcon v-if="run.state === 'success'" :size="16" class="shrink-0" />
+              <CircleAlertIcon v-if="run.state === 'error'" :size="16" class="shrink-0" />
+              <div>{{ run.runner }}</div>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </CardContent>
   </Card>
 </template>
