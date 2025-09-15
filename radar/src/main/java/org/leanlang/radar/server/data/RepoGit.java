@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.BatchingProgressMonitor;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.RefSpec;
@@ -46,6 +44,14 @@ public final class RepoGit implements AutoCloseable {
         repo.close();
     }
 
+    public Repository plumbing() {
+        return repo;
+    }
+
+    public Git porcelain() {
+        return git;
+    }
+
     public void fetch() throws GitAPIException {
         log.info("Fetching repo {} (this may take a while)", path);
         git.fetch()
@@ -54,40 +60,38 @@ public final class RepoGit implements AutoCloseable {
                 .setTagOpt(TagOpt.NO_TAGS)
                 .setForceUpdate(true)
                 .setRemoveDeletedRefs(true)
-                .setProgressMonitor(new BatchingProgressMonitor() {
-                    @Override
-                    protected void onUpdate(String taskName, int workCurr, Duration duration) {
-                        log.info("Fetching repo {}: {}: ({})", path, taskName, workCurr);
-                    }
-
-                    @Override
-                    protected void onEndTask(String taskName, int workCurr, Duration duration) {
-                        log.info("Fetching repo {}: {}: ({}), done.", path, taskName, workCurr);
-                    }
-
-                    @Override
-                    protected void onUpdate(
-                            String taskName, int workCurr, int workTotal, int percentDone, Duration duration) {
-                        log.info("Fetching repo {}: {}: {}% ({}/{})", path, taskName, percentDone, workCurr, workTotal);
-                    }
-
-                    @Override
-                    protected void onEndTask(
-                            String taskName, int workCurr, int workTotal, int percentDone, Duration duration) {
-                        log.info(
-                                "Fetching repo {}: {}: {}% ({}/{}), done.",
-                                path, taskName, percentDone, workCurr, workTotal);
-                    }
-                })
+                .setProgressMonitor(new RepoGitProgressMonitor("Fetching", path))
                 .call();
         log.info("Finished fetching repo {}", path);
     }
 
-    public Repository plumbing() {
-        return repo;
-    }
+    public void cloneTo(Path target, String hash) throws GitAPIException {
+        log.info("Cloning repo {}", path);
+        try (Git git = Git.init().setDirectory(target.toFile()).call()) {
+            // Using the URL so we don't accidentally confuse directory and branch names.
+            System.out.println(path.toUri());
 
-    public Git porcelain() {
-        return git;
+            git.fetch()
+                    .setRemote(path.toUri().toString())
+                    .setRefSpecs(hash)
+                    .setDepth(1)
+                    .setProgressMonitor(new RepoGitProgressMonitor("Cloning", path))
+                    .call();
+
+            git.checkout().setName(hash).call();
+
+            // No submodules for now
+        }
+
+        //        Git.cloneRepository()
+        //                .setURI(path.toUri().toString())
+        //                .setBranch(hash)
+        //                .setDirectory(target.toFile())
+        //                .setDepth(1)
+        //                .setCloneSubmodules(true)
+        //                .setProgressMonitor(new RepoGitProgressMonitor("Cloning", path))
+        //                .call()
+        //                .close();
+        log.info("Finished cloning repo {}", path);
     }
 }

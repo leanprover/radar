@@ -30,6 +30,7 @@ public final class RunnerMain {
     private static final Logger log = LoggerFactory.getLogger(RunnerMain.class);
 
     private final RunnerConfig config;
+    private final Dirs dirs;
     private final Client client;
 
     public RunnerMain(Path configFile) throws Exception {
@@ -49,6 +50,7 @@ public final class RunnerMain {
         config = loadConfig(configFile);
         configureLogging(config, environment.metrics());
 
+        dirs = new Dirs(configFile, config.dirs());
         client = new JerseyClientBuilder(environment).build(NAME);
     }
 
@@ -72,7 +74,7 @@ public final class RunnerMain {
     }
 
     public void run() {
-        Supervisor supervisor = new Supervisor(config, client);
+        Supervisor supervisor = new Supervisor(config, dirs, client);
         StatusUpdater statusUpdater = new StatusUpdater(config, supervisor, client);
 
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {

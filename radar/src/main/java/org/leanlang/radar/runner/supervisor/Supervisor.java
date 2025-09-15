@@ -11,9 +11,12 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import org.apache.commons.lang3.NotImplementedException;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jspecify.annotations.Nullable;
+import org.leanlang.radar.runner.Dirs;
 import org.leanlang.radar.runner.RunnerConfig;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsTake;
+import org.leanlang.radar.server.data.RepoGit;
 import org.leanlang.radar.server.queue.Job;
 import org.leanlang.radar.server.queue.RunResult;
 import org.slf4j.Logger;
@@ -23,12 +26,14 @@ public class Supervisor {
     private static final Logger log = LoggerFactory.getLogger(Supervisor.class);
 
     private final RunnerConfig config;
+    private final Dirs dirs;
     private final Client client;
 
     private @Nullable Job activeJob;
 
-    public Supervisor(RunnerConfig config, Client client) {
+    public Supervisor(RunnerConfig config, Dirs dirs, Client client) {
         this.config = config;
+        this.dirs = dirs;
         this.client = client;
     }
 
@@ -43,7 +48,7 @@ public class Supervisor {
     /**
      * @return true if a run was performed, which indicates that this method should immediately be called again.
      */
-    public boolean run() throws IOException {
+    public boolean run() throws IOException, GitAPIException {
         log.info("Acquiring job");
         Optional<Job> jobOpt = acquireRun();
         if (jobOpt.isEmpty()) return false;
@@ -53,9 +58,9 @@ public class Supervisor {
         setStatus(job);
         try {
             clearTmpDir();
-            Path repo = fetchAndCloneRepo(job);
-            Path benchRepo = fetchAndCloneBenchRepo(job);
-            RunResult result = runBenchScript(benchRepo, repo, job.script());
+            fetchAndCloneRepo(job);
+            fetchAndCloneBenchRepo(job);
+            RunResult result = runBenchScript(job.script());
             submitResult(result);
             return true;
         } finally {
@@ -74,7 +79,9 @@ public class Supervisor {
     }
 
     private void clearTmpDir() throws IOException {
-        Path dir = config.dirs().tmp();
+        log.debug("Clearing tmp directory");
+
+        Path dir = dirs.tmp();
         if (Files.notExists(dir)) return;
 
         Files.walkFileTree(dir, new SimpleFileVisitor<>() {
@@ -92,15 +99,25 @@ public class Supervisor {
         });
     }
 
-    private Path fetchAndCloneRepo(Job job) {
-        throw new NotImplementedException(); // TODO
+    private void fetchAndCloneRepo(Job job) throws IOException, GitAPIException {
+        try (RepoGit repo = new RepoGit(dirs.bareRepo(job.repo()), job.url())) {
+            log.debug("Fetching repo");
+            repo.fetch();
+            log.debug("Cloning repo");
+            repo.cloneTo(dirs.tmpRepo(), job.chash());
+        }
     }
 
-    private Path fetchAndCloneBenchRepo(Job job) {
-        throw new NotImplementedException(); // TODO
+    private void fetchAndCloneBenchRepo(Job job) throws IOException, GitAPIException {
+        try (RepoGit repo = new RepoGit(dirs.bareBenchRepo(job.repo()), job.benchUrl())) {
+            log.debug("Fetching bench repo");
+            repo.fetch();
+            log.debug("Cloning bench repo");
+            repo.cloneTo(dirs.tmpBenchRepo(), job.benchChash());
+        }
     }
 
-    private RunResult runBenchScript(Path benchRepo, Path repo, String script) {
+    private RunResult runBenchScript(String script) {
         throw new NotImplementedException(); // TODO
     }
 
