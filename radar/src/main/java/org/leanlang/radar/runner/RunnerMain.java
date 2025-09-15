@@ -15,14 +15,13 @@ import io.dropwizard.logging.common.BootstrapLogging;
 import io.dropwizard.logging.common.DefaultLoggingFactory;
 import io.dropwizard.logging.common.LoggingFactory;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Optional;
-import org.leanlang.radar.server.api.ResQueueRunnerStatus;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import org.leanlang.radar.runner.supervisor.Supervisor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,8 @@ public final class RunnerMain {
     private final Client client;
 
     public RunnerMain(Path configFile) throws Exception {
+        // Startup process inspired by - and using - Dropwizard machinery
+
         BootstrapLogging.bootstrap(Level.WARN); // No hibernate debug prints, please
 
         Environment environment = new Environment(
@@ -71,17 +72,24 @@ public final class RunnerMain {
     }
 
     public void run() {
-        URI url = config.apiUrl(ResQueueRunnerStatus.PATH);
+        Supervisor supervisor = new Supervisor(config, client);
+        StatusUpdater statusUpdater = new StatusUpdater(config, supervisor, client);
 
-        while (true) {
-            client.target(url)
-                    .request(MediaType.APPLICATION_JSON_TYPE)
-                    .post(Entity.json(
-                            new ResQueueRunnerStatus.JsonPostInput(config.name(), config.token(), Optional.empty())));
+        try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
+            executor.scheduleWithFixedDelay(statusUpdater::run, 0, 1, TimeUnit.SECONDS);
 
-            try {
-                Thread.sleep(Duration.ofSeconds(1));
-            } catch (InterruptedException ignored) {
+            while (true) {
+                try {
+                    while (supervisor.run())
+                        ;
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
+
+                try {
+                    Thread.sleep(Duration.ofSeconds(10));
+                } catch (InterruptedException ignored) {
+                }
             }
         }
     }
