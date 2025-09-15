@@ -13,12 +13,13 @@ import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.queue.Run;
+import org.leanlang.radar.server.runners.RunnerStatus;
 import org.leanlang.radar.server.runners.Runners;
 
 @Path("/queue")
 public record ResQueue(Runners runners, Queue queue) {
 
-    public record JsonRunner(String name, Optional<Instant> lastSeen, boolean connected) {}
+    public record JsonRunner(String name, Optional<Instant> lastSeen) {}
 
     public record JsonRun(String runner, String script, String state) {}
 
@@ -38,15 +39,9 @@ public record ResQueue(Runners runners, Queue queue) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public JsonGet get() throws IOException {
-        Instant connectedCutoff = Instant.now().minus(Duration.ofSeconds(10));
 
         List<JsonRunner> runners = this.runners.runners().stream()
-                .map(runner -> new JsonRunner(
-                        runner.name(),
-                        runner.lastSeen(),
-                        runner.lastSeen()
-                                .filter(lastActive -> lastActive.isAfter(connectedCutoff))
-                                .isPresent()))
+                .map(runner -> new JsonRunner(runner.name(), runner.status().map(RunnerStatus::from)))
                 .toList();
 
         List<JsonTask> tasks = queue.getAllTasks().stream()

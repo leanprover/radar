@@ -9,8 +9,8 @@ import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 
 public record StatusUpdater(RunnerConfig config, Supervisor supervisor, Client client) {
     public void run() {
-        Optional<ResQueueRunnerStatus.JsonRunId> activeRun =
-                supervisor.status().map(ResQueueRunnerStatus.JsonRunId::fromRunId);
+        Optional<ResQueueRunnerStatus.JsonRun> activeRun =
+                supervisor.status().map(it -> new ResQueueRunnerStatus.JsonRun(it.repo(), it.chash(), it.script()));
 
         client.target(config.apiUrl(ResQueueRunnerStatus.PATH))
                 .request(MediaType.APPLICATION_JSON_TYPE)
