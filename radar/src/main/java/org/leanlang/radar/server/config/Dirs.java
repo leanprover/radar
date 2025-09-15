@@ -14,15 +14,15 @@ public final class Dirs {
         tmp = root.resolve(dirs.tmp());
     }
 
-    public Path repoDb(String name) {
-        return data.resolve(name).resolve("data.db");
+    public Path repoDb(String repo) {
+        return data.resolve(repo).resolve("data.db");
     }
 
-    public Path repoGit(String name) {
-        return cache.resolve("repos").resolve(name + ".git");
+    public Path repoGit(String repo) {
+        return cache.resolve(repo).resolve("repo.git");
     }
 
-    public Path repoGitBench(String name) {
-        return cache.resolve("benchrepos").resolve(name + ".git");
+    public Path repoGitBench(String repo) {
+        return cache.resolve(repo).resolve("bench.git");
     }
 }
