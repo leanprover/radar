@@ -17,6 +17,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jooq.Configuration;
+import org.jooq.impl.DSL;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
@@ -113,19 +114,32 @@ public record DbUpdater(Repo repo) {
 
     public void updateQueue() {
         repo.db().writeTransaction(tx -> {
-            Set<String> toEnqueue = tx.dsl()
+            // Find all commits that are now in the history and have never been in the queue (i.e. seen).
+            List<String> toEnqueue = tx.dsl()
                     .selectFrom(HISTORY.join(COMMITS).onKey())
                     .where(COMMITS.SEEN.eq(0))
                     .andNotExists(tx.dsl().selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
-                    .fetchSet(HISTORY.CHASH);
+                    .orderBy(HISTORY.POSITION.asc())
+                    .fetch(HISTORY.CHASH);
 
+            // As a for loop so that I know for certain that the times increment in the right order.
             List<QueueRecord> records = new ArrayList<>();
             for (String chash : toEnqueue) {
                 Instant now = Instant.now();
                 records.add(new QueueRecord(chash, now, now, 0));
             }
 
+            // Yay, new things to benchmark.
             tx.dsl().batchInsert(records).execute();
+
+            // Mark all commits that are now in the queue as seen.
+            tx.dsl()
+                    .update(COMMITS)
+                    .set(COMMITS.SEEN, 1)
+                    .where(COMMITS.SEEN.eq(0))
+                    .andExists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(COMMITS.CHASH)))
+                    .execute();
+
             log.info("Added {} commits to queue", records.size());
         });
     }
