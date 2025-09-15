@@ -29,6 +29,7 @@ public final class RunnerMain {
     public static final String NAME = "Radar Runner";
     private static final Logger log = LoggerFactory.getLogger(RunnerMain.class);
 
+    private final Environment environment;
     private final RunnerConfig config;
     private final Dirs dirs;
     private final Client client;
@@ -38,7 +39,7 @@ public final class RunnerMain {
 
         BootstrapLogging.bootstrap(Level.WARN); // No hibernate debug prints, please
 
-        Environment environment = new Environment(
+        environment = new Environment(
                 NAME,
                 Jackson.newObjectMapper(),
                 Validators.newValidatorFactory(),
@@ -74,7 +75,7 @@ public final class RunnerMain {
     }
 
     public void run() {
-        Supervisor supervisor = new Supervisor(config, dirs, client);
+        Supervisor supervisor = new Supervisor(config, dirs, client, environment.getObjectMapper());
         StatusUpdater statusUpdater = new StatusUpdater(config, supervisor, client);
 
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {

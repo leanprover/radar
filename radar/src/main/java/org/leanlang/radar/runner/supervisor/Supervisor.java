@@ -1,5 +1,6 @@
 package org.leanlang.radar.runner.supervisor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
@@ -9,16 +10,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.NotImplementedException;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.runner.Dirs;
 import org.leanlang.radar.runner.RunnerConfig;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsTake;
 import org.leanlang.radar.server.data.RepoGit;
 import org.leanlang.radar.server.queue.Job;
-import org.leanlang.radar.server.queue.RunResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +29,15 @@ public class Supervisor {
     private final RunnerConfig config;
     private final Dirs dirs;
     private final Client client;
+    private final ObjectMapper mapper;
 
     private @Nullable Job activeJob;
 
-    public Supervisor(RunnerConfig config, Dirs dirs, Client client) {
+    public Supervisor(RunnerConfig config, Dirs dirs, Client client, ObjectMapper mapper) {
         this.config = config;
         this.dirs = dirs;
         this.client = client;
+        this.mapper = mapper;
     }
 
     public synchronized Optional<Job> status() {
@@ -48,7 +51,7 @@ public class Supervisor {
     /**
      * @return true if a run was performed, which indicates that this method should immediately be called again.
      */
-    public boolean run() throws IOException, GitAPIException {
+    public boolean run() throws Exception {
         log.info("Acquiring job");
         Optional<Job> jobOpt = acquireRun();
         if (jobOpt.isEmpty()) return false;
@@ -60,7 +63,7 @@ public class Supervisor {
             clearTmpDir();
             fetchAndCloneRepo(job);
             fetchAndCloneBenchRepo(job);
-            RunResult result = runBenchScript(job.script());
+            JsonRunResult result = runBenchScript(job);
             submitResult(result);
             return true;
         } finally {
@@ -99,7 +102,7 @@ public class Supervisor {
         });
     }
 
-    private void fetchAndCloneRepo(Job job) throws IOException, GitAPIException {
+    private void fetchAndCloneRepo(Job job) throws Exception {
         try (RepoGit repo = new RepoGit(dirs.bareRepo(job.repo()), job.url())) {
             log.debug("Fetching repo");
             repo.fetch();
@@ -108,7 +111,7 @@ public class Supervisor {
         }
     }
 
-    private void fetchAndCloneBenchRepo(Job job) throws IOException, GitAPIException {
+    private void fetchAndCloneBenchRepo(Job job) throws Exception {
         try (RepoGit repo = new RepoGit(dirs.bareBenchRepo(job.repo()), job.benchUrl())) {
             log.debug("Fetching bench repo");
             repo.fetch();
@@ -117,11 +120,26 @@ public class Supervisor {
         }
     }
 
-    private RunResult runBenchScript(String script) {
-        throw new NotImplementedException(); // TODO
+    private JsonRunResult runBenchScript(Job job) throws Exception {
+        Process process = new ProcessBuilder(
+                        dirs.tmpBenchRepoScript(job.script()).toAbsolutePath().toString(),
+                        dirs.tmpRepo().toAbsolutePath().toString(),
+                        dirs.tmpResultFile().toAbsolutePath().toString())
+                .directory(dirs.tmpBenchRepo().toFile())
+                .inheritIO()
+                .start();
+
+        int exitCode = process.waitFor();
+
+        List<JsonRunResultEntry> entries = new ArrayList<>();
+        for (String line : Files.readString(dirs.tmpResultFile()).lines().toList()) {
+            entries.add(mapper.readValue(line, JsonRunResultEntry.class));
+        }
+
+        return new JsonRunResult(job.repo(), job.chash(), job.benchChash(), job.script(), exitCode, entries);
     }
 
-    private void submitResult(RunResult runResult) {
+    private void submitResult(JsonRunResult runResult) {
         throw new NotImplementedException(); // TODO
     }
 }

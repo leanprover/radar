@@ -31,4 +31,12 @@ public final class Dirs {
     public Path tmpBenchRepo() {
         return tmp.resolve("bench");
     }
+
+    public Path tmpBenchRepoScript(String script) {
+        return tmp.resolve("bench").resolve(script);
+    }
+
+    public Path tmpResultFile() {
+        return tmp.resolve("result.jsonl");
+    }
 }
