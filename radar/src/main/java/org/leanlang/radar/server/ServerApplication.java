@@ -60,7 +60,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.lifecycle().manage(busser);
 
         environment.jersey().setUrlPattern("/api/*");
-        environment.jersey().register(new ResDebug(runners));
+        environment.jersey().register(new ResDebug(runners, busser));
         environment.jersey().register(new ResQueue(repos, runners, queue));
         environment.jersey().register(new ResQueueRunnerJobsFinish(runners, queue));
         environment.jersey().register(new ResQueueRunnerJobsTake(runners, queue));

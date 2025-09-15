@@ -33,6 +33,10 @@ public final class Busser implements Managed {
         executor.close();
     }
 
+    public void updateOnce() {
+        executor.execute(this::update);
+    }
+
     private synchronized void update() {
         updateRepos();
     }
