@@ -3,7 +3,12 @@ package org.leanlang.radar.runner.supervisor;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import org.apache.commons.lang3.NotImplementedException;
 import org.jspecify.annotations.Nullable;
@@ -38,7 +43,7 @@ public class Supervisor {
     /**
      * @return true if a run was performed, which indicates that this method should immediately be called again.
      */
-    public boolean run() {
+    public boolean run() throws IOException {
         log.info("Acquiring job");
         Optional<Job> jobOpt = acquireRun();
         if (jobOpt.isEmpty()) return false;
@@ -68,8 +73,23 @@ public class Supervisor {
                 .map(ResQueueRunnerJobsTake.JsonJob::toJob);
     }
 
-    private void clearTmpDir() {
-        throw new NotImplementedException(); // TODO
+    private void clearTmpDir() throws IOException {
+        Path dir = config.dirs().tmp();
+        if (Files.notExists(dir)) return;
+
+        Files.walkFileTree(dir, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private Path fetchAndCloneRepo(Job job) {
