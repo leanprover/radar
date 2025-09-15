@@ -1,5 +1,6 @@
 package org.leanlang.radar.server.api;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -17,7 +18,7 @@ import org.leanlang.radar.server.runners.Runners;
 public record ResQueueRunnerJobsTake(Runners runners, Queue queue) {
     public static final String PATH = "/queue/runner/jobs/take";
 
-    public record JsonPostInput(String runner, String token) {}
+    public record JsonPostInput(@NotNull String runner, @NotNull String token) {}
 
     public record JsonJob(String repo, URI url, String chash, URI benchUrl, String benchChash, String script) {
         public JsonJob(Job job) {

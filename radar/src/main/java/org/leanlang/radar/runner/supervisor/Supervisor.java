@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -121,6 +123,8 @@ public class Supervisor {
     }
 
     private JsonRunResult runBenchScript(Job job) throws Exception {
+        // Run the script
+        Instant startTime = Instant.now();
         Process process = new ProcessBuilder(
                         dirs.tmpBenchRepoScript(job.script()).toAbsolutePath().toString(),
                         dirs.tmpRepo().toAbsolutePath().toString(),
@@ -128,15 +132,21 @@ public class Supervisor {
                 .directory(dirs.tmpBenchRepo().toFile())
                 .inheritIO()
                 .start();
-
         int exitCode = process.waitFor();
+        Instant endTime = Instant.now();
 
+        // Read the resulting data
         List<JsonRunResultEntry> entries = new ArrayList<>();
-        for (String line : Files.readString(dirs.tmpResultFile()).lines().toList()) {
-            entries.add(mapper.readValue(line, JsonRunResultEntry.class));
+        try {
+            for (String line : Files.readString(dirs.tmpResultFile()).lines().toList()) {
+                entries.add(mapper.readValue(line, JsonRunResultEntry.class));
+            }
+        } catch (FileNotFoundException ignored) {
         }
 
-        return new JsonRunResult(job.repo(), job.chash(), job.benchChash(), job.script(), exitCode, entries);
+        // A benchmark has been run :D
+        return new JsonRunResult(
+                job.repo(), job.chash(), job.benchChash(), job.script(), startTime, endTime, exitCode, entries);
     }
 
     private void submitResult(JsonRunResult runResult) {

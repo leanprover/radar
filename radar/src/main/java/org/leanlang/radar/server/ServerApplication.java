@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResQueue;
+import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsTake;
 import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.leanlang.radar.server.api.ResRepos;
@@ -52,7 +53,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         var dirs = new Dirs(configFile, configuration.dirs);
         var repos = new Repos(dirs, configuration.repos);
         var runners = new Runners(configuration.runners);
-        var queue = new Queue(repos, runners);
+        var queue = new Queue(repos);
         var busser = new Busser(repos);
 
         environment.lifecycle().manage(repos);
@@ -61,6 +62,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResDebug(runners));
         environment.jersey().register(new ResQueue(repos, runners, queue));
+        environment.jersey().register(new ResQueueRunnerJobsFinish(runners, queue));
         environment.jersey().register(new ResQueueRunnerJobsTake(runners, queue));
         environment.jersey().register(new ResQueueRunnerStatus(runners, queue));
         environment.jersey().register(new ResRepos(repos));

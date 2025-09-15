@@ -1,5 +1,6 @@
 package org.leanlang.radar.server.api;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -24,7 +25,7 @@ public record ResQueueRunnerStatus(Runners runners, Queue queue) {
         }
     }
 
-    public record JsonPostInput(String runner, String token, Optional<JsonRun> activeRun) {}
+    public record JsonPostInput(@NotNull String runner, @NotNull String token, @NotNull Optional<JsonRun> activeRun) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

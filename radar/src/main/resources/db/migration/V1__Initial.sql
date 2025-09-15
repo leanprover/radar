@@ -37,24 +37,29 @@ CREATE TABLE queue (
 ) STRICT;
 
 CREATE TABLE metrics (
-    name      TEXT NOT NULL PRIMARY KEY,
+    metric    TEXT NOT NULL PRIMARY KEY,
+    unit      TEXT,
     direction INT  NOT NULL,
     CHECK (-1 <= direction AND direction <= 1)
 ) STRICT;
 
 CREATE TABLE runs (
-    chash       TEXT NOT NULL PRIMARY KEY,
+    chash       TEXT NOT NULL,
+    runner      TEXT NOT NULL,
+    script      TEXT NOT NULL,
     chash_bench TEXT NOT NULL,
     start_time  TEXT NOT NULL,
     end_time    TEXT NOT NULL,
+    exit_code   INT  NOT NULL,
+    PRIMARY KEY (chash, runner, script),
     FOREIGN KEY (chash) REFERENCES commits (chash) ON DELETE CASCADE
 ) STRICT;
 
 CREATE TABLE measurements (
-    chash TEXT NOT NULL,
-    name  TEXT NOT NULL,
-    value INT  NOT NULL,
-    PRIMARY KEY (chash, name),
+    chash  TEXT NOT NULL,
+    metric TEXT NOT NULL,
+    value  REAL NOT NULL,
+    PRIMARY KEY (chash, metric),
     FOREIGN KEY (chash) REFERENCES commits (chash) ON DELETE CASCADE,
-    FOREIGN KEY (name) REFERENCES metrics (name) ON DELETE CASCADE
+    FOREIGN KEY (metric) REFERENCES metrics (metric) ON DELETE CASCADE
 ) STRICT;
