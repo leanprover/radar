@@ -59,11 +59,11 @@ public final class ServerApplication extends Application<ServerConfig> {
 
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResDebug(runners));
-        environment.jersey().register(new ResQueue(runners, queue));
+        environment.jersey().register(new ResQueue(repos, runners, queue));
         environment.jersey().register(new ResRepos(repos));
         environment.jersey().register(new ResReposRepoCommitsChash(repos));
         environment.jersey().register(new ResReposRepoHistory(repos));
-        environment.jersey().register(new ResQueueRunnerStatus(runners));
+        environment.jersey().register(new ResQueueRunnerStatus(runners, queue));
     }
 
     private static void configureDummyHealthCheck(Environment environment) {

@@ -1,16 +1,23 @@
 import * as z from "zod";
 import { fetchJson, Timestamp } from "@/api/utils.ts";
 
+const JsonActiveRun = z.object({
+  repo: z.string(),
+  chash: z.string(),
+  script: z.string(),
+});
+
 const JsonRunner = z.object({
   name: z.string(),
-  lastSeen: Timestamp.nullable(),
   connected: z.boolean(),
+  lastSeen: Timestamp.nullable(),
+  activeRun: JsonActiveRun.nullable(),
 });
 
 const JsonRun = z.object({
   runner: z.string(),
   script: z.string(),
-  state: z.union([z.literal("ready"), z.literal("running"), z.literal("success"), z.literal("error")]),
+  exitCode: z.int().nullable(),
 });
 
 const JsonTask = z.object({

@@ -1,15 +1,60 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { reactive } from "vue";
+import { computed, reactive } from "vue";
 import { useQueue } from "@/composables/useQueue.ts";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
-import { BedIcon, BicepsFlexedIcon } from "lucide-vue-next";
+import {
+  BedIcon,
+  BicepsFlexedIcon,
+  CircleAlertIcon,
+  CircleCheckIcon,
+  CircleDashedIcon,
+  LoaderCircleIcon,
+} from "lucide-vue-next";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CSkeleton from "@/components/CSkeleton.vue";
-import { CircleDashedIcon, LoaderCircleIcon, CircleCheckIcon, CircleAlertIcon } from "lucide-vue-next";
 import { cn } from "@/lib/utils.ts";
 
 const queue = reactive(useQueue());
+
+function runStr(repo: string, chash: string, script: string): string {
+  return JSON.stringify([repo, chash, script]);
+}
+
+const runStates = computed(() => {
+  const result = new Map<string, "running" | "success" | "error">();
+  if (!queue.isSuccess) return result;
+
+  // Read state from tasks
+  for (const task of queue.data.tasks) {
+    for (const run of task.runs) {
+      const str = runStr(task.repo, task.chash, run.script);
+      if (run.exitCode === 0) result.set(str, "success");
+      if (run.exitCode !== null) result.set(str, "error");
+    }
+  }
+
+  // Update state with runner statuses
+  for (const runner of queue.data.runners) {
+    if (runner.activeRun === null) continue;
+    const str = runStr(runner.activeRun.repo, runner.activeRun.chash, runner.activeRun.script);
+    result.set(str, "running");
+  }
+
+  return result;
+});
+
+function runsWithState(task: {
+  repo: string;
+  chash: string;
+  runs: { runner: string; script: string }[];
+}): { runner: string; script: string; state: "ready" | "running" | "success" | "error" }[] {
+  return task.runs.map((run) => {
+    const str = runStr(task.repo, task.chash, run.script);
+    const state = runStates.value.get(str) ?? "ready";
+    return { runner: run.runner, script: run.script, state };
+  });
+}
 </script>
 
 <template>
@@ -68,7 +113,7 @@ const queue = reactive(useQueue());
         </RouterLink>
         <div class="flex">
           <div
-            v-for="run in task.runs"
+            v-for="run in runsWithState(task)"
             :class="
               cn('flex items-center gap-1 rounded-md border px-2 pl-1', {
                 'border-destructive-foreground text-destructive-foreground': run.state === 'error',
