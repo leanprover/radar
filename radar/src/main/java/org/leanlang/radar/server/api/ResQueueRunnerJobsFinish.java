@@ -16,14 +16,13 @@ import org.leanlang.radar.server.runners.Runners;
 public record ResQueueRunnerJobsFinish(Runners runners, Queue queue) {
     public static final String PATH = "/queue/runner/jobs/finish";
 
-    public record JsonPostInput(
-            @NotNull String runner, @NotNull String token, String repo, @NotNull JsonRunResult result) {}
+    public record JsonPostInput(@NotNull String runner, @NotNull String token, @NotNull JsonRunResult result) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void post(JsonPostInput input) throws IOException {
         Runner runner = runners.runner(input.runner, input.token);
-        queue.finishJob(input.repo, input.result.toRunResult(runner.name()));
+        queue.finishJob(input.result.repo(), input.result.toRunResult(runner.name()));
     }
 }

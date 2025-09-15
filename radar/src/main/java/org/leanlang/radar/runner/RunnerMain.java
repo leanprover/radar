@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.glassfish.jersey.client.ClientProperties;
 import org.leanlang.radar.runner.supervisor.Supervisor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,9 @@ public final class RunnerMain {
         configureLogging(config, environment.metrics());
 
         dirs = new Dirs(configFile, config.dirs());
-        client = new JerseyClientBuilder(environment).build(NAME);
+        client = new JerseyClientBuilder(environment)
+                .build(NAME)
+                .property(ClientProperties.READ_TIMEOUT, Duration.ofSeconds(10).toMillis());
     }
 
     private static RunnerConfig loadConfig(Path configFile) throws IOException, ConfigurationException {

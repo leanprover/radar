@@ -1,9 +1,11 @@
 package org.leanlang.radar.runner.supervisor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -15,10 +17,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.apache.commons.lang3.NotImplementedException;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.runner.Dirs;
 import org.leanlang.radar.runner.RunnerConfig;
+import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsTake;
 import org.leanlang.radar.server.data.RepoGit;
 import org.leanlang.radar.server.queue.Job;
@@ -150,6 +152,15 @@ public class Supervisor {
     }
 
     private void submitResult(JsonRunResult runResult) {
-        throw new NotImplementedException(); // TODO
+        log.debug("Submitting result");
+        Response response = client.target(config.apiUrl(ResQueueRunnerJobsFinish.PATH))
+                .request()
+                .post(Entity.json(
+                        new ResQueueRunnerJobsFinish.JsonPostInput(config.name(), config.token(), runResult)));
+
+        if (!response.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
+            throw new WebApplicationException(response);
+        }
+        log.debug("Submitted result");
     }
 }

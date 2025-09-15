@@ -63,10 +63,6 @@ public final class Queue {
         return newTask;
     }
 
-    private synchronized void removeActiveTaskIfExists(ActiveTask activeTask) {
-        activeTasks.remove(activeTask);
-    }
-
     private Job jobFromActiveTask(ActiveTask task, String script) {
         return new Job(
                 task.repo().name(),
@@ -114,6 +110,7 @@ public final class Queue {
                         record.setChashBench(it.benchChash());
                         record.setStartTime(it.startTime());
                         record.setEndTime(it.endTime());
+                        record.setExitCode(it.exitCode());
                         return record;
                     })
                     .toList();
@@ -143,14 +140,16 @@ public final class Queue {
             ctx.dsl().deleteFrom(RUNS).where(RUNS.CHASH.eq(task.chash())).execute();
 
             ctx.dsl()
-                    .deleteFrom(RUNS)
+                    .deleteFrom(MEASUREMENTS)
                     .where(MEASUREMENTS.CHASH.eq(task.chash()))
                     .execute();
 
-            ctx.dsl().batchStore(metrics).execute();
+            ctx.dsl().batchMerge(metrics).execute();
 
             ctx.dsl().batchInsert(runs).execute();
             ctx.dsl().batchInsert(measurements).execute();
+
+            ctx.dsl().deleteFrom(QUEUE).where(QUEUE.CHASH.eq(task.chash())).execute();
         });
 
         activeTasks.remove(task);
