@@ -8,9 +8,20 @@ export default defineConfig([
   { ignores: ["dist/"] },
 
   js.configs.recommended,
-  ts.configs.strict,
-  ts.configs.stylistic,
+  ts.configs.strictTypeChecked,
+  ts.configs.stylisticTypeChecked,
   vue.configs["flat/recommended"],
+
+  // Type information for better ts linting
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: ["vue"],
+      },
+    },
+  },
 
   // Parse vue files correctly
   { files: ["**/*.vue"], languageOptions: { parserOptions: { parser: ts.parser } } },
