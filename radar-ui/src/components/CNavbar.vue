@@ -41,12 +41,16 @@ function setRouteToSelected() {
   const repoParam = getRepoParam();
   if (repoParam === repo.selected) return;
 
-  router.push({ name: "/repos.[repo]", params: { repo: repo.selected } });
+  void router.push({ name: "/repos.[repo]", params: { repo: repo.selected } });
   return;
 }
 
-watch(route, () => setSelectedToRoute());
-watch(repo, () => setRouteToSelected());
+watch(route, () => {
+  setSelectedToRoute();
+});
+watch(repo, () => {
+  setRouteToSelected();
+});
 setSelectedToRoute();
 </script>
 

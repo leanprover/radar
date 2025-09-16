@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export async function fetchJson<S extends z.Schema>(
+export async function fetchJson<S extends z.ZodType>(
   schema: S,
   path: string,
   queryParams?: URLSearchParams,
@@ -14,8 +14,7 @@ export async function fetchJson<S extends z.Schema>(
     throw new Error(`Failed to fetch ${url}:\n${result.statusText}`);
   }
 
-  const json = await result.json();
-  const parsed = schema.safeParse(json);
+  const parsed = schema.safeParse(await result.json());
   if (parsed.error) throw new Error(`Failed to fetch ${url}:\n${z.prettifyError(parsed.error)}`);
   return parsed.data;
 }
