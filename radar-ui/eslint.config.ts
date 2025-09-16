@@ -37,6 +37,12 @@ export default defineConfig([
     rules: {
       // https://eslint.org/docs/latest/rules/
       eqeqeq: "error",
+
+      // https://eslint.vuejs.org/rules/
+      "vue/block-lang": ["error", { script: { lang: "ts" } }],
+      "vue/block-order": ["error", { order: ["script", "template", "style"] }],
+      "vue/eqeqeq": "error",
+      "vue/v-for-delimiter-style": ["error", "in"], // "in" has proper syntax highlighting
     },
   },
 
