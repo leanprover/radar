@@ -7,7 +7,7 @@ export async function fetchJson<S extends z.ZodType>(
 ): Promise<z.infer<S>> {
   if (!path.startsWith("/")) throw new Error("path must start with /");
   const params = new URLSearchParams(queryParams);
-  const url = params.size == 0 ? `/api${path}` : `/api${path}?${params}`;
+  const url = params.size === 0 ? `/api${path}` : `/api${path}?${params}`;
 
   const result = await fetch(url);
   if (!result.ok) {

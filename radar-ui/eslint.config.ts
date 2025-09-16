@@ -32,5 +32,13 @@ export default defineConfig([
   // Exception for typed paths
   { files: ["src/pages/**/*.vue"], rules: { "vue/multi-word-component-names": "off" } },
 
+  // Custom settings
+  {
+    rules: {
+      // https://eslint.org/docs/latest/rules/
+      eqeqeq: "error",
+    },
+  },
+
   prettier,
 ]);
