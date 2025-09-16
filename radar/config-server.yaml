@@ -14,7 +14,6 @@ server:
 dirs:
   data: ../../radar-server/data/
   cache: ../../radar-server/cache/
-  tmp: ../../radar-server/tmp/
 
 repos:
   - name: radar-test-dummy
