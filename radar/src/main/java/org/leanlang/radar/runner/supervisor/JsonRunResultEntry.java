@@ -15,10 +15,10 @@ public final class JsonRunResultEntry {
     @Nullable
     public String unit;
 
-    @NotNull
-    public int direction = 0;
+    @Nullable
+    public Integer direction;
 
     public RunResultEntry toRunResultEntry() {
-        return new RunResultEntry(metric, value, Optional.ofNullable(unit), direction);
+        return new RunResultEntry(metric, value, Optional.ofNullable(unit), Optional.ofNullable(direction));
     }
 }
