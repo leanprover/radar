@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jooq.Configuration;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
@@ -113,7 +114,7 @@ public final class Queue {
                         new MetricsRecord(
                                 entry.metric(),
                                 entry.unit().orElse(null),
-                                entry.direction().orElse(0)));
+                                entry.direction().orElse(Constants.DEFAULT_DIRECTION)));
             } else {
                 entry.unit().ifPresent(record::setUnit);
                 entry.direction().ifPresent(record::setDirection);

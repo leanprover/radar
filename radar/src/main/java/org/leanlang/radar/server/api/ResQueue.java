@@ -7,11 +7,11 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.ActiveTask;
@@ -44,7 +44,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public JsonGet get() throws IOException {
-        Instant connectedCutoff = Instant.now().minus(Duration.ofSeconds(10));
+        Instant connectedCutoff = Instant.now().minus(Constants.RUNNER_CONNECTED_TIME);
 
         List<JsonRunner> runners = this.runners.runners().stream()
                 .map(runner -> new JsonRunner(

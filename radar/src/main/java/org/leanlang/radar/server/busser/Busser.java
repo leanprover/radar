@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class Busser implements Managed {
     private static final Logger log = LoggerFactory.getLogger(Busser.class);
+
     private final Repos repos;
     private final ScheduledExecutorService executor;
 
@@ -25,7 +27,7 @@ public final class Busser implements Managed {
 
     @Override
     public void start() {
-        executor.scheduleWithFixedDelay(this::update, 1, 30 * 60, TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(this::update, 1, Constants.BUSSER_DELAY.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     @Override

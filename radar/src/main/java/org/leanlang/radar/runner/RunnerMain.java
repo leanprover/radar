@@ -17,11 +17,11 @@ import io.dropwizard.logging.common.LoggingFactory;
 import jakarta.ws.rs.client.Client;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.client.ClientProperties;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.runner.config.Dirs;
 import org.leanlang.radar.runner.config.RunnerConfig;
 import org.leanlang.radar.runner.supervisor.Supervisor;
@@ -57,7 +57,7 @@ public final class RunnerMain {
         dirs = new Dirs(configFile, config.dirs());
         client = new JerseyClientBuilder(environment)
                 .build(NAME)
-                .property(ClientProperties.READ_TIMEOUT, Duration.ofMinutes(1).toMillis());
+                .property(ClientProperties.READ_TIMEOUT, Constants.RUNNER_HTTP_REQUEST_TIMEOUT.toMillis());
     }
 
     private static RunnerConfig loadConfig(Path configFile) throws IOException, ConfigurationException {
@@ -84,7 +84,8 @@ public final class RunnerMain {
         StatusUpdater statusUpdater = new StatusUpdater(config, supervisor, client);
 
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
-            executor.scheduleWithFixedDelay(statusUpdater::run, 0, 1, TimeUnit.SECONDS);
+            executor.scheduleWithFixedDelay(
+                    statusUpdater::run, 0, Constants.RUNNER_STATUS_DELAY.toMillis(), TimeUnit.MILLISECONDS);
 
             while (true) {
                 try {
@@ -95,7 +96,7 @@ public final class RunnerMain {
                 }
 
                 try {
-                    Thread.sleep(Duration.ofSeconds(10));
+                    Thread.sleep(Constants.RUNNER_JOB_DELAY);
                 } catch (InterruptedException ignored) {
                 }
             }
