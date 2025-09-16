@@ -1,4 +1,4 @@
-package org.leanlang.radar.runner;
+package org.leanlang.radar.runner.config;
 
 import java.nio.file.Path;
 

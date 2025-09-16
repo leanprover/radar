@@ -4,6 +4,7 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import java.util.Optional;
+import org.leanlang.radar.runner.config.RunnerConfig;
 import org.leanlang.radar.runner.supervisor.Supervisor;
 import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.slf4j.Logger;

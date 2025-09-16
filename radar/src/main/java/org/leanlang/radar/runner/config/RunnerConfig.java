@@ -1,4 +1,4 @@
-package org.leanlang.radar.runner;
+package org.leanlang.radar.runner.config;
 
 import io.dropwizard.logging.common.LoggingFactory;
 import jakarta.validation.Valid;
