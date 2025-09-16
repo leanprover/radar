@@ -3,7 +3,7 @@ import * as z from "zod";
 export async function fetchJson<S extends z.Schema>(
   schema: S,
   path: string,
-  queryParams?: Record<string, any>,
+  queryParams?: URLSearchParams,
 ): Promise<z.infer<S>> {
   if (!path.startsWith("/")) throw new Error("path must start with /");
   const params = new URLSearchParams(queryParams);

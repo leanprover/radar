@@ -65,34 +65,35 @@ function runsWithState(task: {
     </CardHeader>
     <CardContent class="flex">
       <CSkeleton v-if="!queue.isSuccess" :error="queue.error" class="h-16 w-[15ch]" />
-      <div
-        v-else
-        v-for="runner in queue.data.runners"
-        :key="runner.name"
-        class="flex items-center gap-4 rounded-lg border px-4 py-2"
-      >
-        <Tooltip>
-          <TooltipTrigger>
-            <BicepsFlexedIcon v-if="runner.connected" />
-            <BedIcon v-else />
-          </TooltipTrigger>
-          <TooltipContent>
-            {{ runner.connected ? "Connected" : "Disconnected" }}
-          </TooltipContent>
-        </Tooltip>
-        <div class="flex flex-col">
-          <div class="font-bold">{{ runner.name }}</div>
-          <div v-if="runner.lastSeen === null" class="text-muted-foreground text-sm">Never seen</div>
-          <Tooltip v-else>
-            <TooltipTrigger class="text-muted-foreground text-sm">
-              Last seen {{ useTimeAgo(runner.lastSeen) }}
+      <template v-else>
+        <div
+          v-for="runner in queue.data.runners"
+          :key="runner.name"
+          class="flex items-center gap-4 rounded-lg border px-4 py-2"
+        >
+          <Tooltip>
+            <TooltipTrigger>
+              <BicepsFlexedIcon v-if="runner.connected" />
+              <BedIcon v-else />
             </TooltipTrigger>
-            <TooltipContent side="bottom" class="tabular-nums">
-              {{ useDateFormat(runner.lastSeen, "YYYY-MM-DD HH:mm:ss").value }}
+            <TooltipContent>
+              {{ runner.connected ? "Connected" : "Disconnected" }}
             </TooltipContent>
           </Tooltip>
-        </div>
-      </div>
+          <div class="flex flex-col">
+            <div class="font-bold">{{ runner.name }}</div>
+            <div v-if="runner.lastSeen === null" class="text-muted-foreground text-sm">Never seen</div>
+            <Tooltip v-else>
+              <TooltipTrigger class="text-muted-foreground text-sm">
+                Last seen {{ useTimeAgo(runner.lastSeen) }}
+              </TooltipTrigger>
+              <TooltipContent side="bottom" class="tabular-nums">
+                {{ useDateFormat(runner.lastSeen, "YYYY-MM-DD HH:mm:ss").value }}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div></template
+      >
     </CardContent>
   </Card>
 
@@ -107,7 +108,11 @@ function runsWithState(task: {
         <div v-if="queue.data.tasks.length === 0" class="text-muted-foreground text-lg font-light italic">
           🙛 Queue empty 🙙
         </div>
-        <div v-for="task in queue.data.tasks" class="flex flex-col gap-2 rounded-lg border p-2">
+        <div
+          v-for="task in queue.data.tasks"
+          :key="JSON.stringify([task.repo, task.chash])"
+          class="flex flex-col gap-2 rounded-lg border p-2"
+        >
           <RouterLink
             :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: task.repo, chash: task.chash } }"
             class="group flex flex-col"
@@ -118,6 +123,7 @@ function runsWithState(task: {
           <div class="flex">
             <div
               v-for="run in runsWithState(task)"
+              :key="JSON.stringify([run.runner, run.script])"
               :class="
                 cn('flex items-center gap-1 rounded-md border px-2 pl-1', {
                   'border-destructive-foreground text-destructive-foreground': run.state === 'error',

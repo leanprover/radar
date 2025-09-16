@@ -61,9 +61,9 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
       </div>
       <div v-else class="flex flex-col gap-4">
         <RouterLink
-          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: commit.chash } }"
           v-for="commit in history.data.commits"
           :key="commit.chash"
+          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: commit.chash } }"
           class="group flex items-center gap-2"
         >
           <GitCommitVerticalIcon :size="32" class="shrink-0" />
@@ -77,7 +77,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
             </div>
           </div>
         </RouterLink>
-        <EllipsisVerticalIcon :size="32" v-if="history.data.nextAt !== null" class="shrink-0" />
+        <EllipsisVerticalIcon v-if="history.data.nextAt !== null" :size="32" class="shrink-0" />
       </div>
     </CardContent>
   </Card>

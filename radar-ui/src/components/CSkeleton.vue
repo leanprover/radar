@@ -3,7 +3,7 @@ import type { HTMLAttributes } from "vue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils.ts";
 
-const { class: clazz, error } = defineProps<{
+const { class: clazz = undefined, error } = defineProps<{
   error: Error | null | undefined;
   class?: HTMLAttributes["class"];
 }>();

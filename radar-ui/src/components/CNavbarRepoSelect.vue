@@ -26,7 +26,7 @@ watchEffect(() => {
       <SelectValue v-else>{{ selected }}</SelectValue>
     </SelectTrigger>
     <SelectContent v-if="repos.isSuccess">
-      <SelectItem :value="repo.name" :key="repo.name" v-for="repo of repos.data.repos">
+      <SelectItem v-for="repo of repos.data.repos" :key="repo.name" :value="repo.name">
         <div class="flex flex-col">
           <div>{{ repo.name }}</div>
           <div class="text-muted-foreground">{{ repo.description }}</div>
