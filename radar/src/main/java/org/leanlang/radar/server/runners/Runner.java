@@ -6,7 +6,9 @@ import org.leanlang.radar.server.config.ServerConfigRunner;
 
 public final class Runner {
     private final ServerConfigRunner config;
-    private @Nullable RunnerStatus status;
+
+    @Nullable
+    private RunnerStatus status;
 
     public Runner(ServerConfigRunner config) {
         this.config = config;

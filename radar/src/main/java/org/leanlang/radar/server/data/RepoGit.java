@@ -82,16 +82,6 @@ public final class RepoGit implements AutoCloseable {
 
             // No submodules for now
         }
-
-        //        Git.cloneRepository()
-        //                .setURI(path.toUri().toString())
-        //                .setBranch(hash)
-        //                .setDirectory(target.toFile())
-        //                .setDepth(1)
-        //                .setCloneSubmodules(true)
-        //                .setProgressMonitor(new RepoGitProgressMonitor("Cloning", path))
-        //                .call()
-        //                .close();
         log.info("Finished cloning repo {}", path);
     }
 }
