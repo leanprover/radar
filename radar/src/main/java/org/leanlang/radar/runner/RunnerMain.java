@@ -55,7 +55,7 @@ public final class RunnerMain {
         dirs = new Dirs(configFile, config.dirs());
         client = new JerseyClientBuilder(environment)
                 .build(NAME)
-                .property(ClientProperties.READ_TIMEOUT, Duration.ofSeconds(10).toMillis());
+                .property(ClientProperties.READ_TIMEOUT, Duration.ofMinutes(1).toMillis());
     }
 
     private static RunnerConfig loadConfig(Path configFile) throws IOException, ConfigurationException {
