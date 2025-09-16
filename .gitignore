@@ -2,5 +2,7 @@
 /.idea/*
 !/.idea/codeStyles/
 !/.idea/codeStyles/*
+!/.idea/inspectionProfiles/
+!/.idea/inspectionProfiles/*
 !/.idea/palantir-java-format.xml
 !/.idea/prettier.xml
