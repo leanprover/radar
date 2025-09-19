@@ -12,7 +12,7 @@ server:
       port: 8081
 
 dirs:
-  data: ../../radar-server/data/
+  state: ../../radar-server/state/
   cache: ../../radar-server/cache/
 
 repos:

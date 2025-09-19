@@ -3,17 +3,17 @@ package org.leanlang.radar.server.config;
 import java.nio.file.Path;
 
 public final class Dirs {
-    private final Path data;
+    private final Path state;
     private final Path cache;
 
     public Dirs(Path configFile, ServerConfigDirs dirs) {
         Path root = configFile.getParent();
-        data = root.resolve(dirs.data());
+        state = root.resolve(dirs.state());
         cache = root.resolve(dirs.cache());
     }
 
     public Path repoDb(String repo) {
-        return data.resolve(repo).resolve("data.db");
+        return state.resolve(repo).resolve("data.db");
     }
 
     public Path repoGit(String repo) {
