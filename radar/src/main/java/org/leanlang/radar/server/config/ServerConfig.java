@@ -10,7 +10,7 @@ public final class ServerConfig extends Configuration {
 
     @Valid
     @NotNull
-    public ServerConfigDirs dirs;
+    public ServerConfigDirs dirs = new ServerConfigDirs();
 
     @Valid
     @NotEmpty

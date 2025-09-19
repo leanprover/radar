@@ -11,10 +11,6 @@ server:
     - type: http
       port: 8081
 
-dirs:
-  state: ../../radar-server/state/
-  cache: ../../radar-server/cache/
-
 repos:
   - name: radar-test-dummy
     description: Dummy test data

@@ -7,12 +7,23 @@ import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import org.jspecify.annotations.Nullable;
 
-public record RunnerConfig(
-        @Valid @Nullable LoggingFactory logging,
-        @NotEmpty String name,
-        @NotNull URI url,
-        @NotEmpty String token,
-        @Valid @NotNull RunnerConfigDirs dirs) {
+public class RunnerConfig {
+    @Valid
+    @Nullable
+    public LoggingFactory logging;
+
+    @NotEmpty
+    public String name;
+
+    @NotNull
+    public URI url;
+
+    @NotEmpty
+    public String token;
+
+    @Valid
+    @NotNull
+    public RunnerConfigDirs dirs = new RunnerConfigDirs();
 
     public URI apiUrl(String path) {
         if (path.startsWith("/")) path = path.substring(1);

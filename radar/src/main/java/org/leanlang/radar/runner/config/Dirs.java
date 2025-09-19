@@ -9,8 +9,8 @@ public final class Dirs {
 
     public Dirs(Path configFile, @Nullable Path cacheDir, @Nullable Path tmpDir, RunnerConfigDirs dirs) {
         Path root = configFile.getParent();
-        cache = cacheDir != null ? cacheDir : root.resolve(dirs.cache());
-        tmp = tmpDir != null ? tmpDir : root.resolve(dirs.tmp());
+        cache = cacheDir != null ? cacheDir : root.resolve(dirs.cache);
+        tmp = tmpDir != null ? tmpDir : root.resolve(dirs.tmp);
     }
 
     public Path bareRepo(String repo) {

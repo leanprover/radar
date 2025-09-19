@@ -86,7 +86,7 @@ public class Supervisor {
         return client.target(config.apiUrl(ResQueueRunnerJobsTake.PATH))
                 .request(MediaType.APPLICATION_JSON)
                 .post(
-                        Entity.json(new ResQueueRunnerJobsTake.JsonPostInput(config.name(), config.token())),
+                        Entity.json(new ResQueueRunnerJobsTake.JsonPostInput(config.name, config.token)),
                         ResQueueRunnerJobsTake.JsonPost.class)
                 .job()
                 .map(ResQueueRunnerJobsTake.JsonJob::toJob);
@@ -162,8 +162,7 @@ public class Supervisor {
         log.debug("Submitting result");
         Response response = client.target(config.apiUrl(ResQueueRunnerJobsFinish.PATH))
                 .request()
-                .post(Entity.json(
-                        new ResQueueRunnerJobsFinish.JsonPostInput(config.name(), config.token(), runResult)));
+                .post(Entity.json(new ResQueueRunnerJobsFinish.JsonPostInput(config.name, config.token, runResult)));
 
         if (!response.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
             throw new WebApplicationException(response);

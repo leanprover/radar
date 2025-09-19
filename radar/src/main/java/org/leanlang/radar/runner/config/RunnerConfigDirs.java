@@ -1,5 +1,12 @@
 package org.leanlang.radar.runner.config;
 
+import jakarta.validation.constraints.NotNull;
 import java.nio.file.Path;
 
-public record RunnerConfigDirs(Path cache, Path tmp) {}
+public class RunnerConfigDirs {
+    @NotNull
+    public Path cache = Path.of("cache");
+
+    @NotNull
+    public Path tmp = Path.of("tmp");
+}

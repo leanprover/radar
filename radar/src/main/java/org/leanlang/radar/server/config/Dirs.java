@@ -9,8 +9,8 @@ public final class Dirs {
 
     public Dirs(Path configFile, @Nullable Path stateDir, @Nullable Path cacheDir, ServerConfigDirs dirs) {
         Path root = configFile.getParent();
-        state = stateDir != null ? stateDir : root.resolve(dirs.state());
-        cache = cacheDir != null ? cacheDir : root.resolve(dirs.cache());
+        state = stateDir != null ? stateDir : root.resolve(dirs.state);
+        cache = cacheDir != null ? cacheDir : root.resolve(dirs.cache);
     }
 
     public Path repoDb(String repo) {

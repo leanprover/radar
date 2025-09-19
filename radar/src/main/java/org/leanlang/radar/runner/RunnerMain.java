@@ -55,7 +55,7 @@ public final class RunnerMain {
         config = loadConfig(configFile);
         configureLogging(config, environment.metrics());
 
-        dirs = new Dirs(configFile, cacheDir, tmpDir, config.dirs());
+        dirs = new Dirs(configFile, cacheDir, tmpDir, config.dirs);
         client = new JerseyClientBuilder(environment)
                 .build(NAME)
                 .property(ClientProperties.READ_TIMEOUT, Constants.RUNNER_HTTP_REQUEST_TIMEOUT.toMillis());
@@ -73,7 +73,7 @@ public final class RunnerMain {
     }
 
     private static void configureLogging(RunnerConfig config, MetricRegistry metricRegistry) {
-        LoggingFactory loggingFactory = config.logging();
+        LoggingFactory loggingFactory = config.logging;
         if (loggingFactory == null) {
             loggingFactory = new DefaultLoggingFactory();
         }
