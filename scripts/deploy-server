@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+rsync -v radar/target/radar-*.jar root@speed.lean-lang.org:/var/lib/radar-server/radar.jar
+ssh root@speed.lean-lang.org systemctl restart radar-server.service
