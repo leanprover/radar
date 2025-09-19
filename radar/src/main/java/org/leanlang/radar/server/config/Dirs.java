@@ -14,14 +14,14 @@ public final class Dirs {
     }
 
     public Path repoDb(String repo) {
-        return state.resolve(repo).resolve("data.db");
+        return state.resolve("repos").resolve(repo).resolve("data.db");
     }
 
     public Path repoGit(String repo) {
-        return cache.resolve(repo).resolve("repo.git");
+        return cache.resolve("repos").resolve(repo).resolve("repo.git");
     }
 
     public Path repoGitBench(String repo) {
-        return cache.resolve(repo).resolve("bench.git");
+        return cache.resolve("repos").resolve(repo).resolve("bench.git");
     }
 }

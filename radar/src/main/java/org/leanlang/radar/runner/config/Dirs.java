@@ -14,11 +14,11 @@ public final class Dirs {
     }
 
     public Path bareRepo(String repo) {
-        return cache.resolve(repo).resolve("repo.git");
+        return cache.resolve("repos").resolve(repo).resolve("repo.git");
     }
 
     public Path bareBenchRepo(String repo) {
-        return cache.resolve(repo).resolve("bench.git");
+        return cache.resolve("repos").resolve(repo).resolve("bench.git");
     }
 
     public Path tmp() {
