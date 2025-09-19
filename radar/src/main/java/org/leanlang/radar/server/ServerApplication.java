@@ -7,6 +7,7 @@ import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResQueue;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
@@ -26,9 +27,13 @@ public final class ServerApplication extends Application<ServerConfig> {
     public static final String NAME = "Radar Server";
 
     private final Path configFile;
+    private final @Nullable Path stateDir;
+    private final @Nullable Path cacheDir;
 
-    public ServerApplication(Path configFile) {
+    public ServerApplication(Path configFile, @Nullable Path stateDir, @Nullable Path cacheDir) {
         this.configFile = configFile;
+        this.stateDir = stateDir;
+        this.cacheDir = cacheDir;
     }
 
     public void run() throws Exception {
@@ -50,7 +55,7 @@ public final class ServerApplication extends Application<ServerConfig> {
     public void run(ServerConfig configuration, Environment environment) throws IOException {
         configureDummyHealthCheck(environment);
 
-        var dirs = new Dirs(configFile, configuration.dirs);
+        var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
         var repos = new Repos(dirs, configuration.repos);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos);

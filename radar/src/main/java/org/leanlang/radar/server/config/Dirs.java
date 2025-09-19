@@ -1,15 +1,16 @@
 package org.leanlang.radar.server.config;
 
 import java.nio.file.Path;
+import org.jspecify.annotations.Nullable;
 
 public final class Dirs {
     private final Path state;
     private final Path cache;
 
-    public Dirs(Path configFile, ServerConfigDirs dirs) {
+    public Dirs(Path configFile, @Nullable Path stateDir, @Nullable Path cacheDir, ServerConfigDirs dirs) {
         Path root = configFile.getParent();
-        state = root.resolve(dirs.state());
-        cache = root.resolve(dirs.cache());
+        state = stateDir != null ? stateDir : root.resolve(dirs.state());
+        cache = cacheDir != null ? cacheDir : root.resolve(dirs.cache());
     }
 
     public Path repoDb(String repo) {

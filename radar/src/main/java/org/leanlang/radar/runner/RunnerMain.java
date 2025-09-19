@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.client.ClientProperties;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.runner.config.Dirs;
 import org.leanlang.radar.runner.config.RunnerConfig;
@@ -37,7 +38,7 @@ public final class RunnerMain {
     private final Dirs dirs;
     private final Client client;
 
-    public RunnerMain(Path configFile) throws Exception {
+    public RunnerMain(Path configFile, @Nullable Path cacheDir, @Nullable Path tmpDir) throws Exception {
         // Startup process inspired by - and using - Dropwizard machinery
 
         BootstrapLogging.bootstrap(Level.WARN); // No hibernate debug prints, please
@@ -54,7 +55,7 @@ public final class RunnerMain {
         config = loadConfig(configFile);
         configureLogging(config, environment.metrics());
 
-        dirs = new Dirs(configFile, config.dirs());
+        dirs = new Dirs(configFile, cacheDir, tmpDir, config.dirs());
         client = new JerseyClientBuilder(environment)
                 .build(NAME)
                 .property(ClientProperties.READ_TIMEOUT, Constants.RUNNER_HTTP_REQUEST_TIMEOUT.toMillis());

@@ -1,25 +1,33 @@
 package org.leanlang.radar;
 
 import java.nio.file.Path;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.runner.RunnerMain;
 import org.leanlang.radar.server.ServerApplication;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command()
 public final class Main {
 
     @Command(name = "server", description = "Start the server.")
-    void runServer(@Parameters(index = "0", description = "Path to the config file.") Path configFile)
+    void runServer(
+            @Parameters(index = "0", description = "Path to the config file.") Path configFile,
+            @Option(names = "--state-dir", description = "Path to the state dir.") @Nullable Path stateDir,
+            @Option(names = "--cache-dir", description = "Path to the cache dir.") @Nullable Path cacheDir)
             throws Exception {
-        new ServerApplication(configFile).run();
+        new ServerApplication(configFile, stateDir, cacheDir).run();
     }
 
     @Command(name = "runner", description = "Start the runner.")
-    void runRunner(@Parameters(index = "0", description = "Path to the config file.") Path configFile)
+    void runRunner(
+            @Parameters(index = "0", description = "Path to the config file.") Path configFile,
+            @Option(names = "--cache-dir", description = "Path to the cache dir.") @Nullable Path cacheDir,
+            @Option(names = "--tmp-dir", description = "Path to the tmp dir.") @Nullable Path tmpDir)
             throws Exception {
-        new RunnerMain(configFile).run();
+        new RunnerMain(configFile, cacheDir, tmpDir).run();
     }
 
     public static void main(String[] args) {
