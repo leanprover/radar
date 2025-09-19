@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev-remote": "VITE_PROXY=https://radar.lean-lang.org vite",
     "check": "vue-tsc -b && eslint",
     "build": "pnpm run check && vite build",
     "preview": "vite preview",

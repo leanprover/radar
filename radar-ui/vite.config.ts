@@ -15,7 +15,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8080/",
+      "/api": process.env["VITE_PROXY"] ?? "http://localhost:8080/",
     },
   },
 });
