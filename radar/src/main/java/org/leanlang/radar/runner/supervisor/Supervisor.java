@@ -77,6 +77,20 @@ public class Supervisor {
 
             submitResult(result);
             return true;
+        } catch (Exception e) {
+            // TODO Include exception trace in log instead of just logging it
+            log.debug("Failed to run job {}", job, e);
+
+            Instant now = Instant.now();
+            JsonRunResult result = new JsonRunResult(job, now, now, -1);
+
+            // We need to prevent the situation where we send a status update telling the server we're still working on
+            // our run after we've already submitted the results. Otherwise, the run will land on the queue again.
+            setStatus(null);
+            new StatusUpdater(config, this, client).runAndThrow();
+
+            submitResult(result);
+            return true;
         } finally {
             setStatus(null);
         }
@@ -154,16 +168,7 @@ public class Supervisor {
         }
 
         // A benchmark has been run :D
-        return new JsonRunResult(
-                job.repo(),
-                job.chash(),
-                job.benchChash(),
-                job.name(),
-                job.script(),
-                startTime,
-                endTime,
-                exitCode,
-                entries);
+        return new JsonRunResult(job, startTime, endTime, exitCode, entries);
     }
 
     private void submitResult(JsonRunResult runResult) {
