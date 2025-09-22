@@ -3,6 +3,8 @@ logging:
   loggers:
     org.leanlang.radar: DEBUG
 
+adminToken: admintoken
+
 server:
   applicationConnectors:
     - type: http

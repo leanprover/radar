@@ -2,12 +2,16 @@ package org.leanlang.radar.server;
 
 import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.jspecify.annotations.Nullable;
+import org.leanlang.radar.server.api.ResAdminEnqueue;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResQueue;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
@@ -16,6 +20,8 @@ import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.leanlang.radar.server.api.ResRepos;
 import org.leanlang.radar.server.api.ResReposRepoCommitsChash;
 import org.leanlang.radar.server.api.ResReposRepoHistory;
+import org.leanlang.radar.server.api.auth.Admin;
+import org.leanlang.radar.server.api.auth.AdminAuthenticator;
 import org.leanlang.radar.server.busser.Busser;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfig;
@@ -54,6 +60,7 @@ public final class ServerApplication extends Application<ServerConfig> {
     @Override
     public void run(ServerConfig configuration, Environment environment) throws IOException {
         configureDummyHealthCheck(environment);
+        configureAdminAuth(environment, configuration.adminToken);
 
         var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
         var repos = new Repos(dirs, configuration.repos);
@@ -65,6 +72,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.lifecycle().manage(busser);
 
         environment.jersey().setUrlPattern("/api/*");
+        environment.jersey().register(new ResAdminEnqueue(repos, queue));
         environment.jersey().register(new ResDebug(runners, busser));
         environment.jersey().register(new ResQueue(repos, runners, queue));
         environment.jersey().register(new ResQueueRunnerJobsFinish(runners, queue));
@@ -82,5 +90,16 @@ public final class ServerApplication extends Application<ServerConfig> {
                 return Result.healthy();
             }
         });
+    }
+
+    private static void configureAdminAuth(Environment environment, String adminToken) {
+        environment
+                .jersey()
+                .register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<Admin>()
+                        .setAuthenticator(new AdminAuthenticator(adminToken))
+                        // .setRealm("radar-admin")
+                        .buildAuthFilter()));
+
+        environment.jersey().register(new AuthValueFactoryProvider.Binder<>(Admin.class));
     }
 }

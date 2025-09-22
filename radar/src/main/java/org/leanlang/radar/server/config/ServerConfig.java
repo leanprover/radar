@@ -12,6 +12,9 @@ public final class ServerConfig extends Configuration {
     @NotNull
     public ServerConfigDirs dirs = new ServerConfigDirs();
 
+    @NotEmpty
+    public String adminToken;
+
     @Valid
     @NotEmpty
     @RepoNamesUnique
