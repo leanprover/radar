@@ -1,0 +1,12 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
+  width="1024" height="1024" viewBox="-.1 -.6 1.2 1.2">
+  <rect x="-1" y="-1.5" width="3" height="3" fill="#fff" />
+  <path fill="#000" d="
+    M 0 0
+    L .866 .5
+    A 1 1 0 0 0 .866 -.5
+    M 1 0
+    L .5 .288
+    A .577 .577 0 0 1 .5 -.288
+  "/>
+</svg>
