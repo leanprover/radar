@@ -47,12 +47,12 @@ const runStates = computed(() => {
 function runsWithState(task: {
   repo: string;
   chash: string;
-  runs: { runner: string; script: string }[];
-}): { runner: string; script: string; state: "ready" | "running" | "success" | "error" }[] {
+  runs: { name: string; script: string; runner: string }[];
+}): { name: string; script: string; runner: string; state: "ready" | "running" | "success" | "error" }[] {
   return task.runs.map((run) => {
     const str = runStr(task.repo, task.chash, run.script);
     const state = runStates.value.get(str) ?? "ready";
-    return { runner: run.runner, script: run.script, state };
+    return { name: run.name, script: run.script, runner: run.runner, state };
   });
 }
 </script>
@@ -135,7 +135,7 @@ function runsWithState(task: {
               <LoaderCircleIcon v-if="run.state === 'running'" :size="16" class="shrink-0 animate-spin" />
               <CircleCheckIcon v-if="run.state === 'success'" :size="16" class="shrink-0" />
               <CircleAlertIcon v-if="run.state === 'error'" :size="16" class="shrink-0" />
-              <div>{{ run.runner }}</div>
+              <div>{{ run.name }} (on {{ run.runner }})</div>
             </div>
           </div>
         </div>
