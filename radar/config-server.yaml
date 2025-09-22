@@ -19,8 +19,9 @@ repos:
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
-      - runner: testrunner
+      - name: main
         script: main.py
+        runner: testrunner
 
   - name: radar
     description: Do you know how fast you were going?
@@ -29,8 +30,9 @@ repos:
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
-      - runner: testrunner
+      - name: main
         script: main.py
+        runner: testrunner
 
   - name: lean4
     description: The Lean 4 programming language and theorem prover
@@ -39,8 +41,9 @@ repos:
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
-      - runner: testrunner
+      - name: main
         script: main.py
+        runner: testrunner
 
   - name: mathlib4
     url: https://github.com/leanprover-community/mathlib4
@@ -49,8 +52,9 @@ repos:
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
-      - runner: testrunner
+      - name: main
         script: main.py
+        runner: testrunner
 
 runners:
   - name: testrunner

@@ -20,13 +20,14 @@ public record ResQueueRunnerJobsTake(Runners runners, Queue queue) {
 
     public record JsonPostInput(@NotNull String runner, @NotNull String token) {}
 
-    public record JsonJob(String repo, URI url, String chash, URI benchUrl, String benchChash, String script) {
+    public record JsonJob(
+            String repo, URI url, String chash, URI benchUrl, String benchChash, String name, String script) {
         public JsonJob(Job job) {
-            this(job.repo(), job.url(), job.chash(), job.benchUrl(), job.benchChash(), job.script());
+            this(job.repo(), job.url(), job.chash(), job.benchUrl(), job.benchChash(), job.name(), job.script());
         }
 
         public Job toJob() {
-            return new Job(repo, url, chash, benchUrl, benchChash, script);
+            return new Job(repo, url, chash, benchUrl, benchChash, name, script);
         }
     }
 

@@ -1,5 +1,6 @@
 package org.leanlang.radar.server.config;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -14,4 +15,4 @@ public record ServerConfigRepo(
         @NotEmpty Set<@NonEmpty String> track,
         @NotNull URI benchUrl,
         @NotEmpty String benchRef,
-        @NotEmpty List<ServerConfigRepoRun> benchRuns) {}
+        @Valid @NotEmpty @RepoRunNamesUnique List<ServerConfigRepoRun> benchRuns) {}

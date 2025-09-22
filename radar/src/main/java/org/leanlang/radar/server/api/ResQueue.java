@@ -35,7 +35,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
     public record JsonRunner(
             String name, boolean connected, Optional<Instant> lastSeen, Optional<JsonActiveRun> activeRun) {}
 
-    public record JsonRun(String runner, String script, Optional<Integer> exitCode) {}
+    public record JsonRun(String name, String script, String runner, Optional<Integer> exitCode) {}
 
     public record JsonTask(String repo, String chash, String title, List<JsonRun> runs) {}
 
@@ -78,11 +78,11 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
         // Currently O(n*m), maybe optimize?
         return runs.stream()
                 .map(run -> new JsonRun(
-                        run.runner(),
+                        run.name(),
                         run.script(),
+                        run.runner(),
                         results.stream()
-                                .filter(it -> it.runner().equals(run.runner())
-                                        && it.script().equals(run.script()))
+                                .filter(it -> it.run().name().equals(run.name()))
                                 .findFirst()
                                 .map(RunResult::exitCode)))
                 .toList();

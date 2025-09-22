@@ -15,8 +15,9 @@ const JsonRunner = z.object({
 });
 
 const JsonRun = z.object({
-  runner: z.string(),
+  name: z.string(),
   script: z.string(),
+  runner: z.string(),
   exitCode: z.int().nullable(),
 });
 

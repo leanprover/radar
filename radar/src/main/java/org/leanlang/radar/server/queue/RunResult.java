@@ -5,8 +5,7 @@ import java.util.List;
 
 public record RunResult(
         String chash,
-        String runner,
-        String script,
+        Run run,
         String benchChash,
         Instant startTime,
         Instant endTime,

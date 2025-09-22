@@ -22,7 +22,7 @@ public class ActiveTask {
                 repo.gitBench().plumbing().resolve(repo.config().benchRef()).name();
 
         this.runs = repo.config().benchRuns().stream()
-                .map(it -> new Run(it.runner(), it.script()))
+                .map(it -> new Run(it.name(), it.script(), it.runner()))
                 .toList();
 
         this.results = new ArrayList<>();
@@ -53,15 +53,15 @@ public class ActiveTask {
     }
 
     public synchronized void addResult(RunResult result) {
+        if (!runs.contains(result.run())) return;
         results.add(result);
     }
 
-    public Set<Run> completedRuns() {
-        return results().stream().map(it -> new Run(it.runner(), it.script())).collect(Collectors.toUnmodifiableSet());
-    }
-
     public List<Run> uncompletedRuns() {
-        Set<Run> completed = completedRuns();
-        return runs.stream().filter(it -> !completed.contains(it)).toList();
+        Set<String> completedRunNames =
+                results.stream().map(it -> it.run().name()).collect(Collectors.toUnmodifiableSet());
+        return runs.stream()
+                .filter(it -> !completedRunNames.contains(it.name()))
+                .toList();
     }
 }

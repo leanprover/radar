@@ -45,13 +45,14 @@ CREATE TABLE metrics (
 
 CREATE TABLE runs (
     chash       TEXT NOT NULL,
-    runner      TEXT NOT NULL,
+    name        TEXT NOT NULL,
     script      TEXT NOT NULL,
+    runner      TEXT NOT NULL,
     chash_bench TEXT NOT NULL,
     start_time  TEXT NOT NULL,
     end_time    TEXT NOT NULL,
     exit_code   INT  NOT NULL,
-    PRIMARY KEY (chash, runner, script),
+    PRIMARY KEY (chash, name),
     FOREIGN KEY (chash) REFERENCES commits (chash) ON DELETE CASCADE
 ) STRICT;
 

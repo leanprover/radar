@@ -3,12 +3,14 @@ package org.leanlang.radar.runner.supervisor;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
+import org.leanlang.radar.server.queue.Run;
 import org.leanlang.radar.server.queue.RunResult;
 
 public record JsonRunResult(
         @NotNull String repo,
         @NotNull String chash,
         @NotNull String benchChash,
+        @NotNull String name,
         @NotNull String script,
         @NotNull Instant startTime,
         @NotNull Instant endTime,
@@ -17,8 +19,7 @@ public record JsonRunResult(
     public RunResult toRunResult(String runner) {
         return new RunResult(
                 chash,
-                runner,
-                script,
+                new Run(name, script, runner),
                 benchChash,
                 startTime,
                 endTime,

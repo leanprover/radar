@@ -49,7 +49,7 @@ public final class Queue {
                 if (activeTaskIds.contains(id)) continue;
 
                 List<Run> runs = repo.config().benchRuns().stream()
-                        .map(it -> new Run(it.runner(), it.script()))
+                        .map(it -> new Run(it.name(), it.script(), it.runner()))
                         .toList();
                 Task task = new Task(id.repo(), id.chash(), runs, entry.getQueuedTime(), entry.getBumpedTime());
                 result.add(task);
@@ -70,14 +70,15 @@ public final class Queue {
         return newTask;
     }
 
-    private Job jobFromActiveTask(ActiveTask task, String script) {
+    private Job jobFromActiveTask(ActiveTask task, Run run) {
         return new Job(
                 task.repo().name(),
                 task.repo().config().url(),
                 task.chash(),
                 task.repo().config().benchUrl(),
                 task.benchChash(),
-                script);
+                run.name(),
+                run.script());
     }
 
     public Optional<Job> takeJob(String runner) throws IOException {
@@ -85,7 +86,7 @@ public final class Queue {
         for (ActiveTask activeTask : getActiveTasks()) {
             for (Run run : activeTask.uncompletedRuns()) {
                 if (!run.runner().equals(runner)) continue;
-                return Optional.of(jobFromActiveTask(activeTask, run.script()));
+                return Optional.of(jobFromActiveTask(activeTask, run));
             }
         }
 
@@ -95,7 +96,7 @@ public final class Queue {
                 if (!run.runner().equals(runner)) continue;
                 TaskId id = new TaskId(task.repo(), task.chash());
                 ActiveTask activeTask = ensureActiveTaskExists(id);
-                return Optional.of(jobFromActiveTask(activeTask, run.script()));
+                return Optional.of(jobFromActiveTask(activeTask, run));
             }
         }
 
@@ -129,8 +130,9 @@ public final class Queue {
                 .map(it -> {
                     RunsRecord record = new RunsRecord();
                     record.setChash(it.chash());
-                    record.setRunner(it.runner());
-                    record.setScript(it.script());
+                    record.setName(it.run().name());
+                    record.setScript(it.run().script());
+                    record.setRunner(it.run().runner());
                     record.setChashBench(it.benchChash());
                     record.setStartTime(it.startTime());
                     record.setEndTime(it.endTime());

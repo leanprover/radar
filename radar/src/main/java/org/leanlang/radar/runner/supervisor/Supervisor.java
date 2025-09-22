@@ -155,7 +155,15 @@ public class Supervisor {
 
         // A benchmark has been run :D
         return new JsonRunResult(
-                job.repo(), job.chash(), job.benchChash(), job.script(), startTime, endTime, exitCode, entries);
+                job.repo(),
+                job.chash(),
+                job.benchChash(),
+                job.name(),
+                job.script(),
+                startTime,
+                endTime,
+                exitCode,
+                entries);
     }
 
     private void submitResult(JsonRunResult runResult) {
