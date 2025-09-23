@@ -10,7 +10,7 @@
   --color-green: var(--c-green);
   --color-yellow: var(--c-yellow);
   --color-blue: var(--c-blue);
-  --color-purple: var(--c-purple);
+  --color-magenta: var(--c-magenta);
   --color-cyan: var(--c-cyan);
 }
 
@@ -20,12 +20,12 @@
   --c-foreground-alt: #555;
   --c-foreground: #000;
 
-  --c-red: #db2d20;
-  --c-green: #01a252;
-  --c-yellow: #fded02;
-  --c-blue: #01a0e4;
-  --c-purple: #a16a94;
-  --c-cyan: #b5e3f3;
+  --c-red: #c01c28;
+  --c-green: #2ec27e;
+  --c-yellow: #d0a100;
+  --c-blue: #1e78e4;
+  --c-magenta: #9841bb;
+  --c-cyan: #0ab9dc;
 }
 
 .dark {
@@ -33,6 +33,13 @@
   --c-background-alt: #333;
   --c-foreground-alt: #aaa;
   --c-foreground: #fff;
+
+  --c-red: #c01c28;
+  --c-green: #2ec27e;
+  --c-yellow: #f5c211;
+  --c-blue: #1e78e4;
+  --c-magenta: #9841bb;
+  --c-cyan: #0ab9dc;
 }
 
 @layer base {
