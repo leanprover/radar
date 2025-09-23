@@ -30,7 +30,7 @@ public record ResReposRepoHistory(Repos repos) {
             @QueryParam("at") Optional<Integer> atOptional) {
 
         Repo repo = repos.repo(name);
-        int n = Math.clamp(nOptional.orElse(20), 0, 1000);
+        int n = Math.clamp(nOptional.orElse(32), 0, 1000);
         int at = atOptional.orElse(Integer.MAX_VALUE);
 
         var history = repo
