@@ -55,8 +55,9 @@ setSelectedToRoute();
 </script>
 
 <template>
-  <div class="flex gap-1 border-b pr-1">
+  <div class="flex gap-1 border-b p-1">
     <CNavbarRepoSelect v-model="repo.selected"></CNavbarRepoSelect>
+    <div class="h-auto border-r" />
 
     <RouterLink v-if="repo.selected" :to="{ name: '/repos.[repo]', params: { repo: repo.selected } }">
       <CNavbarButton :selected="route.name === '/repos.[repo]'">Overview</CNavbarButton>

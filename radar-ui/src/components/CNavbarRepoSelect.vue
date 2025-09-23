@@ -20,12 +20,12 @@ watchEffect(() => {
 <template>
   <SelectRoot v-model="selected">
     <SelectTrigger
-      class="hover:bg-background-alt flex min-w-[20ch] cursor-pointer justify-between gap-2 border-r px-1"
+      class="hover:bg-background-alt flex min-w-[20ch] cursor-pointer justify-between gap-2 px-1"
       title="Switch between repos"
     >
       <SelectValue v-if="repos.isPending" class="text-foreground-alt">Loading repos...</SelectValue>
       <SelectValue v-else-if="repos.isError" class="text-red font-bold">Error loading repos</SelectValue>
-      <SelectValue v-else-if="!selected" placeholder="Select a repo" />
+      <SelectValue v-else-if="!selected" placeholder="Select a repo" class="text-foreground-alt" />
       <SelectValue v-else>{{ selected }}</SelectValue>
       <SelectIcon>v</SelectIcon>
     </SelectTrigger>
