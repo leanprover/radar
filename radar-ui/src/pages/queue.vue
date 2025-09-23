@@ -1,18 +1,9 @@
 <script setup lang="ts">
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { computed, reactive } from "vue";
 import { useQueue } from "@/composables/useQueue.ts";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
-import {
-  BedIcon,
-  BicepsFlexedIcon,
-  CircleAlertIcon,
-  CircleCheckIcon,
-  CircleDashedIcon,
-  LoaderCircleIcon,
-} from "lucide-vue-next";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import CSkeleton from "@/components/CSkeleton.vue";
+import CHeading2 from "@/components/CHeading2.vue";
+import CLoading from "@/components/CLoading.vue";
 import { cn } from "@/lib/utils.ts";
 
 const queue = reactive(useQueue());
@@ -30,7 +21,7 @@ const runStates = computed(() => {
     for (const run of task.runs) {
       const str = runStr(task.repo, task.chash, run.script);
       if (run.exitCode === 0) result.set(str, "success");
-      if (run.exitCode !== null) result.set(str, "error");
+      else if (run.exitCode !== null) result.set(str, "error");
     }
   }
 
@@ -58,88 +49,66 @@ function runsWithState(task: {
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>Runners</CardTitle>
-      <CardDescription>Our hard-working minions &lt;3</CardDescription>
-    </CardHeader>
-    <CardContent class="flex">
-      <CSkeleton v-if="!queue.isSuccess" :error="queue.error" class="h-16 w-[15ch]" />
-      <template v-else>
-        <div
-          v-for="runner in queue.data.runners"
-          :key="runner.name"
-          class="flex items-center gap-4 rounded-lg border px-4 py-2"
-        >
-          <Tooltip>
-            <TooltipTrigger>
-              <BicepsFlexedIcon v-if="runner.connected" />
-              <BedIcon v-else />
-            </TooltipTrigger>
-            <TooltipContent>
-              {{ runner.connected ? "Connected" : "Disconnected" }}
-            </TooltipContent>
-          </Tooltip>
-          <div class="flex flex-col">
-            <div class="font-bold">{{ runner.name }}</div>
-            <div v-if="runner.lastSeen === null" class="text-muted-foreground text-sm">Never seen</div>
-            <Tooltip v-else>
-              <TooltipTrigger class="text-muted-foreground text-sm">
-                Last seen {{ useTimeAgo(runner.lastSeen) }}
-              </TooltipTrigger>
-              <TooltipContent side="bottom" class="tabular-nums">
-                {{ useDateFormat(runner.lastSeen, "YYYY-MM-DD HH:mm:ss").value }}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div></template
-      >
-    </CardContent>
-  </Card>
+  <CLoading v-if="!queue.isSuccess" :error="queue.error" />
+  <div v-else class="flex flex-col">
+    <CHeading2>Runners</CHeading2>
+    <div v-for="runner in queue.data.runners" :key="runner.name" class="flex items-baseline gap-2">
+      <div>-</div>
+      <div>{{ runner.name }}</div>
+      <div class="text-foreground-alt text-xs">
+        <template v-if="runner.connected">(connected)</template>
+        <template v-else-if="runner.lastSeen">
+          (last seen
+          <span :title="useDateFormat(runner.lastSeen, 'YYYY-MM-DD HH:mm:ss').value" class="hover:text-foreground">{{
+            useTimeAgo(runner.lastSeen)
+          }}</span
+          >)
+        </template>
+        <template v-else>(never seen)</template>
+      </div>
+    </div>
+  </div>
 
-  <Card>
-    <CardHeader>
-      <CardTitle>Queue</CardTitle>
-      <CardDescription>All in a day's work</CardDescription>
-    </CardHeader>
-    <CardContent class="flex flex-col gap-2">
-      <CSkeleton v-if="!queue.isSuccess" :error="queue.error" class="h-24" />
-      <template v-else>
-        <div v-if="queue.data.tasks.length === 0" class="text-muted-foreground text-lg font-light italic">
-          🙛 Queue empty 🙙
-        </div>
-        <div
-          v-for="task in queue.data.tasks"
-          :key="JSON.stringify([task.repo, task.chash])"
-          class="flex flex-col gap-2 rounded-lg border p-2"
-        >
-          <RouterLink
-            :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: task.repo, chash: task.chash } }"
-            class="group flex flex-col"
-          >
-            <div class="group-hover:underline">{{ task.title }}</div>
-            <div class="text-muted-foreground text-sm">{{ task.repo }}</div>
-          </RouterLink>
-          <div class="flex">
-            <div
-              v-for="run in runsWithState(task)"
-              :key="JSON.stringify([run.runner, run.script])"
-              :class="
-                cn('flex items-center gap-1 rounded-md border px-2 pl-1', {
-                  'border-destructive-foreground text-destructive-foreground': run.state === 'error',
-                })
-              "
-              :title="`Running ${run.script}`"
+  <CLoading v-if="!queue.isSuccess" :error="queue.error" />
+  <div v-else class="flex flex-col">
+    <CHeading2>Queue</CHeading2>
+    <div v-if="queue.data.tasks.length === 0" class="text-foreground-alt">empty \o/</div>
+    <div v-else class="flex flex-col gap-2">
+      <div v-for="task in queue.data.tasks" :key="JSON.stringify([task.repo, task.chash])" class="flex gap-2">
+        <div>-</div>
+        <div class="flex flex-col">
+          <div class="flex gap-2">
+            <RouterLink
+              :to="{ name: '/repos.[repo]', params: { repo: task.repo } }"
+              class="text-foreground-alt italic hover:underline"
             >
-              <CircleDashedIcon v-if="run.state === 'ready'" :size="16" class="shrink-0" />
-              <LoaderCircleIcon v-if="run.state === 'running'" :size="16" class="shrink-0 animate-spin" />
-              <CircleCheckIcon v-if="run.state === 'success'" :size="16" class="shrink-0" />
-              <CircleAlertIcon v-if="run.state === 'error'" :size="16" class="shrink-0" />
-              <div>{{ run.name }} (on {{ run.runner }})</div>
-            </div>
+              {{ task.repo }}
+            </RouterLink>
+            <RouterLink
+              :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: task.repo, chash: task.chash } }"
+              class="hover:underline"
+            >
+              {{ task.title }}
+            </RouterLink>
+          </div>
+          <div
+            v-for="run in runsWithState(task)"
+            :key="run.name"
+            :class="
+              cn('text-xs', {
+                'text-foreground-alt': run.state === 'ready',
+                'text-blue': run.state === 'running',
+                'text-green': run.state === 'success',
+                'text-red': run.state === 'error',
+              })
+            "
+          >
+            <span :title="run.script" class="hover:text-foreground">{{ run.name }}</span>
+            ({{ run.runner }}):
+            <span>{{ run.state }}</span>
           </div>
         </div>
-      </template>
-    </CardContent>
-  </Card>
+      </div>
+    </div>
+  </div>
 </template>
