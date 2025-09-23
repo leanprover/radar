@@ -1,21 +1,16 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 
-echo "##############"
-echo "## radar-ui ##"
-echo "##############"
 pushd radar-ui
 pnpm install
 pnpm run build
 popd
 
-echo
-echo "###########"
-echo "## radar ##"
-echo "###########"
 pushd radar
 mvn clean package
 popd
 
-echo
-echo The jar is located at radar/target/radar-*.jar
+{
+  echo
+  echo The jar is located at radar/target/radar-*.jar
+} 2>/dev/null # hide "set -x" output

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 
 ./scripts/deploy-server
 ./scripts/deploy-runner

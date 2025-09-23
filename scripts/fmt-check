@@ -1,18 +1,11 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 
-echo "##############"
-echo "## radar-ui ##"
-echo "##############"
 pushd radar-ui
 pnpm install
 pnpm run fmt-check
 popd
 
-echo
-echo "###########"
-echo "## radar ##"
-echo "###########"
 pushd radar
 mvn spotless:check
 popd

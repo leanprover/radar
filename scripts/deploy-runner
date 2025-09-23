@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 
 rsync -v radar/target/radar-*.jar root@runner3.lean-fro.org:/var/lib/radar-runner/radar.jar
 rsync -v radar/target/radar-*.jar root@runner4.lean-fro.org:/var/lib/radar-runner/radar.jar
