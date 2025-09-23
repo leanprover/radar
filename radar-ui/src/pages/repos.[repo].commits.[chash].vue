@@ -6,7 +6,7 @@ import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import CLoading from "@/components/CLoading.vue";
 import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui";
 import { cn } from "@/lib/utils.ts";
-import CHeading1 from "@/components/CHeading1.vue";
+import CSectionTitle from "@/components/CSectionTitle.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const commit = reactive(
@@ -26,7 +26,7 @@ onBeforeRouteUpdate(() => {
 <template>
   <CLoading v-if="!commit.isSuccess" :error="commit.error" />
   <div v-else class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
-    <CHeading1>Commit</CHeading1>
+    <CSectionTitle>Commit</CSectionTitle>
 
     <!-- TODO Link to GitHub -->
     <div class="text-yellow col-span-2">commit {{ commit.data.chash }}</div>

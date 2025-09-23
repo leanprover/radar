@@ -2,7 +2,7 @@
 import { computed, reactive } from "vue";
 import { useQueue } from "@/composables/useQueue.ts";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
-import CHeading2 from "@/components/CHeading2.vue";
+import CSectionTitle from "@/components/CSectionTitle.vue";
 import CLoading from "@/components/CLoading.vue";
 import { cn } from "@/lib/utils.ts";
 
@@ -51,7 +51,7 @@ function runsWithState(task: {
 <template>
   <CLoading v-if="!queue.isSuccess" :error="queue.error" />
   <div v-else class="flex flex-col">
-    <CHeading2>Runners</CHeading2>
+    <CSectionTitle>Runners</CSectionTitle>
     <div v-for="runner in queue.data.runners" :key="runner.name" class="flex items-baseline gap-2">
       <div>-</div>
       <div>{{ runner.name }}</div>
@@ -71,7 +71,7 @@ function runsWithState(task: {
 
   <CLoading v-if="!queue.isSuccess" :error="queue.error" />
   <div v-else class="flex flex-col">
-    <CHeading2>Queue</CHeading2>
+    <CSectionTitle>Queue</CSectionTitle>
     <div v-if="queue.data.tasks.length === 0" class="text-foreground-alt">empty \o/</div>
     <div v-else class="flex flex-col gap-2">
       <div v-for="task in queue.data.tasks" :key="JSON.stringify([task.repo, task.chash])" class="flex gap-2">
