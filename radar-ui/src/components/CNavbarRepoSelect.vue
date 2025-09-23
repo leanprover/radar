@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRepos } from "@/composables/useRepos.ts";
 import { reactive, watchEffect } from "vue";
+import { SelectContent, SelectIcon, SelectItem, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "reka-ui";
 
 const repos = reactive(useRepos());
 const selected = defineModel<string>();
@@ -18,20 +18,31 @@ watchEffect(() => {
 </script>
 
 <template>
-  <Select v-model="selected" :disabled="!repos.isSuccess">
-    <SelectTrigger :title="repos.error?.message" class="min-w-50">
-      <SelectValue v-if="repos.isPending">Loading repos...</SelectValue>
-      <SelectValue v-else-if="repos.isError" title="Hello" class="text-destructive">Error loading repos.</SelectValue>
+  <SelectRoot v-model="selected">
+    <SelectTrigger
+      class="hover:bg-background-alt flex min-w-[20ch] cursor-pointer justify-between gap-2 border-r px-1"
+      title="Switch between repos"
+    >
+      <SelectValue v-if="repos.isPending" class="text-foreground-alt">Loading repos...</SelectValue>
+      <SelectValue v-else-if="repos.isError" class="text-red font-bold">Error loading repos</SelectValue>
       <SelectValue v-else-if="!selected" placeholder="Select a repo" />
       <SelectValue v-else>{{ selected }}</SelectValue>
+      <SelectIcon>v</SelectIcon>
     </SelectTrigger>
-    <SelectContent v-if="repos.isSuccess">
-      <SelectItem v-for="repo in repos.data.repos" :key="repo.name" :value="repo.name">
-        <div class="flex flex-col">
-          <div>{{ repo.name }}</div>
-          <div class="text-muted-foreground">{{ repo.description }}</div>
-        </div>
-      </SelectItem>
-    </SelectContent>
-  </Select>
+    <SelectPortal v-if="repos.isSuccess">
+      <SelectContent position="popper" class="bg-background z-[100] min-w-[20ch] border">
+        <SelectItem
+          v-for="repo in repos.data.repos"
+          :key="repo.name"
+          :value="repo.name"
+          class="hover:bg-background-alt cursor-default px-1"
+        >
+          <div class="flex flex-col">
+            <div>{{ repo.name }}</div>
+            <div class="text-foreground-alt text-xs">{{ repo.description }}</div>
+          </div>
+        </SelectItem>
+      </SelectContent>
+    </SelectPortal>
+  </SelectRoot>
 </template>

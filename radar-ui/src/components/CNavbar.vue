@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import CColorMode from "@/components/CColorMode.vue";
+import CNavbarColorMode from "@/components/CNavbarColorMode.vue";
 import CNavbarRepoSelect from "@/components/CNavbarRepoSelect.vue";
 import { useRoute, useRouter } from "vue-router";
 import { watch } from "vue";
-import { Button } from "@/components/ui/button";
 import { useRepoStore } from "@/stores/useRepoStore.ts";
+import CNavbarButton from "@/components/CNavbarButton.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -55,20 +55,20 @@ setSelectedToRoute();
 </script>
 
 <template>
-  <div class="bg-background flex items-center gap-2 border-b p-2">
+  <div class="flex gap-1 border-b pr-1">
     <CNavbarRepoSelect v-model="repo.selected"></CNavbarRepoSelect>
 
     <RouterLink v-if="repo.selected" :to="{ name: '/repos.[repo]', params: { repo: repo.selected } }">
-      <Button :variant="route.name === '/repos.[repo]' ? 'secondary' : 'ghost'">Overview</Button>
+      <CNavbarButton :selected="route.name === '/repos.[repo]'">Overview</CNavbarButton>
     </RouterLink>
-    <Button v-else variant="ghost" disabled>Overview</Button>
+    <CNavbarButton v-else disabled>Overview</CNavbarButton>
 
     <RouterLink :to="{ name: '/queue' }">
-      <Button :variant="route.name === '/queue' ? 'secondary' : 'ghost'">Queue</Button>
+      <CNavbarButton :selected="route.name === '/queue'">Queue</CNavbarButton>
     </RouterLink>
 
     <div class="flex grow justify-end">
-      <CColorMode />
+      <CNavbarColorMode />
     </div>
   </div>
 </template>
