@@ -35,7 +35,7 @@ const grade = computed(() => {
   <div
     v-else
     :class="
-      cn('text-right', {
+      cn('text-right whitespace-pre', {
         'text-green font-bold': grade === 'good',
         'text-red font-bold': grade === 'bad',
         'font-bold': grade === 'neutral',
