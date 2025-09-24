@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatValue } from "@/lib/utils.ts";
+import { cn, formatValue } from "@/lib/utils.ts";
 import { computed } from "vue";
 
 const {
@@ -28,16 +28,22 @@ const grade = computed(() => {
   if (sign === -direction) return "bad";
   return undefined; // This shouldn't happen unless NaN is involved
 });
-
-const opts = { align: true, sign: true };
 </script>
 
 <template>
   <template v-if="amount === undefined" />
-  <div v-else-if="grade === 'good'" class="text-green text-right font-bold">{{ formatValue(amount, unit, opts) }}</div>
-  <div v-else-if="grade === 'bad'" class="text-red text-right font-bold">{{ formatValue(amount, unit, opts) }}</div>
-  <div v-else-if="grade === 'neutral'" class="text-right font-bold">
-    {{ formatValue(amount, unit, opts) }}
+  <div
+    v-else
+    :class="
+      cn('text-right', {
+        'text-green font-bold': grade === 'good',
+        'text-red font-bold': grade === 'bad',
+        'font-bold': grade === 'neutral',
+        'text-foreground-alt': grade === undefined,
+      })
+    "
+    :title="amount.toString()"
+  >
+    {{ formatValue(amount, unit, { align: true, sign: true }) }}
   </div>
-  <div v-else class="text-foreground-alt text-right">{{ formatValue(amount, unit, opts) }}</div>
 </template>

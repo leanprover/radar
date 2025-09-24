@@ -6,5 +6,7 @@ const { value = undefined, unit = undefined } = defineProps<{ value?: number; un
 
 <template>
   <template v-if="value === undefined" />
-  <div v-else class="text-right whitespace-pre">{{ formatValue(value, unit, { align: true }) }}</div>
+  <div v-else class="text-right whitespace-pre" :title="value.toString()">
+    {{ formatValue(value, unit, { align: true }) }}
+  </div>
 </template>
