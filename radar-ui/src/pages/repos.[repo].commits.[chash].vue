@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useCommitInfo } from "@/composables/useCommitInfo.ts";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import CLoading from "@/components/CLoading.vue";
@@ -31,6 +31,12 @@ const compare = reactive(
     () => route.params.chash,
   ),
 );
+const measurements = computed(() => {
+  if (!compare.isSuccess) return undefined;
+  const data = compare.data.measurements.filter((it) => it.second !== undefined);
+  if (data.length === 0) return undefined;
+  return data;
+});
 
 const open = ref(false);
 
@@ -102,8 +108,8 @@ onBeforeRouteUpdate(() => {
   </div>
 
   <CLoading v-if="!compare.isSuccess" :error="compare.error" />
-  <div v-else class="flex flex-col">
+  <div v-else-if="measurements !== undefined" class="flex flex-col">
     <CSectionTitle>Measurements</CSectionTitle>
-    <CCommitMeasurementsTable :measurements="compare.data.measurements.filter((it) => it.second !== undefined)" />
+    <CCommitMeasurementsTable :measurements="measurements" />
   </div>
 </template>
