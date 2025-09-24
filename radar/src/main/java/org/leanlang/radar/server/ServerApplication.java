@@ -20,6 +20,7 @@ import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.leanlang.radar.server.api.ResRepos;
 import org.leanlang.radar.server.api.ResReposRepoCommitsChash;
 import org.leanlang.radar.server.api.ResReposRepoHistory;
+import org.leanlang.radar.server.api.ResRuns;
 import org.leanlang.radar.server.api.auth.Admin;
 import org.leanlang.radar.server.api.auth.AdminAuthenticator;
 import org.leanlang.radar.server.busser.Busser;
@@ -81,6 +82,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().register(new ResRepos(repos));
         environment.jersey().register(new ResReposRepoCommitsChash(repos));
         environment.jersey().register(new ResReposRepoHistory(repos));
+        environment.jersey().register(new ResRuns(repos));
     }
 
     private static void configureDummyHealthCheck(Environment environment) {

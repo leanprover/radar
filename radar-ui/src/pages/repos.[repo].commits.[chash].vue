@@ -5,12 +5,19 @@ import { useCommitInfo } from "@/composables/useCommitInfo.ts";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import CLoading from "@/components/CLoading.vue";
 import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui";
-import { cn } from "@/lib/utils.ts";
+import { cn, formatDuration } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
+import { useRuns } from "@/composables/useRuns.ts";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const commit = reactive(
   useCommitInfo(
+    () => route.params.repo,
+    () => route.params.chash,
+  ),
+);
+const runs = reactive(
+  useRuns(
     () => route.params.repo,
     () => route.params.chash,
   ),
@@ -74,39 +81,14 @@ onBeforeRouteUpdate(() => {
     </template>
   </div>
 
-  <!--    <CardFooter v-if="commit.isSuccess" class="flex flex-col items-stretch">-->
-  <!--      <div class="flex gap-8">-->
-  <!--        <div class="flex flex-1 flex-col items-start gap-1">-->
-  <!--          <RouterLink-->
-  <!--            v-for="parent in commit.data.parents"-->
-  <!--            :key="parent.chash"-->
-  <!--            :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: parent.chash } }"-->
-  <!--            :class="-->
-  <!--              cn('flex hover:underline', {-->
-  <!--                'text-muted-foreground': !parent.tracked,-->
-  <!--              })-->
-  <!--            "-->
-  <!--          >-->
-  <!--            <ChevronLeftIcon :size="20" class="relative top-1/16 shrink-0" />-->
-  <!--            <div class="line-clamp-1 text-sm break-all">{{ parent.title }}</div>-->
-  <!--          </RouterLink>-->
-  <!--        </div>-->
-  <!--        <div class="flex flex-1 flex-col items-end gap-1">-->
-  <!--          <RouterLink-->
-  <!--            v-for="child in commit.data.children"-->
-  <!--            :key="child.chash"-->
-  <!--            :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: child.chash } }"-->
-  <!--            :class="-->
-  <!--              cn('flex pl-2 hover:underline', {-->
-  <!--                'text-muted-foreground': !child.tracked,-->
-  <!--              })-->
-  <!--            "-->
-  <!--          >-->
-  <!--            <div class="line-clamp-1 text-sm break-all">{{ child.title }}</div>-->
-  <!--            <ChevronRightIcon :size="20" class="relative top-1/16 shrink-0" />-->
-  <!--          </RouterLink>-->
-  <!--        </div>-->
-  <!--      </div>-->
-  <!--    </CardFooter>-->
-  <!--  </Card>-->
+  <CLoading v-if="!runs.isSuccess" :error="runs.error" />
+  <div v-else-if="runs.data.runs.length > 0" class="flex flex-col">
+    <CSectionTitle>Runs</CSectionTitle>
+    <div v-for="run in runs.data.runs" :key="run.name" class="flex gap-2">
+      <div>-</div>
+      <div>
+        {{ run.name }} ({{ run.script }} on {{ run.runner }}) in {{ formatDuration(run.startTime.until(run.endTime)) }}
+      </div>
+    </div>
+  </div>
 </template>
