@@ -7,16 +7,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDuration(duration: Temporal.Duration): string {
-  let rounded = duration.round({ smallestUnit: "seconds", largestUnit: "days" });
+export function formatDuration(duration: Temporal.Duration, opts?: { sign?: boolean }): string {
+  const { sign = false } = opts ?? {};
+  let rounded = duration.round({ smallestUnit: "milliseconds", largestUnit: "days" });
   if (rounded.sign < 0) rounded = rounded.negated();
 
   const result = [];
   if (rounded.days > 0) result.push(`${rounded.days.toFixed()}d`);
   if (rounded.hours > 0) result.push(`${rounded.hours.toFixed()}h`);
   if (rounded.minutes > 0) result.push(`${rounded.minutes.toFixed()}m`);
-  if (rounded.seconds > 0 || result.length === 0) result.push(`${rounded.seconds.toFixed()}s`);
-  return (duration.sign < 0 ? "-" : "") + result.join(" ");
+  if (rounded.seconds > 0) result.push(`${rounded.seconds.toFixed()}s`);
+  // Only show ms if no higher unit exists
+  if (rounded.milliseconds > 0 && result.length === 0) result.push(`${rounded.milliseconds.toFixed()}ms`);
+  if (result.length === 0) result.push("0s"); // Never show nothing
+  return (duration.sign < 0 ? "-" : sign ? "+" : "") + result.join(" ");
 }
 
 export const decimalPrefixes: [string, number][] = [
@@ -51,8 +55,9 @@ export function formatNumber(
   const signPrefix = sign && number > 0 ? "+" : "";
   const suffixWidth = align ? Math.max(0, ...prefixes.map((it) => it[0].length)) : 0;
 
+  const magnitude = Math.abs(number);
   for (const [suffix, value] of prefixes) {
-    if (number >= value) {
+    if (magnitude >= value) {
       return signPrefix + (number / value).toFixed(precision) + suffix.padEnd(suffixWidth);
     }
   }
@@ -62,20 +67,21 @@ export function formatNumber(
 
 export function formatBytes(bytes: number, opts?: { align?: boolean; sign?: boolean }): string {
   bytes = Math.round(bytes); // Ensure we have an integer amount of bytes
+  const magnitude = Math.abs(bytes);
   const { align = false, sign = false } = opts ?? {};
 
   let result;
-  if (bytes > 1024 ** 6)
+  if (magnitude > 1024 ** 6)
     result = (bytes / 1024 ** 6).toFixed() + " EiB"; // exbi
-  else if (bytes > 1024 ** 5)
+  else if (magnitude > 1024 ** 5)
     result = (bytes / 1024 ** 5).toFixed() + " PiB"; // pebi
-  else if (bytes > 1024 ** 4)
+  else if (magnitude > 1024 ** 4)
     result = (bytes / 1024 ** 4).toFixed() + " PiB"; // tebi
-  else if (bytes > 1024 ** 3)
+  else if (magnitude > 1024 ** 3)
     result = (bytes / 1024 ** 3).toFixed() + " PiB"; // gibi
-  else if (bytes > 1024 ** 2)
+  else if (magnitude > 1024 ** 2)
     result = (bytes / 1024 ** 2).toFixed() + " PiB"; // mebi
-  else if (bytes > 1024 ** 1)
+  else if (magnitude > 1024 ** 1)
     result = (bytes / 1024 ** 1).toFixed() + " PiB"; // kibi
   else result = bytes.toFixed() + (align ? "   B" : " B"); // bytes
 
@@ -90,7 +96,7 @@ export function formatValue(
   opts?: { precision?: number; align?: boolean; sign?: boolean },
 ): string {
   opts = opts ?? {};
-  if (unit === "s") return formatDuration(Temporal.Duration.from({ seconds: value }));
+  if (unit === "s") return formatDuration(Temporal.Duration.from({ milliseconds: Math.round(value * 1000) }), opts);
   if (unit === "B") return formatBytes(value, opts);
   return formatNumber(value, opts);
 }
