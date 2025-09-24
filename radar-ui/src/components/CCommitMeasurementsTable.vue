@@ -4,6 +4,7 @@ import { h } from "vue";
 import CTableCellValue from "@/components/CTableCellValue.vue";
 import CTableCellDelta from "@/components/CTableCellDelta.vue";
 import CTable from "@/components/CTable.vue";
+import CTableHeader from "@/components/CTableHeader.vue";
 
 interface Measurement {
   metric: string;
@@ -18,12 +19,22 @@ const { measurements } = defineProps<{ measurements: Measurement[] }>();
 const columns: ColumnDef<Measurement>[] = [
   {
     accessorKey: "metric",
-    header: () => h("div", { class: "text-left" }, "Metric"),
+    header: ({ column }) =>
+      h(CTableHeader<Measurement>, {
+        column,
+        title: "Metric",
+        align: "left",
+      }),
   },
   {
     id: "value",
     accessorFn: (it) => it.second,
-    header: () => h("div", { class: "text-right" }, "Value"),
+    header: ({ column }) =>
+      h(CTableHeader<Measurement>, {
+        column,
+        title: "Value",
+        align: "right",
+      }),
     cell: ({ row }) =>
       h(CTableCellValue, {
         value: row.original.second,
@@ -32,14 +43,32 @@ const columns: ColumnDef<Measurement>[] = [
   },
   {
     id: "delta",
-    accessorFn: (it) => it.first,
-    header: () => h("div", { class: "text-right" }, "Delta"),
+    accessorFn: (it) => {
+      if (it.first === undefined) return 0;
+      if (it.second === undefined) return 0;
+      return it.second - it.first;
+    },
+    header: ({ column }) =>
+      h(CTableHeader<Measurement>, {
+        column,
+        title: "Delta",
+        align: "right",
+      }),
     cell: ({ row }) =>
       h(CTableCellDelta, {
         from: row.original.first,
         to: row.original.second,
         unit: row.original.unit,
         direction: row.original.direction,
+      }),
+  },
+  {
+    accessorKey: "unit",
+    header: ({ column }) =>
+      h(CTableHeader<Measurement>, {
+        column,
+        title: "Unit",
+        align: "left",
       }),
   },
 ];
