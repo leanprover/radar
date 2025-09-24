@@ -36,8 +36,8 @@ onBeforeRouteUpdate(() => {
 
     <div>Date:</div>
     <div>
-      {{ useDateFormat(commit.data.author.time, "YYYY-MM-DD HH:mm:ss") }}
-      ({{ useTimeAgo(commit.data.author.time) }})
+      {{ useDateFormat(commit.data.author.time.epochMilliseconds, "YYYY-MM-DD HH:mm:ss") }}
+      ({{ useTimeAgo(commit.data.author.time.epochMilliseconds) }})
     </div>
 
     <CollapsibleRoot

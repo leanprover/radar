@@ -59,9 +59,10 @@ function runsWithState(task: {
         <template v-if="runner.connected">(connected)</template>
         <template v-else-if="runner.lastSeen">
           (last seen
-          <span :title="useDateFormat(runner.lastSeen, 'YYYY-MM-DD HH:mm:ss').value" class="hover:text-foreground">{{
-            useTimeAgo(runner.lastSeen)
-          }}</span
+          <span
+            :title="useDateFormat(runner.lastSeen.epochMilliseconds, 'YYYY-MM-DD HH:mm:ss').value"
+            class="hover:text-foreground"
+            >{{ useTimeAgo(runner.lastSeen.epochMilliseconds) }}</span
           >)
         </template>
         <template v-else>(never seen)</template>

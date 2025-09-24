@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { Temporal } from "temporal-polyfill";
 
 export async function fetchJson<S extends z.ZodType>(
   schema: S,
@@ -21,4 +22,4 @@ export async function fetchJson<S extends z.ZodType>(
 
 export const enc = encodeURIComponent;
 
-export const Timestamp = z.number().transform((it) => new Date(it * 1000));
+export const Timestamp = z.number().transform((it) => Temporal.Instant.fromEpochMilliseconds(Math.round(it * 1000)));

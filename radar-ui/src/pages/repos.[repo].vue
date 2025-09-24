@@ -41,8 +41,11 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
           {{ commit.title }}
         </RouterLink>
         <div class="text-foreground-alt text-xs">
-          <span :title="useDateFormat(commit.committerTime, 'YYYY-MM-DD HH:mm:ss').value" class="hover:text-foreground">
-            {{ useTimeAgo(commit.committerTime) }}
+          <span
+            :title="useDateFormat(commit.committerTime.epochMilliseconds, 'YYYY-MM-DD HH:mm:ss').value"
+            class="hover:text-foreground"
+          >
+            {{ useTimeAgo(commit.committerTime.epochMilliseconds) }}
           </span>
           by {{ commit.author }}
         </div>

@@ -29,6 +29,7 @@
     "reka-ui": "^2.5.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13",
+    "temporal-polyfill": "^0.3.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
     "unplugin-vue-router": "^0.15.0",
