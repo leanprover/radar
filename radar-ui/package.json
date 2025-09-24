@@ -16,6 +16,7 @@
     "@eslint/js": "^9.36.0",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/vue-query": "^5.90.2",
+    "@tanstack/vue-table": "^8.21.3",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.7.0",
     "@vueuse/core": "^13.9.0",

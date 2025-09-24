@@ -8,6 +8,8 @@ import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui
 import { cn, formatDuration } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useRuns } from "@/composables/useRuns.ts";
+import { useCompare } from "@/composables/useCompare.ts";
+import CCommitMeasurementsTable from "@/components/CCommitMeasurementsTable.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const commit = reactive(
@@ -19,6 +21,13 @@ const commit = reactive(
 const runs = reactive(
   useRuns(
     () => route.params.repo,
+    () => route.params.chash,
+  ),
+);
+const compare = reactive(
+  useCompare(
+    () => route.params.repo,
+    "parent",
     () => route.params.chash,
   ),
 );
@@ -90,5 +99,11 @@ onBeforeRouteUpdate(() => {
         {{ run.name }} ({{ run.script }} on {{ run.runner }}) in {{ formatDuration(run.startTime.until(run.endTime)) }}
       </div>
     </div>
+  </div>
+
+  <CLoading v-if="!compare.isSuccess" :error="compare.error" />
+  <div v-else class="flex flex-col">
+    <CSectionTitle>Measurements</CSectionTitle>
+    <CCommitMeasurementsTable :measurements="compare.data.measurements.filter((it) => it.second !== undefined)" />
   </div>
 </template>

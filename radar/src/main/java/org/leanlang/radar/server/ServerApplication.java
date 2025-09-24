@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
+import org.leanlang.radar.server.api.ResCompare;
 import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResQueue;
 import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
@@ -74,6 +75,7 @@ public final class ServerApplication extends Application<ServerConfig> {
 
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResAdminEnqueue(repos, queue));
+        environment.jersey().register(new ResCompare(repos));
         environment.jersey().register(new ResDebug(runners, busser));
         environment.jersey().register(new ResQueue(repos, runners, queue));
         environment.jersey().register(new ResQueueRunnerJobsFinish(runners, queue));
