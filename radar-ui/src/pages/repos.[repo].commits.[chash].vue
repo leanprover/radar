@@ -10,8 +10,12 @@ import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useRuns } from "@/composables/useRuns.ts";
 import { useCompare } from "@/composables/useCompare.ts";
 import CCommitMeasurementsTable from "@/components/CCommitMeasurementsTable.vue";
+import { useAdminStore } from "@/stores/useAdminStore.ts";
+import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
+const admin = useAdminStore();
+
 const commit = reactive(
   useCommitInfo(
     () => route.params.repo,
@@ -94,6 +98,18 @@ onBeforeRouteUpdate(() => {
         &gt; {{ child.title }}
       </RouterLink>
     </template>
+  </div>
+
+  <div v-if="admin.token !== undefined" class="col-span-2 flex flex-col">
+    <CSectionTitle>Admin</CSectionTitle>
+    <div class="flex gap-2">
+      <button
+        class="bg-foreground text-background hover:bg-foreground-alt cursor-pointer px-1"
+        @click="postAdminEnqueue(admin.token, route.params.repo, route.params.chash)"
+      >
+        Enqueue
+      </button>
+    </div>
   </div>
 
   <CLoading v-if="!runs.isSuccess" :error="runs.error" />
