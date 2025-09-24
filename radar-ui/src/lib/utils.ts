@@ -76,13 +76,13 @@ export function formatBytes(bytes: number, opts?: { align?: boolean; sign?: bool
   else if (magnitude > 1024 ** 5)
     result = (bytes / 1024 ** 5).toFixed() + " PiB"; // pebi
   else if (magnitude > 1024 ** 4)
-    result = (bytes / 1024 ** 4).toFixed() + " PiB"; // tebi
+    result = (bytes / 1024 ** 4).toFixed() + " TiB"; // tebi
   else if (magnitude > 1024 ** 3)
-    result = (bytes / 1024 ** 3).toFixed() + " PiB"; // gibi
+    result = (bytes / 1024 ** 3).toFixed() + " GiB"; // gibi
   else if (magnitude > 1024 ** 2)
-    result = (bytes / 1024 ** 2).toFixed() + " PiB"; // mebi
+    result = (bytes / 1024 ** 2).toFixed() + " MiB"; // mebi
   else if (magnitude > 1024 ** 1)
-    result = (bytes / 1024 ** 1).toFixed() + " PiB"; // kibi
+    result = (bytes / 1024 ** 1).toFixed() + " KiB"; // kibi
   else result = bytes.toFixed() + (align ? "   B" : " B"); // bytes
 
   if (sign && bytes > 0) result = "+" + result;
