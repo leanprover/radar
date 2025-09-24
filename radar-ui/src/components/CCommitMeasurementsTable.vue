@@ -19,6 +19,8 @@ const { measurements } = defineProps<{ measurements: Measurement[] }>();
 const columns: ColumnDef<Measurement>[] = [
   {
     accessorKey: "metric",
+    sortingFn: "textCaseSensitive",
+    sortDescFirst: true,
     header: ({ column }) =>
       h(CTableHeader<Measurement>, {
         column,
