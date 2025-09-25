@@ -2,8 +2,11 @@ package org.leanlang.radar.runner.supervisor;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.queue.Job;
 import org.leanlang.radar.server.queue.Run;
 import org.leanlang.radar.server.queue.RunResult;
@@ -16,9 +19,21 @@ public record JsonRunResult(
         @NotNull String script,
         @NotNull Instant startTime,
         @NotNull Instant endTime,
+        @NotNull Optional<Instant> scriptStartTime,
+        @NotNull Optional<Instant> scriptEndTime,
         @NotNull int exitCode,
-        @Valid @NotNull List<JsonRunResultEntry> entries) {
-    public JsonRunResult(Job job, Instant startTime, Instant endTime, int exitCode, List<JsonRunResultEntry> entries) {
+        @Valid @NotNull List<JsonRunResultEntry> entries,
+        @Valid @NotNull List<JsonOutputLine> lines) {
+
+    public JsonRunResult(
+            Job job,
+            Instant startTime,
+            Instant endTime,
+            @Nullable Instant scriptStartTime,
+            @Nullable Instant scriptEndTime,
+            int exitCode,
+            List<JsonRunResultEntry> entries,
+            List<OutputLine> lines) {
         this(
                 job.repo(),
                 job.chash(),
@@ -27,14 +42,14 @@ public record JsonRunResult(
                 job.script(),
                 startTime,
                 endTime,
+                Optional.ofNullable(scriptStartTime),
+                Optional.ofNullable(scriptEndTime),
                 exitCode,
-                entries);
+                entries,
+                lines.stream().map(JsonOutputLine::new).toList());
     }
 
-    public JsonRunResult(Job job, Instant startTime, Instant endTime, int exitCode) {
-        this(job, startTime, endTime, exitCode, List.of());
-    }
-
+    // TODO Actually use scriptStartTime and scriptEndTime
     public RunResult toRunResult(String runner) {
         return new RunResult(
                 chash,

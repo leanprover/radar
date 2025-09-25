@@ -86,18 +86,17 @@ public final class RunnerMain {
 
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
             executor.scheduleWithFixedDelay(
-                    statusUpdater::run, 0, Constants.RUNNER_STATUS_DELAY.toMillis(), TimeUnit.MILLISECONDS);
+                    statusUpdater::run, 0, Constants.RUNNER_STATUS_UPDATE_DELAY.toMillis(), TimeUnit.MILLISECONDS);
 
             while (true) {
                 try {
-                    while (supervisor.run())
-                        ;
+                    while (supervisor.run()) {}
                 } catch (Exception e) {
                     log.error("Error while running supervisor", e);
                 }
 
                 try {
-                    Thread.sleep(Constants.RUNNER_JOB_DELAY);
+                    Thread.sleep(Constants.RUNNER_GET_JOB_DELAY);
                 } catch (InterruptedException ignored) {
                 }
             }
