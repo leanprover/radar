@@ -22,7 +22,7 @@ const { repo, chash, title, runs } = defineProps<TaskWithActiveRun>();
         >
           {{ repo }}
         </RouterLink>
-
+        {{ " " }}
         <RouterLink :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash } }" class="hover:underline">
           {{ title }}
         </RouterLink>
