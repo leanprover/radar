@@ -26,16 +26,22 @@ import org.leanlang.radar.server.runners.Runners;
 @Path("/queue/")
 public record ResQueue(Repos repos, Runners runners, Queue queue) {
 
-    public record JsonActiveRun(String repo, String chash, String script) {
+    public record JsonActiveRun(String repo, String chash, String name, Instant startTime) {
         public JsonActiveRun(RunnerStatusRun run) {
-            this(run.repo(), run.chash(), run.script());
+            this(run.job().repo(), run.job().chash(), run.job().name(), run.startTime());
         }
     }
 
     public record JsonRunner(
             String name, boolean connected, Optional<Instant> lastSeen, Optional<JsonActiveRun> activeRun) {}
 
-    public record JsonRun(String name, String script, String runner, Optional<Integer> exitCode) {}
+    public record JsonRunResult(Instant startTime, Instant endTime, int exitCode) {
+        public JsonRunResult(RunResult result) {
+            this(result.startTime(), result.endTime(), result.exitCode());
+        }
+    }
+
+    public record JsonRun(String name, String script, String runner, Optional<JsonRunResult> result) {}
 
     public record JsonTask(String repo, String chash, String title, List<JsonRun> runs) {}
 
@@ -84,7 +90,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
                         results.stream()
                                 .filter(it -> it.run().name().equals(run.name()))
                                 .findFirst()
-                                .map(RunResult::exitCode)))
+                                .map(JsonRunResult::new)))
                 .toList();
     }
 

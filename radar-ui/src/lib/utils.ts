@@ -7,6 +7,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function formatInstant(instant: Temporal.Instant): string {
+  const time = instant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
+  const year = time.year.toFixed().padStart(4, "0");
+  const month = time.month.toFixed().padStart(2, "0");
+  const day = time.day.toFixed().padStart(2, "0");
+  const hour = time.hour.toFixed().padStart(2, "0");
+  const minute = time.minute.toFixed().padStart(2, "0");
+  const second = time.second.toFixed().padStart(2, "0");
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+}
+
 export function formatDuration(duration: Temporal.Duration, opts?: { sign?: boolean }): string {
   const { sign = false } = opts ?? {};
   let rounded = duration.round({ smallestUnit: "milliseconds", largestUnit: "days" });

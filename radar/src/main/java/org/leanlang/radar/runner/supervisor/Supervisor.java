@@ -63,10 +63,10 @@ public class Supervisor {
         Job job = jobOpt.get();
         log.debug("Acquired job {}", job);
 
-        OutputLines lines = new OutputLines();
-        setStatus(new SupervisorStatus(job, lines));
-
         Instant startTime = Instant.now();
+        OutputLines lines = new OutputLines();
+        setStatus(new SupervisorStatus(job, startTime, lines));
+
         Instant scriptStartTime = null;
         Instant scriptEndTime = null;
         int exitCode;
@@ -89,8 +89,8 @@ public class Supervisor {
         } finally {
             setStatus(null);
         }
-        Instant endTime = Instant.now();
 
+        Instant endTime = Instant.now();
         JsonRunResult result = new JsonRunResult(
                 job, startTime, endTime, scriptStartTime, scriptEndTime, exitCode, entries, lines.getAll());
 

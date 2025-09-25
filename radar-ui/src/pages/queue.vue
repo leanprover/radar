@@ -4,47 +4,40 @@ import { useQueue } from "@/composables/useQueue.ts";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import CLoading from "@/components/CLoading.vue";
-import { cn } from "@/lib/utils.ts";
+import { Temporal } from "temporal-polyfill";
+import type { JsonTask } from "@/api/queue.ts";
+import { type TaskWithActiveRun } from "@/components/pages/queue/PQueueTask.vue";
+import PQueue from "@/components/pages/queue/PQueue.vue";
 
 const queue = reactive(useQueue());
 
-function runStr(repo: string, chash: string, script: string): string {
-  return JSON.stringify([repo, chash, script]);
+function runId(repo: string, chash: string, name: string): string {
+  return JSON.stringify([repo, chash, name]);
 }
 
-const runStates = computed(() => {
-  const result = new Map<string, "running" | "success" | "error">();
+const activeRuns = computed(() => {
+  const result = new Map<string, Temporal.Instant>();
   if (!queue.isSuccess) return result;
-
-  // Read state from tasks
-  for (const task of queue.data.tasks) {
-    for (const run of task.runs) {
-      const str = runStr(task.repo, task.chash, run.script);
-      if (run.exitCode === 0) result.set(str, "success");
-      else if (run.exitCode !== null) result.set(str, "error");
-    }
-  }
-
-  // Update state with runner statuses
   for (const runner of queue.data.runners) {
-    if (runner.activeRun === null) continue;
-    const str = runStr(runner.activeRun.repo, runner.activeRun.chash, runner.activeRun.script);
-    result.set(str, "running");
+    if (runner.activeRun === undefined) continue;
+    const id = runId(runner.activeRun.repo, runner.activeRun.chash, runner.activeRun.name);
+    result.set(id, runner.activeRun.startTime);
   }
-
   return result;
 });
 
-function runsWithState(task: {
-  repo: string;
-  chash: string;
-  runs: { name: string; script: string; runner: string }[];
-}): { name: string; script: string; runner: string; state: "ready" | "running" | "success" | "error" }[] {
-  return task.runs.map((run) => {
-    const str = runStr(task.repo, task.chash, run.script);
-    const state = runStates.value.get(str) ?? "ready";
-    return { name: run.name, script: run.script, runner: run.runner, state };
-  });
+function tasksWithActiveRun(tasks: JsonTask[]): TaskWithActiveRun[] {
+  return tasks.map((task) => ({
+    repo: task.repo,
+    chash: task.chash,
+    title: task.title,
+    runs: task.runs.map((run) => ({
+      name: run.name,
+      runner: run.runner,
+      result: run.result,
+      active: activeRuns.value.get(runId(task.repo, task.chash, run.name)),
+    })),
+  }));
 }
 </script>
 
@@ -71,45 +64,5 @@ function runsWithState(task: {
   </div>
 
   <CLoading v-if="!queue.isSuccess" :error="queue.error" />
-  <div v-else class="flex flex-col">
-    <CSectionTitle>Queue</CSectionTitle>
-    <div v-if="queue.data.tasks.length === 0" class="text-foreground-alt">empty \o/</div>
-    <div v-else class="flex flex-col gap-2">
-      <div v-for="task in queue.data.tasks" :key="JSON.stringify([task.repo, task.chash])" class="flex gap-2">
-        <div>-</div>
-        <div class="flex flex-col">
-          <div class="flex gap-2">
-            <RouterLink
-              :to="{ name: '/repos.[repo]', params: { repo: task.repo } }"
-              class="text-foreground-alt italic hover:underline"
-            >
-              {{ task.repo }}
-            </RouterLink>
-            <RouterLink
-              :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: task.repo, chash: task.chash } }"
-              class="hover:underline"
-            >
-              {{ task.title }}
-            </RouterLink>
-          </div>
-          <div
-            v-for="run in runsWithState(task)"
-            :key="run.name"
-            :class="
-              cn('text-xs', {
-                'text-foreground-alt': run.state === 'ready',
-                'text-blue': run.state === 'running',
-                'text-green': run.state === 'success',
-                'text-red': run.state === 'error',
-              })
-            "
-          >
-            <span :title="run.script" class="hover:text-foreground">{{ run.name }}</span>
-            ({{ run.runner }}):
-            <span>{{ run.state }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <PQueue v-else :tasks="tasksWithActiveRun(queue.data.tasks)" />
 </template>

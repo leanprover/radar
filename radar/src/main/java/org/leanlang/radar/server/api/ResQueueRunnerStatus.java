@@ -21,9 +21,9 @@ import org.leanlang.radar.server.runners.Runners;
 public record ResQueueRunnerStatus(Runners runners, Queue queue) {
     public static final String PATH = "/queue/runner/status/";
 
-    public record JsonRun(String repo, String chash, String script, List<JsonOutputLine> lastLines) {
+    public record JsonRun(ResQueueRunnerTake.JsonJob job, Instant startTime, List<JsonOutputLine> lastLines) {
         public RunnerStatusRun toRunnerStatusRun() {
-            return new RunnerStatusRun(repo, chash, script, lastLines);
+            return new RunnerStatusRun(job.toJob(), startTime, lastLines);
         }
     }
 
@@ -40,7 +40,7 @@ public record ResQueueRunnerStatus(Runners runners, Queue queue) {
 
         if (status.activeRun().isPresent()) {
             RunnerStatusRun run = status.activeRun().get();
-            queue.ensureActiveTaskExists(new TaskId(run.repo(), run.chash()));
+            queue.ensureActiveTaskExists(new TaskId(run.job().repo(), run.job().chash()));
         }
     }
 }
