@@ -12,14 +12,17 @@ const {
   align?: "left" | "center" | "right";
 }>();
 
-const indicator = computed(() => {
+const marker = computed(() => {
+  const isSorted = column.getIsSorted();
+  if (!isSorted) return " ";
+  return { asc: "^", desc: "v" }[isSorted];
+});
+
+const index = computed(() => {
   const isSorted = column.getIsSorted();
   const canMultiSort = column.getCanMultiSort();
-  const sortIndex = column.getSortIndex().toFixed();
-
-  if (!isSorted) return canMultiSort ? "  " : " ";
-  const marker = { asc: "^", desc: "v" }[isSorted];
-  return canMultiSort ? marker + sortIndex : marker;
+  if (!isSorted) return canMultiSort ? " " : "";
+  return column.getSortIndex().toFixed();
 });
 </script>
 
@@ -32,15 +35,15 @@ const indicator = computed(() => {
       'text-right': align === 'right',
     }"
   >
-    <span v-if="column.getCanSort() && align === 'right'" class="font-normal whitespace-pre">
-      {{ indicator }}{{ " " }}
+    <span v-if="column.getCanSort() && align === 'right'" class="text-xs font-normal whitespace-pre">
+      {{ index }}{{ marker }}
     </span>
 
     <template v-if="title !== undefined">{{ title }}</template>
     <slot v-else />
 
-    <span v-if="column.getCanSort() && align !== 'right'" class="font-normal whitespace-pre">
-      {{ " " }}{{ indicator }}
+    <span v-if="column.getCanSort() && align !== 'right'" class="text-xs font-normal whitespace-pre">
+      {{ marker }}{{ index }}
     </span>
   </div>
 </template>

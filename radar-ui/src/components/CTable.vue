@@ -63,8 +63,8 @@ function goToLastPage() {
 </script>
 
 <template>
-  <div class="flex w-fit flex-col gap-2">
-    <div class="bg-background-alt col-span-full -m-1 flex gap-2 p-1 align-baseline">
+  <div class="flex w-fit flex-col gap-1">
+    <div class="bg-background-alt col-span-full -mx-1 flex gap-2 p-1 align-baseline">
       <CButton @click="goToFirstPage()">first</CButton>
       <CButton @click="goToPreviousPage()">prev</CButton>
       <div>Page {{ tableData.getState().pagination.pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>
@@ -80,22 +80,27 @@ function goToLastPage() {
 
     <div>Use shift+click to sort by multiple columns simultaneously.</div>
 
-    <table class="grid w-fit gap-x-4">
-      <thead class="contents">
-        <tr v-for="headerGroup in tableData.getHeaderGroups()" :key="headerGroup.id" class="contents">
+    <table class="mt-1 w-fit">
+      <thead>
+        <tr v-for="headerGroup in tableData.getHeaderGroups()" :key="headerGroup.id">
           <th
             v-for="header in headerGroup.headers"
             :key="header.id"
             :colspan="header.colSpan"
+            class="pl-4 first:pl-0"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
             <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
           </th>
         </tr>
       </thead>
-      <tbody class="contents">
-        <tr v-for="row in tableData.getRowModel().rows" :key="row.id" class="contents">
-          <td v-for="cell in row.getVisibleCells()" :key="cell.id">
+      <tbody>
+        <tr
+          v-for="row in tableData.getRowModel().rows"
+          :key="row.id"
+          class="border-background-alt hover:bg-background-alt border-t-[1px] border-dashed"
+        >
+          <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="py-[1px] pl-4 first:pl-0">
             <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
           </td>
         </tr>
