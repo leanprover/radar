@@ -2,7 +2,6 @@ package org.leanlang.radar.runner.supervisor;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +48,6 @@ public record JsonRunResult(
                 lines.stream().map(JsonOutputLine::new).toList());
     }
 
-    // TODO Actually use scriptStartTime and scriptEndTime
     public RunResult toRunResult(String runner) {
         return new RunResult(
                 chash,
@@ -57,7 +55,10 @@ public record JsonRunResult(
                 benchChash,
                 startTime,
                 endTime,
+                scriptStartTime,
+                scriptEndTime,
                 exitCode,
-                entries.stream().map(JsonRunResultEntry::toRunResultEntry).toList());
+                entries.stream().map(JsonRunResultEntry::toRunResultEntry).toList(),
+                lines);
     }
 }

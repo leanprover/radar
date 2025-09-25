@@ -36,7 +36,7 @@ public class Supervisor {
     private final Client client;
     private final ObjectMapper mapper;
 
-    private @Nullable Job activeJob;
+    private @Nullable SupervisorStatus status;
 
     public Supervisor(RunnerConfig config, Dirs dirs, Client client, ObjectMapper mapper) {
         this.config = config;
@@ -45,12 +45,12 @@ public class Supervisor {
         this.mapper = mapper;
     }
 
-    public synchronized Optional<Job> status() {
-        return Optional.ofNullable(activeJob);
+    public synchronized Optional<SupervisorStatus> status() {
+        return Optional.ofNullable(status);
     }
 
-    private synchronized void setStatus(@Nullable Job activeJob) {
-        this.activeJob = activeJob;
+    private synchronized void setStatus(@Nullable SupervisorStatus status) {
+        this.status = status;
     }
 
     /**
@@ -63,8 +63,8 @@ public class Supervisor {
         Job job = jobOpt.get();
         log.debug("Acquired job {}", job);
 
-        setStatus(job);
         OutputLines lines = new OutputLines();
+        setStatus(new SupervisorStatus(job, lines));
 
         Instant startTime = Instant.now();
         Instant scriptStartTime = null;

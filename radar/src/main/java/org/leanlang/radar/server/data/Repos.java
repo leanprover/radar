@@ -1,5 +1,6 @@
 package org.leanlang.radar.server.data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.lifecycle.Managed;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,12 +14,12 @@ public final class Repos implements Managed {
     private final List<String> repoNames;
     private final Map<String, Repo> repos;
 
-    public Repos(Dirs dirs, List<ServerConfigRepo> repoList) throws IOException {
+    public Repos(ObjectMapper mapper, Dirs dirs, List<ServerConfigRepo> repoList) throws IOException {
         repoNames = new ArrayList<>();
         repos = new HashMap<>();
         for (ServerConfigRepo repo : repoList) {
             repoNames.add(repo.name());
-            repos.put(repo.name(), new Repo(dirs, repo));
+            repos.put(repo.name(), new Repo(mapper, dirs, repo));
         }
     }
 

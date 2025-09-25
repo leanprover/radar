@@ -32,7 +32,9 @@ public class OutputLines {
         return lines.stream().toList();
     }
 
-    public synchronized List<OutputLine> get(int skip) {
-        return lines.stream().skip(skip).toList();
+    public synchronized List<OutputLine> getLast(int n) {
+        int end = lines.size();
+        int start = Math.max(0, end - n);
+        return List.copyOf(lines.subList(start, end));
     }
 }

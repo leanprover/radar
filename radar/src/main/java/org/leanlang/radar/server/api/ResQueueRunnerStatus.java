@@ -7,7 +7,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.queue.TaskId;
 import org.leanlang.radar.server.runners.Runner;
@@ -19,9 +21,9 @@ import org.leanlang.radar.server.runners.Runners;
 public record ResQueueRunnerStatus(Runners runners, Queue queue) {
     public static final String PATH = "/queue/runner/status";
 
-    public record JsonRun(String repo, String chash, String script) {
+    public record JsonRun(String repo, String chash, String script, List<JsonOutputLine> lastLines) {
         public RunnerStatusRun toRunnerStatusRun() {
-            return new RunnerStatusRun(repo, chash, script);
+            return new RunnerStatusRun(repo, chash, script, lastLines);
         }
     }
 

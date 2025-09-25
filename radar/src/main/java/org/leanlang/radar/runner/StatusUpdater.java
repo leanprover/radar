@@ -4,7 +4,9 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import java.util.Optional;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.runner.config.RunnerConfig;
+import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.runner.supervisor.Supervisor;
 import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.slf4j.Logger;
@@ -22,8 +24,15 @@ public record StatusUpdater(RunnerConfig config, Supervisor supervisor, Client c
     }
 
     public void runAndThrow() {
-        Optional<ResQueueRunnerStatus.JsonRun> activeRun =
-                supervisor.status().map(it -> new ResQueueRunnerStatus.JsonRun(it.repo(), it.chash(), it.script()));
+        Optional<ResQueueRunnerStatus.JsonRun> activeRun = supervisor
+                .status()
+                .map(it -> new ResQueueRunnerStatus.JsonRun(
+                        it.job().repo(),
+                        it.job().chash(),
+                        it.job().script(),
+                        it.lines().getLast(Constants.RUNNER_STATUS_UPDATE_LINES).stream()
+                                .map(JsonOutputLine::new)
+                                .toList()));
 
         client.target(config.apiUrl(ResQueueRunnerStatus.PATH))
                 .request(MediaType.APPLICATION_JSON_TYPE)

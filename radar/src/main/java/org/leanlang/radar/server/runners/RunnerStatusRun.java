@@ -1,3 +1,6 @@
 package org.leanlang.radar.server.runners;
 
-public record RunnerStatusRun(String repo, String chash, String script) {}
+import java.util.List;
+import org.leanlang.radar.runner.supervisor.JsonOutputLine;
+
+public record RunnerStatusRun(String repo, String chash, String script, List<JsonOutputLine> lastLines) {}

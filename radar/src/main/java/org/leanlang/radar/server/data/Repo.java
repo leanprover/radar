@@ -1,6 +1,5 @@
 package org.leanlang.radar.server.data;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedWriter;
 import java.io.Closeable;
@@ -10,25 +9,23 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
-import org.leanlang.radar.runner.supervisor.JsonRunResultEntry;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 
 public final class Repo implements Closeable {
+    private final ObjectMapper mapper;
     private final Dirs dirs;
     private final ServerConfigRepo config;
-    private final ObjectMapper mapper;
 
     private final RepoDb db;
     private final RepoGit git;
     private final RepoGit gitBench;
 
-    public Repo(Dirs dirs, ServerConfigRepo config, ObjectMapper mapper) throws IOException {
+    public Repo(ObjectMapper mapper, Dirs dirs, ServerConfigRepo config) throws IOException {
+        this.mapper = mapper;
         this.dirs = dirs;
         this.config = config;
-        this.mapper = mapper;
 
         this.db = new RepoDb(config.name(), dirs.repoDb(config.name()));
         this.git = new RepoGit(dirs.repoGit(config.name()), config.url());

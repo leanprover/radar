@@ -65,7 +65,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         configureAdminAuth(environment, configuration.adminToken);
 
         var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
-        var repos = new Repos(dirs, configuration.repos);
+        var repos = new Repos(environment.getObjectMapper(), dirs, configuration.repos);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos);
         var busser = new Busser(repos);

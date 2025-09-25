@@ -28,6 +28,11 @@ public class Constants {
     public static final Duration RUNNER_STATUS_UPDATE_DELAY = Duration.ofSeconds(1);
 
     /**
+     * How many lines of logs to send as part of the status update if logs are available.
+     */
+    public static final int RUNNER_STATUS_UPDATE_LINES = 100;
+
+    /**
      * A runner's last status update must be at most this long ago,
      * or else the runner will no longer be considered "connected".
      *
