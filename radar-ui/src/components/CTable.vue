@@ -3,11 +3,13 @@ import {
   type ColumnDef,
   FlexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   type SortingState,
   useVueTable,
 } from "@tanstack/vue-table";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import CButton from "@/components/CButton.vue";
 
 const { columns, data } = defineProps<{ columns: ColumnDef<T>[]; data: T[] }>();
 
@@ -28,31 +30,78 @@ const tableData = useVueTable({
   },
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
 });
+
+const pageSizes = [100, 500, 1000, 5000];
+const pageSize = ref<number>(100);
+watch(pageSize, (newValue) => {
+  tableData.setPageSize(newValue);
+});
+tableData.setPageSize(pageSize.value);
+
+function goToFirstPage() {
+  tableData.setPageIndex(0);
+}
+
+function goToPreviousPage() {
+  const index = tableData.getState().pagination.pageIndex;
+  const nextIndex = Math.max(index - 1, 0);
+  tableData.setPageIndex(nextIndex);
+}
+
+function goToNextPage() {
+  const index = tableData.getState().pagination.pageIndex;
+  const nextIndex = Math.min(index + 1, tableData.getPageCount() - 1);
+  tableData.setPageIndex(nextIndex);
+}
+
+function goToLastPage() {
+  const index = Math.max(0, tableData.getPageCount() - 1);
+  tableData.setPageIndex(index);
+}
 </script>
 
 <template>
-  <table class="grid w-fit gap-x-4">
-    <thead class="contents">
-      <tr v-for="headerGroup in tableData.getHeaderGroups()" :key="headerGroup.id" class="contents">
-        <th
-          v-for="header in headerGroup.headers"
-          :key="header.id"
-          :colspan="header.colSpan"
-          @click="header.column.getToggleSortingHandler()?.($event)"
-        >
-          <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
-        </th>
-      </tr>
-    </thead>
-    <tbody class="contents">
-      <tr v-for="row in tableData.getRowModel().rows" :key="row.id" class="contents">
-        <td v-for="cell in row.getVisibleCells()" :key="cell.id">
-          <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="flex w-fit flex-col gap-2">
+    <div class="bg-background-alt col-span-full -m-1 flex gap-2 p-1 align-baseline">
+      <CButton @click="goToFirstPage()">first</CButton>
+      <CButton @click="goToPreviousPage()">prev</CButton>
+      <div>Page {{ tableData.getState().pagination.pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>
+      <CButton @click="goToNextPage()">next</CButton>
+      <CButton @click="goToLastPage()">last</CButton>
+      <label class="ml-auto">
+        Rows:
+        <select v-model="pageSize" class="bg-background h-5 px-1">
+          <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
+        </select>
+      </label>
+    </div>
+
+    <div>Use shift+click to sort by multiple columns simultaneously.</div>
+
+    <table class="grid w-fit gap-x-4">
+      <thead class="contents">
+        <tr v-for="headerGroup in tableData.getHeaderGroups()" :key="headerGroup.id" class="contents">
+          <th
+            v-for="header in headerGroup.headers"
+            :key="header.id"
+            :colspan="header.colSpan"
+            @click="header.column.getToggleSortingHandler()?.($event)"
+          >
+            <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+          </th>
+        </tr>
+      </thead>
+      <tbody class="contents">
+        <tr v-for="row in tableData.getRowModel().rows" :key="row.id" class="contents">
+          <td v-for="cell in row.getVisibleCells()" :key="cell.id">
+            <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <style scoped>

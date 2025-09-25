@@ -118,7 +118,6 @@ onBeforeRouteUpdate(() => {
   <CLoading v-if="!compare.isSuccess" :error="compare.error" />
   <div v-else-if="measurements !== undefined" class="flex flex-col">
     <CSectionTitle>Measurements</CSectionTitle>
-    <p class="mb-2">Use shift+click to sort by multiple columns simultaneously.</p>
     <CCommitMeasurementsTable :measurements="measurements" />
   </div>
 </template>
