@@ -14,7 +14,7 @@ import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.Queue;
 
-@Path("/admin/enqueue")
+@Path("/admin/enqueue/")
 public record ResAdminEnqueue(Repos repos, Queue queue) {
 
     public record JsonPostInput(@NotNull String repo, @NotNull String chash, @NotNull Optional<Integer> priority) {}

@@ -12,16 +12,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
+import org.leanlang.radar.server.api.ResCommit;
 import org.leanlang.radar.server.api.ResCompare;
-import org.leanlang.radar.server.api.ResDebug;
 import org.leanlang.radar.server.api.ResQueue;
-import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
-import org.leanlang.radar.server.api.ResQueueRunnerJobsTake;
+import org.leanlang.radar.server.api.ResQueueRunnerFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerStatus;
+import org.leanlang.radar.server.api.ResQueueRunnerTake;
+import org.leanlang.radar.server.api.ResRepoHistory;
 import org.leanlang.radar.server.api.ResRepos;
-import org.leanlang.radar.server.api.ResReposRepoCommitsChash;
-import org.leanlang.radar.server.api.ResReposRepoHistory;
-import org.leanlang.radar.server.api.ResRuns;
 import org.leanlang.radar.server.api.auth.Admin;
 import org.leanlang.radar.server.api.auth.AdminAuthenticator;
 import org.leanlang.radar.server.busser.Busser;
@@ -75,16 +73,14 @@ public final class ServerApplication extends Application<ServerConfig> {
 
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResAdminEnqueue(repos, queue));
+        environment.jersey().register(new ResCommit(repos));
         environment.jersey().register(new ResCompare(repos));
-        environment.jersey().register(new ResDebug(runners, busser));
         environment.jersey().register(new ResQueue(repos, runners, queue));
-        environment.jersey().register(new ResQueueRunnerJobsFinish(runners, queue));
-        environment.jersey().register(new ResQueueRunnerJobsTake(runners, queue));
+        environment.jersey().register(new ResQueueRunnerFinish(runners, queue));
         environment.jersey().register(new ResQueueRunnerStatus(runners, queue));
+        environment.jersey().register(new ResQueueRunnerTake(runners, queue));
         environment.jersey().register(new ResRepos(repos));
-        environment.jersey().register(new ResReposRepoCommitsChash(repos));
-        environment.jersey().register(new ResReposRepoHistory(repos));
-        environment.jersey().register(new ResRuns(repos));
+        environment.jersey().register(new ResRepoHistory(repos));
     }
 
     private static void configureDummyHealthCheck(Environment environment) {

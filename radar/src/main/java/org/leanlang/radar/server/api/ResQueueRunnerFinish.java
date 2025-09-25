@@ -12,9 +12,9 @@ import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.runners.Runner;
 import org.leanlang.radar.server.runners.Runners;
 
-@Path(ResQueueRunnerJobsFinish.PATH)
-public record ResQueueRunnerJobsFinish(Runners runners, Queue queue) {
-    public static final String PATH = "/queue/runner/jobs/finish";
+@Path(ResQueueRunnerFinish.PATH)
+public record ResQueueRunnerFinish(Runners runners, Queue queue) {
+    public static final String PATH = "/queue/runner/finish/";
 
     public record JsonPostInput(@NotNull String runner, @NotNull String token, @NotNull JsonRunResult result) {}
 

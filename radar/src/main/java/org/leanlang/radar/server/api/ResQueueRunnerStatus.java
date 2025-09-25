@@ -19,7 +19,7 @@ import org.leanlang.radar.server.runners.Runners;
 
 @Path(ResQueueRunnerStatus.PATH)
 public record ResQueueRunnerStatus(Runners runners, Queue queue) {
-    public static final String PATH = "/queue/runner/status";
+    public static final String PATH = "/queue/runner/status/";
 
     public record JsonRun(String repo, String chash, String script, List<JsonOutputLine> lastLines) {
         public RunnerStatusRun toRunnerStatusRun() {

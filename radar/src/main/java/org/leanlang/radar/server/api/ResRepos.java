@@ -9,7 +9,7 @@ import java.util.List;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 
-@Path("/repos")
+@Path("/repos/")
 public record ResRepos(Repos repos) {
 
     public record JsonRepo(String name, URI url, String description) {

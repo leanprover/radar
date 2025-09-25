@@ -34,5 +34,5 @@ const JsonGet = z.object({
 });
 
 export async function getQueue() {
-  return await fetchJson(JsonGet, "/queue");
+  return await fetchJson(JsonGet, "/queue/");
 }

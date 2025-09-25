@@ -14,6 +14,16 @@ const JsonLinkedCommit = z.object({
   tracked: z.boolean(),
 });
 
+const JsonRun = z.object({
+  name: z.string(),
+  script: z.string(),
+  runner: z.string(),
+  benchChash: z.string(),
+  startTime: Timestamp,
+  endTime: Timestamp,
+  exitCode: z.int(),
+});
+
 const JsonGet = z.object({
   chash: z.string(),
   author: JsonPersonIdent,
@@ -22,8 +32,9 @@ const JsonGet = z.object({
   body: z.string().nullable(),
   parents: z.array(JsonLinkedCommit),
   children: z.array(JsonLinkedCommit),
+  runs: z.array(JsonRun),
 });
 
-export async function getReposRepoCommitsChash(repo: string, chash: string) {
-  return await fetchJson(JsonGet, `/repos/${enc(repo)}/commits/${enc(chash)}`);
+export async function getCommit(repo: string, chash: string) {
+  return await fetchJson(JsonGet, `/commits/${enc(repo)}/${enc(chash)}/`);
 }

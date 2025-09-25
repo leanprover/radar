@@ -14,9 +14,9 @@ import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.runners.Runner;
 import org.leanlang.radar.server.runners.Runners;
 
-@Path(ResQueueRunnerJobsTake.PATH)
-public record ResQueueRunnerJobsTake(Runners runners, Queue queue) {
-    public static final String PATH = "/queue/runner/jobs/take";
+@Path(ResQueueRunnerTake.PATH)
+public record ResQueueRunnerTake(Runners runners, Queue queue) {
+    public static final String PATH = "/queue/runner/take/";
 
     public record JsonPostInput(@NotNull String runner, @NotNull String token) {}
 

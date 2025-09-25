@@ -21,8 +21,8 @@ import org.leanlang.radar.Constants;
 import org.leanlang.radar.runner.StatusUpdater;
 import org.leanlang.radar.runner.config.Dirs;
 import org.leanlang.radar.runner.config.RunnerConfig;
-import org.leanlang.radar.server.api.ResQueueRunnerJobsFinish;
-import org.leanlang.radar.server.api.ResQueueRunnerJobsTake;
+import org.leanlang.radar.server.api.ResQueueRunnerFinish;
+import org.leanlang.radar.server.api.ResQueueRunnerTake;
 import org.leanlang.radar.server.data.RepoGit;
 import org.leanlang.radar.server.queue.Job;
 import org.slf4j.Logger;
@@ -108,13 +108,13 @@ public class Supervisor {
     }
 
     private Optional<Job> acquireRun() {
-        return client.target(config.apiUrl(ResQueueRunnerJobsTake.PATH))
+        return client.target(config.apiUrl(ResQueueRunnerTake.PATH))
                 .request(MediaType.APPLICATION_JSON)
                 .post(
-                        Entity.json(new ResQueueRunnerJobsTake.JsonPostInput(config.name, config.token)),
-                        ResQueueRunnerJobsTake.JsonPost.class)
+                        Entity.json(new ResQueueRunnerTake.JsonPostInput(config.name, config.token)),
+                        ResQueueRunnerTake.JsonPost.class)
                 .job()
-                .map(ResQueueRunnerJobsTake.JsonJob::toJob);
+                .map(ResQueueRunnerTake.JsonJob::toJob);
     }
 
     private void clearTmpDir() throws IOException {
@@ -171,9 +171,9 @@ public class Supervisor {
         // our run after we've already submitted the results. Otherwise, the run will land on the queue again.
         new StatusUpdater(config, this, client).runAndThrow();
 
-        Response response = client.target(config.apiUrl(ResQueueRunnerJobsFinish.PATH))
+        Response response = client.target(config.apiUrl(ResQueueRunnerFinish.PATH))
                 .request()
-                .post(Entity.json(new ResQueueRunnerJobsFinish.JsonPostInput(config.name, config.token, runResult)));
+                .post(Entity.json(new ResQueueRunnerFinish.JsonPostInput(config.name, config.token, runResult)));
 
         if (!response.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
             throw new WebApplicationException(response);

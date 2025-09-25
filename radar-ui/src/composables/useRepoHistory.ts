@@ -1,8 +1,8 @@
 import { toValue } from "vue";
 import type { MaybeRefOrGetter } from "@vueuse/core";
 import { useQuery } from "@tanstack/vue-query";
-import { getReposRepoHistory } from "@/api/reposRepoHistory.ts";
+import { getRepoHistory } from "@/api/reposHistory.ts";
 
 export function useRepoHistory(repo: MaybeRefOrGetter<string>) {
-  return useQuery({ queryKey: ["repos", repo, "history"], queryFn: () => getReposRepoHistory(toValue(repo)) });
+  return useQuery({ queryKey: ["repoHistory", { repo }], queryFn: () => getRepoHistory(toValue(repo)) });
 }

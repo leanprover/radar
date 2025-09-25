@@ -15,8 +15,8 @@ import java.util.Optional;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 
-@Path("/repos/{repo}/history")
-public record ResReposRepoHistory(Repos repos) {
+@Path("/repos/{repo}/history/")
+public record ResRepoHistory(Repos repos) {
 
     public record JsonCommit(String chash, String title, String author, Instant committerTime) {}
 

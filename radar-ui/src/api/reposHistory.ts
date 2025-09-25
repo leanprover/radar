@@ -13,9 +13,9 @@ const JsonGet = z.object({
   nextAt: z.int().nullable(),
 });
 
-export async function getReposRepoHistory(repo: string, params?: { n?: number; at?: number }) {
+export async function getRepoHistory(repo: string, params?: { n?: number; at?: number }) {
   const queryParams = new URLSearchParams();
   if (params?.n !== undefined) queryParams.set("n", params.n.toFixed());
   if (params?.at !== undefined) queryParams.set("at", params.at.toFixed());
-  return await fetchJson(JsonGet, `/repos/${enc(repo)}/history`, queryParams);
+  return await fetchJson(JsonGet, `/repos/${enc(repo)}/history/`, queryParams);
 }

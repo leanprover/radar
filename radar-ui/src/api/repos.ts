@@ -12,5 +12,5 @@ const JsonGet = z.object({
 });
 
 export async function getRepos() {
-  return await fetchJson(JsonGet, "/repos");
+  return await fetchJson(JsonGet, "/repos/");
 }

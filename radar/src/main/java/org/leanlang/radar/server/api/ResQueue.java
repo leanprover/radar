@@ -23,7 +23,7 @@ import org.leanlang.radar.server.runners.RunnerStatus;
 import org.leanlang.radar.server.runners.RunnerStatusRun;
 import org.leanlang.radar.server.runners.Runners;
 
-@Path("/queue")
+@Path("/queue/")
 public record ResQueue(Repos repos, Runners runners, Queue queue) {
 
     public record JsonActiveRun(String repo, String chash, String script) {

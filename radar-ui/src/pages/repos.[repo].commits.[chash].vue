@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { computed, reactive, ref } from "vue";
-import { useCommitInfo } from "@/composables/useCommitInfo.ts";
+import { useCommit } from "@/composables/useCommit.ts";
 import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import CLoading from "@/components/CLoading.vue";
 import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui";
 import { cn, formatDuration } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import { useRuns } from "@/composables/useRuns.ts";
 import { useCompare } from "@/composables/useCompare.ts";
 import CCommitMeasurementsTable from "@/components/CCommitMeasurementsTable.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
@@ -17,13 +16,7 @@ const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
 
 const commit = reactive(
-  useCommitInfo(
-    () => route.params.repo,
-    () => route.params.chash,
-  ),
-);
-const runs = reactive(
-  useRuns(
+  useCommit(
     () => route.params.repo,
     () => route.params.chash,
   ),
@@ -112,10 +105,9 @@ onBeforeRouteUpdate(() => {
     </div>
   </div>
 
-  <CLoading v-if="!runs.isSuccess" :error="runs.error" />
-  <div v-else-if="runs.data.runs.length > 0" class="flex flex-col">
+  <div v-if="commit.isSuccess && commit.data.runs.length > 0" class="flex flex-col">
     <CSectionTitle>Runs</CSectionTitle>
-    <div v-for="run in runs.data.runs" :key="run.name" class="flex gap-2">
+    <div v-for="run in commit.data.runs" :key="run.name" class="flex gap-2">
       <div>-</div>
       <div>
         {{ run.name }} ({{ run.script }} on {{ run.runner }}) in {{ formatDuration(run.startTime.until(run.endTime)) }}
