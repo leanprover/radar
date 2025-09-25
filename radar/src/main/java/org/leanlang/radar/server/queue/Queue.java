@@ -136,6 +136,8 @@ public final class Queue {
                     record.setChashBench(it.benchChash());
                     record.setStartTime(it.startTime());
                     record.setEndTime(it.endTime());
+                    record.setScriptStartTime(it.scriptStartTime().orElse(null));
+                    record.setScriptEndTime(it.scriptEndTime().orElse(null));
                     record.setExitCode(it.exitCode());
                     return record;
                 })
