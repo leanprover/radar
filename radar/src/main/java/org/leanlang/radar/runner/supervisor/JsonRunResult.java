@@ -1,5 +1,6 @@
 package org.leanlang.radar.runner.supervisor;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
@@ -16,7 +17,7 @@ public record JsonRunResult(
         @NotNull Instant startTime,
         @NotNull Instant endTime,
         @NotNull int exitCode,
-        @NotNull List<JsonRunResultEntry> entries) {
+        @Valid @NotNull List<JsonRunResultEntry> entries) {
     public JsonRunResult(Job job, Instant startTime, Instant endTime, int exitCode, List<JsonRunResultEntry> entries) {
         this(
                 job.repo(),
