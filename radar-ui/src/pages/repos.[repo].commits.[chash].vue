@@ -59,16 +59,28 @@ onBeforeRouteUpdate(() => {
       ({{ useTimeAgo(commit.data.author.time.epochMilliseconds) }})
     </div>
 
-    <CollapsibleRoot
-      v-model:open="open"
-      :disabled="!commit.data.body"
-      class="col-span-2 my-3 ml-[4ch] flex flex-col gap-3"
-    >
-      <CollapsibleTrigger :class="cn('text-left', { 'cursor-pointer': commit.data.body })">
+    <CollapsibleRoot v-model:open="open" :disabled="!commit.data.body" class="col-span-2 my-3 ml-[4ch] flex flex-col">
+      <CollapsibleTrigger
+        :class="
+          cn(
+            'text-left',
+
+            { 'cursor-pointer': commit.data.body },
+          )
+        "
+      >
         <span>{{ commit.data.body ? (open ? "v" : "^") : "-" }}{{ " " }}</span>
         <span class="font-bold">{{ commit.data.title }}</span>
       </CollapsibleTrigger>
-      <CollapsibleContent class="max-w-[80ch] whitespace-pre-wrap">{{ commit.data.body }}</CollapsibleContent>
+      <CollapsibleContent
+        :class="[
+          'overflow-hidden',
+          'data-[state=closed]:animate-[slideUp_200ms_ease-out]',
+          'data-[state=open]:animate-[slideDown_200ms_ease-out]',
+        ]"
+      >
+        <pre class="max-w-[80ch] pt-3 whitespace-pre-wrap">{{ commit.data.body }}</pre>
+      </CollapsibleContent>
     </CollapsibleRoot>
 
     <template v-for="parent in commit.data.parents" :key="parent.chash">
@@ -121,3 +133,23 @@ onBeforeRouteUpdate(() => {
     <CCommitMeasurementsTable :measurements="measurements" />
   </div>
 </template>
+
+<style>
+@keyframes slideDown {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--reka-collapsible-content-height);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--reka-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+</style>
