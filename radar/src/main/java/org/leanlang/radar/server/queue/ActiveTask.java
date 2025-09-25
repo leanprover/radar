@@ -54,6 +54,7 @@ public class ActiveTask {
 
     public synchronized void addResult(RunResult result) {
         if (!runs.contains(result.run())) return;
+        if (results.stream().anyMatch(it -> it.run().equals(result.run()))) return;
         results.add(result);
     }
 
