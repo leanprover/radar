@@ -13,15 +13,27 @@ public final class Dirs {
         cache = cacheDir != null ? cacheDir : root.resolve(dirs.cache);
     }
 
+    private Path repoState(String repo) {
+        return state.resolve("repos").resolve(repo);
+    }
+
+    private Path repoCache(String repo) {
+        return cache.resolve("repos").resolve(repo);
+    }
+
     public Path repoDb(String repo) {
-        return state.resolve("repos").resolve(repo).resolve("data.db");
+        return repoState(repo).resolve("data.db");
+    }
+
+    public Path repoRunLog(String repo, String chash) {
+        return repoState(repo).resolve("logs").resolve(chash + ".jsonl");
     }
 
     public Path repoGit(String repo) {
-        return cache.resolve("repos").resolve(repo).resolve("repo.git");
+        return repoCache(repo).resolve("repo.git");
     }
 
     public Path repoGitBench(String repo) {
-        return cache.resolve("repos").resolve(repo).resolve("bench.git");
+        return repoCache(repo).resolve("bench.git");
     }
 }
