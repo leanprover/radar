@@ -3,6 +3,7 @@ package org.leanlang.radar.server.api;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -21,10 +22,16 @@ import org.leanlang.radar.server.data.Repos;
 @Path("/compare/{repo}/{first}/{second}/")
 public record ResCompare(Repos repos) {
     public record JsonMeasurement(
-            String metric, Optional<Float> first, Optional<Float> second, Optional<String> unit, int direction) {}
+            @JsonProperty(required = true) String metric,
+            Optional<Float> first,
+            Optional<Float> second,
+            Optional<String> unit,
+            @JsonProperty(required = true) int direction) {}
 
     public record JsonGet(
-            Optional<String> chashFirst, Optional<String> chashSecond, List<JsonMeasurement> measurements) {}
+            Optional<String> chashFirst,
+            Optional<String> chashSecond,
+            @JsonProperty(required = true) List<JsonMeasurement> measurements) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

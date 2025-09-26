@@ -1,7 +1,7 @@
 package org.leanlang.radar.server.api;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.auth.Auth;
-import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -15,7 +15,10 @@ import org.leanlang.radar.server.queue.Queue;
 @Path("/admin/enqueue/")
 public record ResAdminEnqueue(Repos repos, Queue queue) {
 
-    public record JsonPostInput(@NotNull String repo, @NotNull String chash, @NotNull Optional<Integer> priority) {}
+    public record JsonPostInput(
+            @JsonProperty(required = true) String repo,
+            @JsonProperty(required = true) String chash,
+            Optional<Integer> priority) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

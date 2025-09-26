@@ -1,7 +1,6 @@
 package org.leanlang.radar.runner.supervisor;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -11,18 +10,18 @@ import org.leanlang.radar.server.queue.Run;
 import org.leanlang.radar.server.queue.RunResult;
 
 public record JsonRunResult(
-        @NotNull String repo,
-        @NotNull String chash,
-        @NotNull String benchChash,
-        @NotNull String name,
-        @NotNull String script,
-        @NotNull Instant startTime,
-        @NotNull Instant endTime,
-        @NotNull Optional<Instant> scriptStartTime,
-        @NotNull Optional<Instant> scriptEndTime,
-        @NotNull int exitCode,
-        @Valid @NotNull List<JsonRunResultEntry> entries,
-        @Valid @NotNull List<JsonOutputLine> lines) {
+        @JsonProperty(required = true) String repo,
+        @JsonProperty(required = true) String chash,
+        @JsonProperty(required = true) String benchChash,
+        @JsonProperty(required = true) String name,
+        @JsonProperty(required = true) String script,
+        @JsonProperty(required = true) Instant startTime,
+        @JsonProperty(required = true) Instant endTime,
+        Optional<Instant> scriptStartTime,
+        Optional<Instant> scriptEndTime,
+        @JsonProperty(required = true) int exitCode,
+        @JsonProperty(required = true) List<JsonRunResultEntry> entries,
+        @JsonProperty(required = true) List<JsonOutputLine> lines) {
 
     public JsonRunResult(
             Job job,

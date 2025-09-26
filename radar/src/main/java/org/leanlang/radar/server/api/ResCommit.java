@@ -5,6 +5,7 @@ import static org.leanlang.radar.codegen.jooq.Tables.COMMIT_RELATIONSHIPS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -20,28 +21,35 @@ import org.leanlang.radar.server.data.Repos;
 @Path("/commits/{repo}/{chash}/")
 public record ResCommit(Repos repos) {
 
-    public record JsonPersonIdent(String name, String email, Instant time, int offset) {}
+    public record JsonPersonIdent(
+            @JsonProperty(required = true) String name,
+            @JsonProperty(required = true) String email,
+            @JsonProperty(required = true) Instant time,
+            @JsonProperty(required = true) int offset) {}
 
-    public record JsonLinkedCommit(String chash, String title, boolean tracked) {}
+    public record JsonLinkedCommit(
+            @JsonProperty(required = true) String chash,
+            @JsonProperty(required = true) String title,
+            @JsonProperty(required = true) boolean tracked) {}
 
     public record JsonRun(
-            String name,
-            String script,
-            String runner,
-            String benchChash,
-            Instant startTime,
-            Instant endTime,
-            int exitCode) {}
+            @JsonProperty(required = true) String name,
+            @JsonProperty(required = true) String script,
+            @JsonProperty(required = true) String runner,
+            @JsonProperty(required = true) String benchChash,
+            @JsonProperty(required = true) Instant startTime,
+            @JsonProperty(required = true) Instant endTime,
+            @JsonProperty(required = true) int exitCode) {}
 
     public record JsonGet(
-            String chash,
-            JsonPersonIdent author,
-            JsonPersonIdent committer,
-            String title,
+            @JsonProperty(required = true) String chash,
+            @JsonProperty(required = true) JsonPersonIdent author,
+            @JsonProperty(required = true) JsonPersonIdent committer,
+            @JsonProperty(required = true) String title,
             Optional<String> body,
-            List<JsonLinkedCommit> parents,
-            List<JsonLinkedCommit> children,
-            List<JsonRun> runs) {}
+            @JsonProperty(required = true) List<JsonLinkedCommit> parents,
+            @JsonProperty(required = true) List<JsonLinkedCommit> children,
+            @JsonProperty(required = true) List<JsonRun> runs) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

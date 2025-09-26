@@ -3,6 +3,7 @@ package org.leanlang.radar.server.api;
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -18,9 +19,13 @@ import org.leanlang.radar.server.data.Repos;
 @Path("/repos/{repo}/history/")
 public record ResRepoHistory(Repos repos) {
 
-    public record JsonCommit(String chash, String title, String author, Instant committerTime) {}
+    public record JsonCommit(
+            @JsonProperty(required = true) String chash,
+            @JsonProperty(required = true) String title,
+            @JsonProperty(required = true) String author,
+            @JsonProperty(required = true) Instant committerTime) {}
 
-    public record JsonGet(List<JsonCommit> commits, Optional<Integer> nextAt) {}
+    public record JsonGet(@JsonProperty(required = true) List<JsonCommit> commits, Optional<Integer> nextAt) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

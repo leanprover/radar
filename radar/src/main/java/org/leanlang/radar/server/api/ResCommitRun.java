@@ -2,6 +2,7 @@ package org.leanlang.radar.server.api;
 
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
@@ -24,15 +25,15 @@ import org.leanlang.radar.server.runners.Runners;
 public record ResCommitRun(Repos repos, Runners runners, Queue queue) {
 
     public record JsonGet(
-            String runner,
-            String script,
-            String benchChash,
-            Instant startTime,
-            Instant endTime,
+            @JsonProperty(required = true) String runner,
+            @JsonProperty(required = true) String script,
+            @JsonProperty(required = true) String benchChash,
+            @JsonProperty(required = true) Instant startTime,
+            @JsonProperty(required = true) Instant endTime,
             Optional<Instant> scriptStartTime,
             Optional<Instant> scriptEndTime,
-            int exitCode,
-            List<JsonOutputLine> lines) {}
+            @JsonProperty(required = true) int exitCode,
+            @JsonProperty(required = true) List<JsonOutputLine> lines) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

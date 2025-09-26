@@ -1,6 +1,6 @@
 package org.leanlang.radar.server.api;
 
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -16,7 +16,10 @@ import org.leanlang.radar.server.runners.Runners;
 public record ResQueueRunnerFinish(Runners runners, Queue queue) {
     public static final String PATH = "/queue/runner/finish/";
 
-    public record JsonPostInput(@NotNull String runner, @NotNull String token, @NotNull JsonRunResult result) {}
+    public record JsonPostInput(
+            @JsonProperty(required = true) String runner,
+            @JsonProperty(required = true) String token,
+            @JsonProperty(required = true) JsonRunResult result) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

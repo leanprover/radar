@@ -2,6 +2,7 @@ package org.leanlang.radar.server.api;
 
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -26,26 +27,46 @@ import org.leanlang.radar.server.runners.Runners;
 @Path("/queue/")
 public record ResQueue(Repos repos, Runners runners, Queue queue) {
 
-    public record JsonActiveRun(String repo, String chash, String name, Instant startTime) {
+    public record JsonActiveRun(
+            @JsonProperty(required = true) String repo,
+            @JsonProperty(required = true) String chash,
+            @JsonProperty(required = true) String name,
+            @JsonProperty(required = true) Instant startTime) {
         public JsonActiveRun(RunnerStatusRun run) {
             this(run.job().repo(), run.job().chash(), run.job().name(), run.startTime());
         }
     }
 
     public record JsonRunner(
-            String name, boolean connected, Optional<Instant> lastSeen, Optional<JsonActiveRun> activeRun) {}
+            @JsonProperty(required = true) String name,
+            @JsonProperty(required = true) boolean connected,
+            Optional<Instant> lastSeen,
+            Optional<JsonActiveRun> activeRun) {}
 
-    public record JsonRunResult(Instant startTime, Instant endTime, int exitCode) {
+    public record JsonRunResult(
+            @JsonProperty(required = true) Instant startTime,
+            @JsonProperty(required = true) Instant endTime,
+            @JsonProperty(required = true) int exitCode) {
         public JsonRunResult(RunResult result) {
             this(result.startTime(), result.endTime(), result.exitCode());
         }
     }
 
-    public record JsonRun(String name, String script, String runner, Optional<JsonRunResult> result) {}
+    public record JsonRun(
+            @JsonProperty(required = true) String name,
+            @JsonProperty(required = true) String script,
+            @JsonProperty(required = true) String runner,
+            Optional<JsonRunResult> result) {}
 
-    public record JsonTask(String repo, String chash, String title, List<JsonRun> runs) {}
+    public record JsonTask(
+            @JsonProperty(required = true) String repo,
+            @JsonProperty(required = true) String chash,
+            @JsonProperty(required = true) String title,
+            @JsonProperty(required = true) List<JsonRun> runs) {}
 
-    public record JsonGet(List<JsonRunner> runners, List<JsonTask> tasks) {}
+    public record JsonGet(
+            @JsonProperty(required = true) List<JsonRunner> runners,
+            @JsonProperty(required = true) List<JsonTask> tasks) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
