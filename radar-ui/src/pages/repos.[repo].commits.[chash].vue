@@ -2,7 +2,6 @@
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { computed, reactive, ref } from "vue";
 import { useCommit } from "@/composables/useCommit.ts";
-import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import CLoading from "@/components/CLoading.vue";
 import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui";
 import { cn, formatDuration } from "@/lib/utils.ts";
@@ -11,6 +10,8 @@ import { useCompare } from "@/composables/useCompare.ts";
 import CCommitMeasurementsTable from "@/components/CCommitMeasurementsTable.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
+import CTimeInstant from "@/components/CTimeInstant.vue";
+import CTimeAgo from "@/components/CTimeAgo.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
@@ -55,8 +56,8 @@ onBeforeRouteUpdate(() => {
 
     <div>Date:</div>
     <div>
-      {{ useDateFormat(commit.data.author.time.epochMilliseconds, "YYYY-MM-DD HH:mm:ss") }}
-      ({{ useTimeAgo(commit.data.author.time.epochMilliseconds) }})
+      <CTimeInstant :when="commit.data.author.time" />
+      <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.author.time" />)</span>
     </div>
 
     <CollapsibleRoot v-model:open="open" :disabled="!commit.data.body" class="col-span-2 my-3 ml-[4ch] flex flex-col">

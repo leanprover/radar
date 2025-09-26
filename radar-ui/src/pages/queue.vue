@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, reactive } from "vue";
 import { useQueue } from "@/composables/useQueue.ts";
-import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import CLoading from "@/components/CLoading.vue";
 import { Temporal } from "temporal-polyfill";
 import type { JsonTask } from "@/api/queue.ts";
 import { type TaskWithActiveRun } from "@/components/pages/queue/PQueueTask.vue";
 import PQueue from "@/components/pages/queue/PQueue.vue";
+import CTimeAgo from "@/components/CTimeAgo.vue";
 
 const queue = reactive(useQueue());
 
@@ -51,12 +51,7 @@ function tasksWithActiveRun(tasks: JsonTask[]): TaskWithActiveRun[] {
       <div class="text-foreground-alt text-xs">
         <template v-if="runner.connected">(connected)</template>
         <template v-else-if="runner.lastSeen">
-          (last seen
-          <span
-            :title="useDateFormat(runner.lastSeen.epochMilliseconds, 'YYYY-MM-DD HH:mm:ss').value"
-            class="hover:text-foreground"
-            >{{ useTimeAgo(runner.lastSeen.epochMilliseconds) }}</span
-          >)
+          (last seen <CTimeAgo :when="runner.lastSeen" class="hover:text-foreground" />)
         </template>
         <template v-else>(never seen)</template>
       </div>

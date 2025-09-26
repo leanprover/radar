@@ -37,9 +37,8 @@ const run = reactive(
     <div>Duration:</div>
     <div>
       <CTimeDurationBetween :start="run.data.startTime" :end="run.data.endTime" />
-      {{ " " }}
-      <span class="text-foreground-alt text-xs"
-        >(<CTimeRange :start="run.data.startTime" :end="run.data.endTime" />)</span
+      <span class="text-foreground-alt text-xs">
+        (<CTimeRange :start="run.data.startTime" :end="run.data.endTime" />)</span
       >
     </div>
 

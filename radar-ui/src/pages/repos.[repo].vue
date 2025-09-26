@@ -2,10 +2,10 @@
 import { useRoute } from "vue-router";
 import { useRepoHistory } from "@/composables/useRepoHistory.ts";
 import { computed, reactive } from "vue";
-import { useDateFormat, useTimeAgo } from "@vueuse/core";
 import { useRepos } from "@/composables/useRepos.ts";
 import CLoading from "@/components/CLoading.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
+import CTimeAgo from "@/components/CTimeAgo.vue";
 
 const route = useRoute("/repos.[repo]");
 const repos = reactive(useRepos());
@@ -41,12 +41,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
           {{ commit.title }}
         </RouterLink>
         <div class="text-foreground-alt text-xs">
-          <span
-            :title="useDateFormat(commit.committerTime.epochMilliseconds, 'YYYY-MM-DD HH:mm:ss').value"
-            class="hover:text-foreground"
-          >
-            {{ useTimeAgo(commit.committerTime.epochMilliseconds) }}
-          </span>
+          <CTimeAgo :when="commit.committerTime" class="hover:text-foreground" />
           by {{ commit.author }}
         </div>
       </div>
