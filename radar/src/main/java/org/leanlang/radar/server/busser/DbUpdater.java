@@ -5,7 +5,6 @@ import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -21,12 +20,12 @@ import org.jooq.impl.DSL;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
-import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
 import org.leanlang.radar.server.data.Repo;
+import org.leanlang.radar.server.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record DbUpdater(Repo repo) {
+public record DbUpdater(Repo repo, Queue queue) {
     private static final Logger log = LoggerFactory.getLogger(DbUpdater.class);
 
     public void updateRepoData() {
@@ -113,34 +112,22 @@ public record DbUpdater(Repo repo) {
     }
 
     public void updateQueue() {
-        repo.db().writeTransaction(tx -> {
-            // Find all commits that are now in the history and have never been in the queue (i.e. seen).
-            List<String> toEnqueue = tx.dsl()
-                    .selectFrom(HISTORY.join(COMMITS).onKey())
-                    .where(COMMITS.SEEN.eq(0))
-                    .andNotExists(tx.dsl().selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
-                    .orderBy(HISTORY.POSITION.asc())
-                    .fetch(HISTORY.CHASH);
+        // Find all commits that are now in the history and have never been in the queue (i.e. seen).
+        List<String> toEnqueue = repo.db()
+                .read()
+                .dsl()
+                .selectFrom(HISTORY.join(COMMITS).onKey())
+                .where(COMMITS.SEEN.eq(0))
+                .andNotExists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
+                .orderBy(HISTORY.POSITION.asc())
+                .fetch(HISTORY.CHASH);
 
-            // As a for loop so that I know for certain that the times increment in the right order.
-            List<QueueRecord> records = new ArrayList<>();
-            for (String chash : toEnqueue) {
-                Instant now = Instant.now();
-                records.add(new QueueRecord(chash, now, now, 0));
-            }
+        log.info("Adding {} commits to queue", toEnqueue.size());
 
-            // Yay, new things to benchmark.
-            tx.dsl().batchInsert(records).execute();
+        for (String chash : toEnqueue) {
+            queue.enqueueSoft(repo.name(), chash, 0);
+        }
 
-            // Mark all commits that are now in the queue as seen.
-            tx.dsl()
-                    .update(COMMITS)
-                    .set(COMMITS.SEEN, 1)
-                    .where(COMMITS.SEEN.eq(0))
-                    .andExists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(COMMITS.CHASH)))
-                    .execute();
-
-            log.info("Added {} commits to queue", records.size());
-        });
+        log.info("Added {} commits to queue", toEnqueue.size());
     }
 }

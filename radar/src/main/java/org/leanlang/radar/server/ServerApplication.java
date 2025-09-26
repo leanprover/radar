@@ -67,7 +67,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         var repos = new Repos(environment.getObjectMapper(), dirs, configuration.repos);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos);
-        var busser = new Busser(repos);
+        var busser = new Busser(repos, queue);
 
         environment.lifecycle().manage(repos);
         environment.lifecycle().manage(busser);

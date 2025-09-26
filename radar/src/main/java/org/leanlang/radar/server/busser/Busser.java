@@ -8,6 +8,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
+import org.leanlang.radar.server.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,10 +19,12 @@ public final class Busser implements Managed {
     private static final Logger log = LoggerFactory.getLogger(Busser.class);
 
     private final Repos repos;
+    private final Queue queue;
     private final ScheduledExecutorService executor;
 
-    public Busser(Repos repos) {
+    public Busser(Repos repos, Queue queue) {
         this.repos = repos;
+        this.queue = queue;
         this.executor = Executors.newSingleThreadScheduledExecutor();
     }
 
@@ -58,7 +61,7 @@ public final class Busser implements Managed {
         repo.git().fetch();
         repo.gitBench().fetch();
 
-        DbUpdater updater = new DbUpdater(repo);
+        DbUpdater updater = new DbUpdater(repo, queue);
         updater.updateRepoData();
         updater.updateQueue();
     }

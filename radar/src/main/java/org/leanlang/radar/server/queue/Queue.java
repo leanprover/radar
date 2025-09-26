@@ -1,11 +1,13 @@
 package org.leanlang.radar.server.queue;
 
+import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
 import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -58,6 +60,100 @@ public final class Queue {
 
         result.sort(Comparator.comparing(Task::bumped).reversed());
         return result;
+    }
+
+    private static void enqueueBump(Configuration ctx, QueueRecord inQueue, int priority) {
+        // Bumping the position of higher-priority queue entries
+        // could lead to runs being run earlier than "authorized".
+        if (inQueue.getPriority() > priority) return;
+
+        // Bump as if we had freshly inserted it into the queue
+        inQueue.setPriority(priority);
+        inQueue.setBumpedTime(Instant.now());
+        ctx.dsl().batchUpdate(inQueue).execute();
+    }
+
+    private static void enqueueInsert(String chash, int priority, Configuration ctx) {
+        Instant now = Instant.now();
+        QueueRecord record = new QueueRecord(chash, now, now, priority);
+        ctx.dsl().batchInsert(record).execute();
+
+        ctx.dsl()
+                .update(COMMITS)
+                .set(COMMITS.SEEN, 1)
+                .where(COMMITS.CHASH.eq(chash))
+                .execute();
+    }
+
+    /**
+     * Ensure a commit is in the queue if results are not already available,
+     * bumping its position and priority if appropriate.
+     */
+    public void enqueueSoft(String repoName, String chash, int priority) {
+        log.info("Enqueueing commit {} for repo {} (soft)", chash, repoName);
+        Repo repo = repos.repo(repoName);
+
+        repo.db().writeTransaction(ctx -> {
+            boolean runsExist = !ctx.dsl()
+                    .selectOne()
+                    .from(RUNS)
+                    .where(RUNS.CHASH.eq(chash))
+                    .fetch()
+                    .isEmpty();
+            // No need to enqueue, we already have results.
+            if (runsExist) return;
+
+            QueueRecord inQueue =
+                    ctx.dsl().selectFrom(QUEUE).where(QUEUE.CHASH.eq(chash)).fetchOne();
+            if (inQueue != null) {
+                enqueueBump(ctx, inQueue, priority);
+                return;
+            }
+
+            // Insert into queue anew.
+            // No need to delete results since there aren't any.
+            enqueueInsert(chash, priority, ctx);
+        });
+    }
+
+    /**
+     * Add a commit to the queue, deleting all existing results
+     * and bumping its position and priority if appropriate.
+     */
+    public void enqueueHard(String repoName, String chash, int priority) {
+        log.info("Enqueueing commit {} for repo {} (hard)", chash, repoName);
+        Repo repo = repos.repo(repoName);
+
+        boolean added = repo.db().writeTransactionResult(ctx -> {
+            QueueRecord inQueue =
+                    ctx.dsl().selectFrom(QUEUE).where(QUEUE.CHASH.eq(chash)).fetchOne();
+            if (inQueue != null) {
+                enqueueBump(ctx, inQueue, priority);
+                return false;
+            }
+
+            // Insert into queue anew.
+            enqueueInsert(chash, priority, ctx);
+
+            // Existing data must be removed because new data will be added incrementally to the commit.
+            ctx.dsl().deleteFrom(RUNS).where(RUNS.CHASH.eq(chash)).execute();
+            ctx.dsl()
+                    .deleteFrom(MEASUREMENTS)
+                    .where(MEASUREMENTS.CHASH.eq(chash))
+                    .execute();
+
+            return true;
+        });
+
+        if (added) {
+            // Try to remove previous logs.
+            // If this doesn't work, it isn't a big deal:
+            // The logs can't be accessed via the API because the corresponding run in the DB no longer exists.
+            try {
+                repo.deleteRunLogs(chash);
+            } catch (IOException ignored) {
+            }
+        }
     }
 
     public synchronized ActiveTask ensureActiveTaskExists(TaskId id) throws IOException {
