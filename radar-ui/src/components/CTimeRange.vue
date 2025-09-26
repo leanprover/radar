@@ -9,5 +9,5 @@ const endTime = computed(() => instantToZoned(end));
 </script>
 
 <template>
-  <span :title="formatZonedRange(startTime, endTime)">{{ formatDuration(start.until(end)) }}</span>
+  <span :title="formatDuration(start.until(end))">{{ formatZonedRange(startTime, endTime) }}</span>
 </template>

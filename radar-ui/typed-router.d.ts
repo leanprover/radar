@@ -23,6 +23,7 @@ declare module 'vue-router/auto-routes' {
     '/queue': RouteRecordInfo<'/queue', '/queue', Record<never, never>, Record<never, never>>,
     '/repos.[repo]': RouteRecordInfo<'/repos.[repo]', '/repos/:repo', { repo: ParamValue<true> }, { repo: ParamValue<false> }>,
     '/repos.[repo].commits.[chash]': RouteRecordInfo<'/repos.[repo].commits.[chash]', '/repos/:repo/commits/:chash', { repo: ParamValue<true>, chash: ParamValue<true> }, { repo: ParamValue<false>, chash: ParamValue<false> }>,
+    '/repos.[repo].commits.[chash].runs.[run]': RouteRecordInfo<'/repos.[repo].commits.[chash].runs.[run]', '/repos/:repo/commits/:chash/runs/:run', { repo: ParamValue<true>, chash: ParamValue<true>, run: ParamValue<true> }, { repo: ParamValue<false>, chash: ParamValue<false>, run: ParamValue<false> }>,
   }
 
   /**
@@ -54,6 +55,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/repos.[repo].commits.[chash].vue': {
       routes: '/repos.[repo].commits.[chash]'
+      views: never
+    }
+    'src/pages/repos.[repo].commits.[chash].runs.[run].vue': {
+      routes: '/repos.[repo].commits.[chash].runs.[run]'
       views: never
     }
   }

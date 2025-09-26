@@ -7,15 +7,36 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatInstant(instant: Temporal.Instant): string {
-  const time = instant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
-  const year = time.year.toFixed().padStart(4, "0");
-  const month = time.month.toFixed().padStart(2, "0");
-  const day = time.day.toFixed().padStart(2, "0");
+export function instantToZoned(instant: Temporal.Instant): Temporal.ZonedDateTime {
+  return instant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
+}
+
+export function formatZonedTime(time: Temporal.ZonedDateTime): string {
   const hour = time.hour.toFixed().padStart(2, "0");
   const minute = time.minute.toFixed().padStart(2, "0");
   const second = time.second.toFixed().padStart(2, "0");
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+  return `${hour}:${minute}:${second}`;
+}
+
+export function formatZonedDate(time: Temporal.ZonedDateTime): string {
+  const year = time.year.toFixed().padStart(4, "0");
+  const month = time.month.toFixed().padStart(2, "0");
+  const day = time.day.toFixed().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function formatZoned(time: Temporal.ZonedDateTime): string {
+  return `${formatZonedDate(time)} ${formatZonedTime(time)}`;
+}
+
+export function formatZonedRange(start: Temporal.ZonedDateTime, end: Temporal.ZonedDateTime): string {
+  // Assumes that the two ZonedDateTimes are in the same time zone
+  const startDate = formatZonedDate(start);
+  const endDate = formatZonedDate(end);
+  const startTime = formatZonedTime(start);
+  const endTime = formatZonedTime(end);
+  if (startDate === endDate) return `${startDate} ${startTime} -- ${endTime}`;
+  return `${startDate} ${startTime} -- ${endDate} ${endTime}`;
 }
 
 export function formatDuration(duration: Temporal.Duration, opts?: { sign?: boolean }): string {

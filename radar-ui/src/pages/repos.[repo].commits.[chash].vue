@@ -121,9 +121,15 @@ onBeforeRouteUpdate(() => {
     <CSectionTitle>Runs</CSectionTitle>
     <div v-for="run in commit.data.runs" :key="run.name" class="flex gap-2">
       <div>-</div>
-      <div>
+      <RouterLink
+        :to="{
+          name: '/repos.[repo].commits.[chash].runs.[run]',
+          params: { repo: route.params.repo, chash: route.params.chash, run: run.name },
+        }"
+        class="hover:underline"
+      >
         {{ run.name }} ({{ run.script }} on {{ run.runner }}) in {{ formatDuration(run.startTime.until(run.endTime)) }}
-      </div>
+      </RouterLink>
     </div>
   </div>
 
