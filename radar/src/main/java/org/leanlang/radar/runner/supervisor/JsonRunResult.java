@@ -30,7 +30,7 @@ public record JsonRunResult(
             @Nullable Instant scriptEndTime,
             int exitCode,
             List<JsonRunResultEntry> entries,
-            List<OutputLine> lines) {
+            List<JsonOutputLine> lines) {
         this(
                 job.repo(),
                 job.chash(),
@@ -43,7 +43,7 @@ public record JsonRunResult(
                 Optional.ofNullable(scriptEndTime),
                 exitCode,
                 entries,
-                lines.stream().map(JsonOutputLine::new).toList());
+                lines);
     }
 
     public RunResult toRunResult(String runner) {

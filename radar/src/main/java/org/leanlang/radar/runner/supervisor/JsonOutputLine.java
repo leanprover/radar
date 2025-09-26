@@ -9,7 +9,8 @@ public record JsonOutputLine(
         @JsonProperty(required = true) Instant time,
         @JsonProperty(required = true) int source,
         @JsonProperty(required = true) String line) {
-    public JsonOutputLine(OutputLine outputLine) {
-        this(outputLine.time(), outputLine.source(), outputLine.line());
-    }
+
+    public static final int STDOUT = 0;
+    public static final int STDERR = 1;
+    public static final int INTERNAL = 2;
 }

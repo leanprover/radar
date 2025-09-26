@@ -38,7 +38,7 @@ public final class BenchScriptExecutor implements AutoCloseable {
         try {
             return runBenchScript();
         } catch (Exception e) {
-            lines.add(e);
+            lines.addInternal(e);
             return -1;
         }
     }
@@ -57,10 +57,8 @@ public final class BenchScriptExecutor implements AutoCloseable {
                 BufferedReader stderrReader = process.errorReader(StandardCharsets.UTF_8)) {
 
             log.info("Listening to bench script output");
-            Thread stdoutThread = new Thread(
-                    () -> stdoutReader.lines().forEach(line -> lines.add(OutputLine.STDOUT, line)), "stdout");
-            Thread stderrThread = new Thread(
-                    () -> stderrReader.lines().forEach(line -> lines.add(OutputLine.STDERR, line)), "stderr");
+            Thread stdoutThread = new Thread(() -> stdoutReader.lines().forEach(lines::addStdout), "stdout");
+            Thread stderrThread = new Thread(() -> stderrReader.lines().forEach(lines::addStderr), "stderr");
 
             stdoutThread.start();
             stderrThread.start();

@@ -79,7 +79,7 @@ public class Supervisor {
             entries = readResultFile();
             clearTmpDir(); // Being considerate towards the next run :)
         } catch (Exception e) {
-            lines.add(e);
+            lines.addInternal(e);
             exitCode = -1;
             if (scriptStartTime != null) scriptEndTime = Instant.now();
         } finally {
