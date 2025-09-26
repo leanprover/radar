@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.leanlang.radar.runner.config.Dirs;
-import org.leanlang.radar.server.queue.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +14,13 @@ public final class BenchScriptExecutor implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(BenchScriptExecutor.class);
 
     private final Dirs dirs;
-    private final Job job;
+    private final JsonJob job;
     private final OutputLines lines;
 
     private final ExecutorService executor;
     private final Future<Integer> result;
 
-    public BenchScriptExecutor(Dirs dirs, Job job, OutputLines lines) {
+    public BenchScriptExecutor(Dirs dirs, JsonJob job, OutputLines lines) {
         this.dirs = dirs;
         this.job = job;
         this.lines = lines;

@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.server.queue.Job;
 import org.leanlang.radar.server.queue.Run;
 import org.leanlang.radar.server.queue.RunResult;
 
@@ -24,7 +23,7 @@ public record JsonRunResult(
         @JsonProperty(required = true) List<JsonOutputLine> lines) {
 
     public JsonRunResult(
-            Job job,
+            JsonJob job,
             Instant startTime,
             Instant endTime,
             @Nullable Instant scriptStartTime,

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.leanlang.radar.runner.supervisor.JsonJob;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.queue.TaskId;
@@ -22,11 +23,11 @@ public record ResQueueRunnerStatus(Runners runners, Queue queue) {
     public static final String PATH = "/queue/runner/status/";
 
     public record JsonRun(
-            @JsonProperty(required = true) ResQueueRunnerTake.JsonJob job,
+            @JsonProperty(required = true) JsonJob job,
             @JsonProperty(required = true) Instant startTime,
             @JsonProperty(required = true) List<JsonOutputLine> lastLines) {
         public RunnerStatusRun toRunnerStatusRun() {
-            return new RunnerStatusRun(job.toJob(), startTime, lastLines);
+            return new RunnerStatusRun(job, startTime, lastLines);
         }
     }
 

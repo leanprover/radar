@@ -9,7 +9,6 @@ import org.leanlang.radar.runner.config.RunnerConfig;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.runner.supervisor.Supervisor;
 import org.leanlang.radar.server.api.ResQueueRunnerStatus;
-import org.leanlang.radar.server.api.ResQueueRunnerTake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +27,7 @@ public record StatusUpdater(RunnerConfig config, Supervisor supervisor, Client c
         Optional<ResQueueRunnerStatus.JsonRun> activeRun = supervisor
                 .status()
                 .map(it -> new ResQueueRunnerStatus.JsonRun(
-                        new ResQueueRunnerTake.JsonJob(it.job()),
+                        it.job(),
                         it.startTime(),
                         it.lines().getLast(Constants.RUNNER_STATUS_UPDATE_LINES).stream()
                                 .map(JsonOutputLine::new)

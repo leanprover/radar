@@ -21,6 +21,7 @@ import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
+import org.leanlang.radar.runner.supervisor.JsonJob;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 import org.slf4j.Logger;
@@ -166,8 +167,8 @@ public final class Queue {
         return newTask;
     }
 
-    private Job jobFromActiveTask(ActiveTask task, Run run) {
-        return new Job(
+    private JsonJob jobFromActiveTask(ActiveTask task, Run run) {
+        return new JsonJob(
                 task.repo().name(),
                 task.repo().config().url(),
                 task.chash(),
@@ -177,7 +178,7 @@ public final class Queue {
                 run.script());
     }
 
-    public Optional<Job> takeJob(String runner) throws IOException {
+    public Optional<JsonJob> takeJob(String runner) throws IOException {
         // Look in active tasks, FIFO
         for (ActiveTask activeTask : getActiveTasks()) {
             for (Run run : activeTask.uncompletedRuns()) {

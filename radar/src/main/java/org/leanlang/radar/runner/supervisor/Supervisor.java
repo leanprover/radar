@@ -21,7 +21,6 @@ import org.leanlang.radar.runner.config.RunnerConfig;
 import org.leanlang.radar.server.api.ResQueueRunnerFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerTake;
 import org.leanlang.radar.server.data.RepoGit;
-import org.leanlang.radar.server.queue.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +54,9 @@ public class Supervisor {
      */
     public boolean run() throws InterruptedException {
         log.info("Acquiring job");
-        Optional<Job> jobOpt = acquireRun();
+        Optional<JsonJob> jobOpt = acquireRun();
         if (jobOpt.isEmpty()) return false;
-        Job job = jobOpt.get();
+        JsonJob job = jobOpt.get();
         log.debug("Acquired job {}", job);
 
         Instant startTime = Instant.now();
@@ -104,14 +103,13 @@ public class Supervisor {
         return true;
     }
 
-    private Optional<Job> acquireRun() {
+    private Optional<JsonJob> acquireRun() {
         return client.target(config.apiUrl(ResQueueRunnerTake.PATH))
                 .request(MediaType.APPLICATION_JSON)
                 .post(
                         Entity.json(new ResQueueRunnerTake.JsonPostInput(config.name, config.token)),
                         ResQueueRunnerTake.JsonPost.class)
-                .job()
-                .map(ResQueueRunnerTake.JsonJob::toJob);
+                .job();
     }
 
     private void clearTmpDir() throws IOException {
@@ -119,7 +117,7 @@ public class Supervisor {
         FsUtil.removeDirRecursively(dirs.tmp());
     }
 
-    private void fetchAndCloneRepo(Job job) throws Exception {
+    private void fetchAndCloneRepo(JsonJob job) throws Exception {
         try (RepoGit repo = new RepoGit(dirs.bareRepo(job.repo()), job.url())) {
             log.debug("Fetching repo");
             repo.fetch();
@@ -128,7 +126,7 @@ public class Supervisor {
         }
     }
 
-    private void fetchAndCloneBenchRepo(Job job) throws Exception {
+    private void fetchAndCloneBenchRepo(JsonJob job) throws Exception {
         try (RepoGit repo = new RepoGit(dirs.bareBenchRepo(job.repo()), job.benchUrl())) {
             log.debug("Fetching bench repo");
             repo.fetch();
