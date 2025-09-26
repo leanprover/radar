@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import org.leanlang.radar.FsUtil;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
@@ -59,8 +60,8 @@ public final class Repo implements Closeable {
         return gitBench;
     }
 
-    public void saveRunLog(String chash, List<JsonOutputLine> lines) throws IOException {
-        Path file = dirs.repoRunLog(config.name(), chash);
+    public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
+        Path file = dirs.repoRunLog(config.name(), chash, run);
         Files.createDirectories(file.getParent());
         try (BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
             for (JsonOutputLine line : lines) {
@@ -70,8 +71,8 @@ public final class Repo implements Closeable {
         }
     }
 
-    public List<JsonOutputLine> loadRunLog(String chash) throws IOException {
-        Path file = dirs.repoRunLog(config.name(), chash);
+    public List<JsonOutputLine> loadRunLog(String chash, String run) throws IOException {
+        Path file = dirs.repoRunLog(config.name(), chash, run);
         List<JsonOutputLine> lines = new ArrayList<>();
         for (String line : Files.readString(file).lines().toList()) {
             lines.add(mapper.readValue(line, JsonOutputLine.class));
@@ -79,8 +80,8 @@ public final class Repo implements Closeable {
         return lines;
     }
 
-    public void deleteRunLog(String chash) throws IOException {
-        Path file = dirs.repoRunLog(config.name(), chash);
-        Files.deleteIfExists(file);
+    public void deleteRunLogs(String chash) throws IOException {
+        Path dir = dirs.repoRunLogs(config.name(), chash);
+        FsUtil.removeDirRecursively(dir);
     }
 }

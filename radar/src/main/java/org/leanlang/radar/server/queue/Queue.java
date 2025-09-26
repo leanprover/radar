@@ -172,7 +172,7 @@ public final class Queue {
         task.addResult(runResult);
         if (!task.uncompletedRuns().isEmpty()) return;
 
-        task.repo().deleteRunLog(task.chash());
+        task.repo().deleteRunLogs(task.chash());
 
         task.repo().db().writeTransaction(ctx -> {
             log.debug("Updating metrics");
@@ -190,7 +190,9 @@ public final class Queue {
             log.debug("Done");
         });
 
-        task.repo().saveRunLog(task.chash(), runResult.lines());
+        for (RunResult result : task.results()) {
+            task.repo().saveRunLog(task.chash(), result.run().name(), result.lines());
+        }
 
         activeTasks.remove(task);
     }

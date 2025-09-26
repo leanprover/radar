@@ -25,8 +25,12 @@ public final class Dirs {
         return repoState(repo).resolve("data.db");
     }
 
-    public Path repoRunLog(String repo, String chash) {
-        return repoState(repo).resolve("logs").resolve(chash + ".jsonl");
+    public Path repoRunLogs(String repo, String chash) {
+        return repoState(repo).resolve("logs").resolve(chash);
+    }
+
+    public Path repoRunLog(String repo, String chash, String run) {
+        return repoRunLogs(repo, chash).resolve(run + ".jsonl");
     }
 
     public Path repoGit(String repo) {

@@ -7,17 +7,14 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
+import org.leanlang.radar.FsUtil;
 import org.leanlang.radar.runner.StatusUpdater;
 import org.leanlang.radar.runner.config.Dirs;
 import org.leanlang.radar.runner.config.RunnerConfig;
@@ -119,23 +116,7 @@ public class Supervisor {
 
     private void clearTmpDir() throws IOException {
         log.debug("Clearing tmp directory");
-
-        Path dir = dirs.tmp();
-        if (Files.notExists(dir)) return;
-
-        Files.walkFileTree(dir, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
+        FsUtil.removeDirRecursively(dirs.tmp());
     }
 
     private void fetchAndCloneRepo(Job job) throws Exception {

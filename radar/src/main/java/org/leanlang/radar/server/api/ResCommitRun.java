@@ -52,7 +52,7 @@ public record ResCommitRun(Repos repos, Runners runners, Queue queue) {
 
         List<JsonOutputLine> lines;
         try {
-            lines = repo.loadRunLog(chash);
+            lines = repo.loadRunLog(chash, runName);
         } catch (Exception e) {
             lines = new ArrayList<>();
         }
