@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jooq.Record1;
 import org.leanlang.radar.Constants;
-import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
@@ -264,20 +263,12 @@ public record Queue(Repos repos, Runners runners) {
     }
 
     private void addMeasurements(Configuration ctx, JsonRunResult runResult) {
-        List<MeasurementsRecord> records = runResult.entries().stream()
-                .map(it -> {
-                    MeasurementsRecord record = new MeasurementsRecord();
-                    record.setChash(runResult.chash());
-                    record.setMetric(it.metric());
-                    record.setValue(it.value());
-                    return record;
-                })
-                .toList();
-
-        ctx.dsl()
-                .insertInto(MEASUREMENTS)
-                .values(records)
-                .onDuplicateKeyIgnore()
-                .execute();
+        for (JsonRunResultEntry entry : runResult.entries()) {
+            ctx.dsl()
+                    .insertInto(MEASUREMENTS, MEASUREMENTS.CHASH, MEASUREMENTS.METRIC, MEASUREMENTS.VALUE)
+                    .values(runResult.chash(), entry.metric(), entry.value())
+                    .onDuplicateKeyIgnore()
+                    .execute();
+        }
     }
 }
