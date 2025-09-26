@@ -65,6 +65,27 @@ const columns: ColumnDef<Measurement>[] = [
       }),
   },
   {
+    id: "deltapercent",
+    accessorFn: (it) => {
+      if (it.first === undefined) return 0;
+      if (it.second === undefined) return 0;
+      return (it.second - it.first) / it.first;
+    },
+    header: ({ column }) =>
+      h(CTableHeader<Measurement>, {
+        column,
+        title: "Delta%",
+        align: "right",
+      }),
+    cell: ({ row, cell }) =>
+      h(CTableCellDelta, {
+        from: 0,
+        to: cell.getValue() as number | undefined,
+        unit: "100%",
+        direction: row.original.direction,
+      }),
+  },
+  {
     accessorKey: "unit",
     header: ({ column }) =>
       h(CTableHeader<Measurement>, {

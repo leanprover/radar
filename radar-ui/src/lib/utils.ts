@@ -130,5 +130,7 @@ export function formatValue(
   opts = opts ?? {};
   if (unit === "s") return formatDuration(Temporal.Duration.from({ milliseconds: Math.round(value * 1000) }), opts);
   if (unit === "B") return formatBytes(value, opts);
+  if (unit === "%") return formatNumber(value, { ...opts, prefixes: [] }) + "%";
+  if (unit === "100%") return formatNumber(value * 100, { ...opts, prefixes: [] }) + "%";
   return formatNumber(value, opts);
 }
