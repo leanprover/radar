@@ -9,17 +9,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
-import org.leanlang.radar.server.queue.ActiveTask;
 import org.leanlang.radar.server.queue.Queue;
-import org.leanlang.radar.server.queue.Run;
-import org.leanlang.radar.server.queue.RunResult;
-import org.leanlang.radar.server.queue.Task;
 import org.leanlang.radar.server.runners.RunnerStatus;
 import org.leanlang.radar.server.runners.RunnerStatusRun;
 import org.leanlang.radar.server.runners.Runners;
@@ -46,11 +41,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
     public record JsonRunResult(
             @JsonProperty(required = true) Instant startTime,
             @JsonProperty(required = true) Instant endTime,
-            @JsonProperty(required = true) int exitCode) {
-        public JsonRunResult(RunResult result) {
-            this(result.startTime(), result.endTime(), result.exitCode());
-        }
-    }
+            @JsonProperty(required = true) int exitCode) {}
 
     public record JsonRun(
             @JsonProperty(required = true) String name,
@@ -83,36 +74,23 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
                         runner.status().flatMap(RunnerStatus::activeRun).map(JsonActiveRun::new)))
                 .toList();
 
-        List<JsonTask> tasks = new ArrayList<>();
-
-        for (ActiveTask task : queue.getActiveTasks()) {
-            List<RunResult> results = task.results();
-            List<JsonRun> runs = getRunsWithExitCode(task.runs(), results);
-            String title = getCommitTitle(task.repo(), task.chash());
-            tasks.add(new JsonTask(task.repo().name(), task.chash(), title, runs));
-        }
-
-        for (Task task : queue.getQueuedTasks()) {
-            List<JsonRun> runs = getRunsWithExitCode(task.runs(), List.of());
-            String title = getCommitTitle(repos.repo(task.repo()), task.chash());
-            tasks.add(new JsonTask(task.repo(), task.chash(), title, runs));
-        }
+        List<JsonTask> tasks = queue.getTasks().stream()
+                .map(task -> new JsonTask(
+                        task.repo().name(),
+                        task.chash(),
+                        getCommitTitle(task.repo(), task.chash()),
+                        task.runs().stream()
+                                .map(run -> new JsonRun(
+                                        run.name(),
+                                        run.script(),
+                                        run.runner(),
+                                        run.finished()
+                                                .map(it -> new JsonRunResult(
+                                                        it.startTime(), it.endTime(), it.exitCode()))))
+                                .toList()))
+                .toList();
 
         return new JsonGet(runners, tasks);
-    }
-
-    private static List<JsonRun> getRunsWithExitCode(List<Run> runs, List<RunResult> results) {
-        // Currently O(n*m), maybe optimize?
-        return runs.stream()
-                .map(run -> new JsonRun(
-                        run.name(),
-                        run.script(),
-                        run.runner(),
-                        results.stream()
-                                .filter(it -> it.run().name().equals(run.name()))
-                                .findFirst()
-                                .map(JsonRunResult::new)))
-                .toList();
     }
 
     private static String getCommitTitle(Repo repo, String chash) {

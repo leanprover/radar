@@ -10,56 +10,72 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jooq.Configuration;
+import org.jooq.Record1;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 import org.leanlang.radar.runner.supervisor.JsonJob;
+import org.leanlang.radar.runner.supervisor.JsonRunResult;
+import org.leanlang.radar.runner.supervisor.JsonRunResultEntry;
+import org.leanlang.radar.server.config.ServerConfigRepo;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
+import org.leanlang.radar.server.runners.Runners;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class Queue {
+public record Queue(Repos repos, Runners runners) {
     private static final Logger log = LoggerFactory.getLogger(Queue.class);
-    private final Repos repos;
-    private final List<ActiveTask> activeTasks;
 
-    public Queue(Repos repos) {
-        this.repos = repos;
-        this.activeTasks = new ArrayList<>();
+    private record RunFinishedId(String chash, String name) {}
+
+    private List<Task> getTasksForRepo(Repo repo) {
+        return repo.db().readTransactionResult(ctx -> {
+            Map<RunFinishedId, RunFinished> finishedRuns = ctx
+                    .dsl()
+                    .select(RUNS.CHASH, RUNS.NAME, RUNS.START_TIME, RUNS.END_TIME, RUNS.EXIT_CODE)
+                    .from(QUEUE.join(RUNS).on(RUNS.CHASH.eq(QUEUE.CHASH)))
+                    .stream()
+                    .collect(Collectors.toUnmodifiableMap(
+                            it -> new RunFinishedId(it.value1(), it.value2()),
+                            it -> new RunFinished(it.value3(), it.value4(), it.value5())));
+
+            return ctx.dsl().selectFrom(QUEUE).stream()
+                    .map(task -> new Task(
+                            repo,
+                            task.getChash(),
+                            task.getQueuedTime(),
+                            task.getBumpedTime(),
+                            repo.config().benchRuns().stream()
+                                    .map(run -> new Run(
+                                            run.name(),
+                                            run.script(),
+                                            run.runner(),
+                                            Optional.ofNullable(
+                                                    finishedRuns.get(new RunFinishedId(task.getChash(), run.name())))))
+                                    .toList()))
+                    .toList();
+        });
     }
 
-    public synchronized List<ActiveTask> getActiveTasks() {
-        return activeTasks.stream().toList();
-    }
-
-    public List<Task> getQueuedTasks() {
-        Set<TaskId> activeTaskIds =
-                getActiveTasks().stream().map(ActiveTask::id).collect(Collectors.toUnmodifiableSet());
-
+    public List<Task> getTasks() {
         List<Task> result = new ArrayList<>();
-        for (Repo repo : repos.repos()) {
-            for (QueueRecord entry : repo.db().read().dsl().selectFrom(QUEUE).fetch()) {
-                TaskId id = new TaskId(repo.name(), entry.getChash());
-                if (activeTaskIds.contains(id)) continue;
 
-                List<Run> runs = repo.config().benchRuns().stream()
-                        .map(it -> new Run(it.name(), it.script(), it.runner()))
-                        .toList();
-                Task task = new Task(id.repo(), id.chash(), runs, entry.getQueuedTime(), entry.getBumpedTime());
-                result.add(task);
-            }
+        for (Repo repo : repos.repos()) {
+            result.addAll(getTasksForRepo(repo));
         }
 
         result.sort(Comparator.comparing(Task::bumped).reversed());
+
         return result;
     }
 
@@ -157,99 +173,101 @@ public final class Queue {
         }
     }
 
-    public synchronized ActiveTask ensureActiveTaskExists(TaskId id) throws IOException {
-        Optional<ActiveTask> existingTask =
-                activeTasks.stream().filter(it -> it.id().equals(id)).findFirst();
-        if (existingTask.isPresent()) return existingTask.get();
+    private JsonJob makeJob(Task task, Run run) throws IOException {
+        Repo repo = task.repo();
+        ServerConfigRepo repoConfig = repo.config();
 
-        ActiveTask newTask = new ActiveTask(repos.repo(id.repo()), id.chash());
-        activeTasks.add(newTask);
-        return newTask;
-    }
+        String benchChash =
+                repo.gitBench().plumbing().resolve(repoConfig.benchRef()).name();
 
-    private JsonJob jobFromActiveTask(ActiveTask task, Run run) {
         return new JsonJob(
-                task.repo().name(),
-                task.repo().config().url(),
+                repo.name(),
+                repoConfig.url(),
                 task.chash(),
-                task.repo().config().benchUrl(),
-                task.benchChash(),
+                repoConfig.benchUrl(),
+                benchChash,
                 run.name(),
                 run.script());
     }
 
     public Optional<JsonJob> takeJob(String runner) throws IOException {
-        // Look in active tasks, FIFO
-        for (ActiveTask activeTask : getActiveTasks()) {
-            for (Run run : activeTask.uncompletedRuns()) {
-                if (!run.runner().equals(runner)) continue;
-                return Optional.of(jobFromActiveTask(activeTask, run));
-            }
-        }
-
-        // Look in remaining queue
-        for (Task task : getQueuedTasks()) {
+        for (Task task : getTasks()) {
             for (Run run : task.runs()) {
+                if (run.finished().isPresent()) continue;
                 if (!run.runner().equals(runner)) continue;
-                TaskId id = new TaskId(task.repo(), task.chash());
-                ActiveTask activeTask = ensureActiveTaskExists(id);
-                return Optional.of(jobFromActiveTask(activeTask, run));
+                return Optional.of(makeJob(task, run));
             }
         }
-
         return Optional.empty();
     }
 
-    private void updateMetrics(Configuration ctx, ActiveTask task) {
+    public void finishJob(String repoName, String runnerName, JsonRunResult runResult) {
+        // Intentionally blindly trusting the runner's data.
+        // It might be from an older config version.
+
+        Repo repo = repos.repo(repoName);
+        repo.db().writeTransaction(ctx -> {
+            Set<String> runs = ctx.dsl().select(RUNS.NAME).from(RUNS).where(RUNS.CHASH.eq(runResult.chash())).stream()
+                    .map(Record1::value1)
+                    .collect(Collectors.toCollection(HashSet::new));
+
+            // Adding run data on top of an existing run with the same name is not a good idea.
+            if (runs.contains(runResult.name())) return;
+
+            // Add run data to db
+            updateMetrics(ctx, runResult);
+            addRun(ctx, runnerName, runResult);
+            addMeasurements(ctx, runResult);
+            runs.add(runResult.name());
+
+            // Remove task from queue if all its runs are finished
+            boolean allRunsFinished = repo.config().benchRuns().stream().allMatch(it -> runs.contains(it.name()));
+            if (!allRunsFinished) return;
+            ctx.dsl().deleteFrom(QUEUE).where(QUEUE.CHASH.eq(runResult.chash())).execute();
+        });
+    }
+
+    private void updateMetrics(Configuration ctx, JsonRunResult runResult) {
         Map<String, MetricsRecord> metrics =
                 ctx.dsl().selectFrom(METRICS).stream().collect(Collectors.toMap(MetricsRecord::getMetric, it -> it));
 
-        task.results().stream().flatMap(it -> it.entries().stream()).forEach(entry -> {
+        for (JsonRunResultEntry entry : runResult.entries()) {
             MetricsRecord record = metrics.get(entry.metric());
             if (record == null) {
-                metrics.put(
+                MetricsRecord newRecord = new MetricsRecord(
                         entry.metric(),
-                        new MetricsRecord(
-                                entry.metric(),
-                                entry.unit().orElse(null),
-                                entry.direction().orElse(Constants.DEFAULT_DIRECTION)));
+                        entry.unit().orElse(null),
+                        entry.direction().orElse(Constants.DEFAULT_DIRECTION));
+                metrics.put(entry.metric(), newRecord);
             } else {
                 entry.unit().ifPresent(record::setUnit);
                 entry.direction().ifPresent(record::setDirection);
             }
-        });
+        }
 
         ctx.dsl().batchStore(metrics.values()).execute();
     }
 
-    private void updateRuns(Configuration ctx, ActiveTask task) {
-        List<RunsRecord> runs = task.results().stream()
-                .map(it -> {
-                    RunsRecord record = new RunsRecord();
-                    record.setChash(it.chash());
-                    record.setName(it.run().name());
-                    record.setScript(it.run().script());
-                    record.setRunner(it.run().runner());
-                    record.setChashBench(it.benchChash());
-                    record.setStartTime(it.startTime());
-                    record.setEndTime(it.endTime());
-                    record.setScriptStartTime(it.scriptStartTime().orElse(null));
-                    record.setScriptEndTime(it.scriptEndTime().orElse(null));
-                    record.setExitCode(it.exitCode());
-                    return record;
-                })
-                .toList();
-
-        ctx.dsl().deleteFrom(RUNS).where(RUNS.CHASH.eq(task.chash())).execute();
-        ctx.dsl().batchInsert(runs).execute();
+    private void addRun(Configuration ctx, String runnerName, JsonRunResult runResult) {
+        RunsRecord record = new RunsRecord();
+        record.setChash(runResult.chash());
+        record.setName(runResult.name());
+        record.setScript(runResult.script());
+        record.setRunner(runnerName);
+        record.setChashBench(runResult.benchChash());
+        record.setStartTime(runResult.startTime());
+        record.setEndTime(runResult.endTime());
+        record.setScriptStartTime(runResult.scriptStartTime().orElse(null));
+        record.setScriptEndTime(runResult.scriptEndTime().orElse(null));
+        record.setExitCode(runResult.exitCode());
+        ctx.dsl().batchInsert(record).execute();
     }
 
-    private void updateMeasurements(Configuration ctx, ActiveTask task) {
-        List<MeasurementsRecord> measurements = task.results().stream()
-                .flatMap(it -> it.entries().stream())
+    private void addMeasurements(Configuration ctx, JsonRunResult runResult) {
+        List<MeasurementsRecord> records = runResult.entries().stream()
                 .map(it -> {
                     MeasurementsRecord record = new MeasurementsRecord();
-                    record.setChash(task.chash());
+                    record.setChash(runResult.chash());
                     record.setMetric(it.metric());
                     record.setValue(it.value());
                     return record;
@@ -257,40 +275,9 @@ public final class Queue {
                 .toList();
 
         ctx.dsl()
-                .deleteFrom(MEASUREMENTS)
-                .where(MEASUREMENTS.CHASH.eq(task.chash()))
+                .insertInto(MEASUREMENTS)
+                .values(records)
+                .onDuplicateKeyIgnore()
                 .execute();
-
-        ctx.dsl().batchInsert(measurements).execute();
-    }
-
-    public synchronized void finishJob(String repo, RunResult runResult) throws IOException {
-        ActiveTask task = ensureActiveTaskExists(new TaskId(repo, runResult.chash()));
-        task.addResult(runResult);
-        if (!task.uncompletedRuns().isEmpty()) return;
-
-        task.repo().deleteRunLogs(task.chash());
-
-        task.repo().db().writeTransaction(ctx -> {
-            log.debug("Updating metrics");
-            updateMetrics(ctx, task);
-
-            log.debug("Updating runs");
-            updateRuns(ctx, task);
-
-            log.debug("Updating measurements");
-            updateMeasurements(ctx, task);
-
-            log.debug("Removing from queue");
-            ctx.dsl().deleteFrom(QUEUE).where(QUEUE.CHASH.eq(task.chash())).execute();
-
-            log.debug("Done");
-        });
-
-        for (RunResult result : task.results()) {
-            task.repo().saveRunLog(task.chash(), result.run().name(), result.lines());
-        }
-
-        activeTasks.remove(task);
     }
 }

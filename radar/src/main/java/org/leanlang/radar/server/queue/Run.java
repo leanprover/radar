@@ -1,3 +1,5 @@
 package org.leanlang.radar.server.queue;
 
-public record Run(String name, String script, String runner) {}
+import java.util.Optional;
+
+public record Run(String name, String script, String runner, Optional<RunFinished> finished) {}

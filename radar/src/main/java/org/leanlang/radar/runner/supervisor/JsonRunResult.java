@@ -5,8 +5,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.server.queue.Run;
-import org.leanlang.radar.server.queue.RunResult;
 
 public record JsonRunResult(
         @JsonProperty(required = true) String repo,
@@ -41,20 +39,6 @@ public record JsonRunResult(
                 endTime,
                 Optional.ofNullable(scriptStartTime),
                 Optional.ofNullable(scriptEndTime),
-                exitCode,
-                entries,
-                lines);
-    }
-
-    public RunResult toRunResult(String runner) {
-        return new RunResult(
-                chash,
-                new Run(name, script, runner),
-                benchChash,
-                startTime,
-                endTime,
-                scriptStartTime,
-                scriptEndTime,
                 exitCode,
                 entries,
                 lines);

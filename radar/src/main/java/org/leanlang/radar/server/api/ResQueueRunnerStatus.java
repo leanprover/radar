@@ -12,7 +12,6 @@ import java.util.Optional;
 import org.leanlang.radar.runner.supervisor.JsonJob;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.queue.Queue;
-import org.leanlang.radar.server.queue.TaskId;
 import org.leanlang.radar.server.runners.Runner;
 import org.leanlang.radar.server.runners.RunnerStatus;
 import org.leanlang.radar.server.runners.RunnerStatusRun;
@@ -40,14 +39,7 @@ public record ResQueueRunnerStatus(Runners runners, Queue queue) {
     @Consumes(MediaType.APPLICATION_JSON)
     public void post(JsonPostInput input) throws IOException {
         Runner runner = runners.runner(input.runner, input.token);
-
         RunnerStatus status = new RunnerStatus(Instant.now(), input.activeRun.map(JsonRun::toRunnerStatusRun));
-
         runner.setStatus(status);
-
-        if (status.activeRun().isPresent()) {
-            RunnerStatusRun run = status.activeRun().get();
-            queue.ensureActiveTaskExists(new TaskId(run.job().repo(), run.job().chash()));
-        }
     }
 }

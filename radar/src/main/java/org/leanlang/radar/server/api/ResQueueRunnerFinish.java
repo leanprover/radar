@@ -26,6 +26,6 @@ public record ResQueueRunnerFinish(Runners runners, Queue queue) {
     @Produces(MediaType.APPLICATION_JSON)
     public void post(JsonPostInput input) throws IOException {
         Runner runner = runners.runner(input.runner, input.token);
-        queue.finishJob(input.result.repo(), input.result.toRunResult(runner.name()));
+        queue.finishJob(input.result.repo(), runner.name(), input.result);
     }
 }
