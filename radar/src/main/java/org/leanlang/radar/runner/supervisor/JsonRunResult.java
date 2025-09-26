@@ -56,7 +56,7 @@ public record JsonRunResult(
                 scriptStartTime,
                 scriptEndTime,
                 exitCode,
-                entries.stream().map(JsonRunResultEntry::toRunResultEntry).toList(),
+                entries,
                 lines);
     }
 }
