@@ -21,8 +21,9 @@ const columns: ColumnDef<Measurement>[] = [
     accessorKey: "metric",
     sortingFn: "textCaseSensitive",
     sortDescFirst: true,
-    header: ({ column }) =>
+    header: ({ table, column }) =>
       h(CTableHeader<Measurement>, {
+        table,
         column,
         title: "Metric",
         align: "left",
@@ -31,8 +32,9 @@ const columns: ColumnDef<Measurement>[] = [
   {
     id: "value",
     accessorFn: (it) => it.second,
-    header: ({ column }) =>
+    header: ({ table, column }) =>
       h(CTableHeader<Measurement>, {
+        table,
         column,
         title: "Value",
         align: "right",
@@ -50,8 +52,9 @@ const columns: ColumnDef<Measurement>[] = [
       if (it.second === undefined) return 0;
       return it.second - it.first;
     },
-    header: ({ column }) =>
+    header: ({ table, column }) =>
       h(CTableHeader<Measurement>, {
+        table,
         column,
         title: "Delta",
         align: "right",
@@ -71,8 +74,9 @@ const columns: ColumnDef<Measurement>[] = [
       if (it.second === undefined) return 0;
       return (it.second - it.first) / it.first;
     },
-    header: ({ column }) =>
+    header: ({ table, column }) =>
       h(CTableHeader<Measurement>, {
+        table,
         column,
         title: "Delta%",
         align: "right",
@@ -87,8 +91,9 @@ const columns: ColumnDef<Measurement>[] = [
   },
   {
     accessorKey: "unit",
-    header: ({ column }) =>
+    header: ({ table, column }) =>
       h(CTableHeader<Measurement>, {
+        table,
         column,
         title: "Unit",
         align: "left",

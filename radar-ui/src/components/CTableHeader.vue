@@ -1,12 +1,14 @@
 <script setup lang="ts" generic="T">
 import { computed } from "vue";
-import { type Column } from "@tanstack/vue-table";
+import { type Column, type Table } from "@tanstack/vue-table";
 
 const {
+  table,
   column,
   title = undefined,
   align = "left",
 } = defineProps<{
+  table: Table<T>;
   column: Column<T>;
   title?: string;
   align?: "left" | "center" | "right";
@@ -19,10 +21,9 @@ const marker = computed(() => {
 });
 
 const index = computed(() => {
-  const isSorted = column.getIsSorted();
-  const canMultiSort = column.getCanMultiSort();
-  if (!isSorted) return canMultiSort ? " " : "";
-  return column.getSortIndex().toFixed();
+  if (table.getState().sorting.length <= 1) return ""; // Not multisorting
+  if (!column.getIsSorted()) return " ";
+  return (column.getSortIndex() + 1).toFixed();
 });
 </script>
 
