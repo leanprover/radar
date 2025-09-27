@@ -66,7 +66,7 @@ const run = reactive(
           :class="{ 'text-red': line.source === 1, 'text-blue': line.source === 2 }"
         >
           [<CTimeInstant :when="line.time" :date="false" />]
-          {{ line.line }}
+          <span class="whitespace-pre-wrap">{{ line.line }}</span>
         </div>
       </div>
     </template>
