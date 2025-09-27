@@ -56,16 +56,19 @@ const run = reactive(
 
   <div v-if="run.isSuccess" class="flex flex-col">
     <CSectionTitle>Logs</CSectionTitle>
-    <div class="mb-2">Lines: {{ run.data.lines.length }}</div>
-    <div class="flex flex-col">
-      <div
-        v-for="(line, index) in run.data.lines"
-        :key="index"
-        :class="{ 'text-red': line.source === 1, 'text-blue': line.source === 2 }"
-      >
-        [<CTimeInstant :when="line.time" :date="false" />]
-        {{ line.line }}
+    <div v-if="run.data.lines === undefined">No logs available.</div>
+    <template v-else>
+      <div class="mb-2">Lines: {{ run.data.lines.length }}</div>
+      <div class="flex flex-col">
+        <div
+          v-for="(line, index) in run.data.lines"
+          :key="index"
+          :class="{ 'text-red': line.source === 1, 'text-blue': line.source === 2 }"
+        >
+          [<CTimeInstant :when="line.time" :date="false" />]
+          {{ line.line }}
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>

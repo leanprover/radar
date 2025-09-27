@@ -11,7 +11,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
@@ -33,7 +32,7 @@ public record ResCommitRun(Repos repos, Runners runners, Queue queue) {
             Optional<Instant> scriptStartTime,
             Optional<Instant> scriptEndTime,
             @JsonProperty(required = true) int exitCode,
-            @JsonProperty(required = true) List<JsonOutputLine> lines) {}
+            Optional<List<JsonOutputLine>> lines) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -51,11 +50,11 @@ public record ResCommitRun(Repos repos, Runners runners, Queue queue) {
                 .fetchOne();
         if (record == null) throw new NotFoundException();
 
-        List<JsonOutputLine> lines;
+        Optional<List<JsonOutputLine>> lines;
         try {
-            lines = repo.loadRunLog(chash, runName);
+            lines = Optional.of(repo.loadRunLog(chash, runName));
         } catch (Exception e) {
-            lines = new ArrayList<>();
+            lines = Optional.empty();
         }
 
         return new JsonGet(

@@ -14,7 +14,9 @@ const JsonGet = z.object({
   scriptStartTime: Timestamp.nullish().transform((it) => it ?? undefined),
   scriptEndTime: Timestamp.nullish().transform((it) => it ?? undefined),
   exitCode: z.int(),
-  lines: JsonOutputLine.array(),
+  lines: JsonOutputLine.array()
+    .nullish()
+    .transform((lines) => lines ?? undefined),
 });
 
 export async function getCommitRun(repo: string, chash: string, run: string) {
