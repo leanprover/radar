@@ -200,11 +200,12 @@ public record Queue(Repos repos, Runners runners) {
         return Optional.empty();
     }
 
-    public void finishJob(String repoName, String runnerName, JsonRunResult runResult) {
+    public void finishJob(String repoName, String runnerName, JsonRunResult runResult) throws IOException {
         // Intentionally blindly trusting the runner's data.
         // It might be from an older config version.
 
         Repo repo = repos.repo(repoName);
+
         repo.db().writeTransaction(ctx -> {
             Set<String> runs = ctx.dsl().select(RUNS.NAME).from(RUNS).where(RUNS.CHASH.eq(runResult.chash())).stream()
                     .map(Record1::value1)
@@ -224,6 +225,8 @@ public record Queue(Repos repos, Runners runners) {
             if (!allRunsFinished) return;
             ctx.dsl().deleteFrom(QUEUE).where(QUEUE.CHASH.eq(runResult.chash())).execute();
         });
+
+        repo.saveRunLog(runResult.chash(), runResult.name(), runResult.lines());
     }
 
     private void updateMetrics(Configuration ctx, JsonRunResult runResult) {
