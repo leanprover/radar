@@ -4,9 +4,9 @@ import { reactive } from "vue";
 import CLoading from "@/components/CLoading.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCommitRun } from "@/composables/useCommitRun.ts";
-import CTimeInstant from "@/components/CTimeInstant.vue";
 import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/CTimeRange.vue";
+import { formatZonedTime, instantToZoned } from "@/lib/utils.ts";
 
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 
@@ -60,14 +60,12 @@ const run = reactive(
     <template v-else>
       <div class="mb-2">Lines: {{ run.data.lines.length }}</div>
       <div class="flex flex-col">
-        <div
+        <span
           v-for="(line, index) in run.data.lines"
           :key="index"
-          :class="{ 'text-red': line.source === 1, 'text-blue': line.source === 2 }"
+          :class="['whitespace-pre-wrap', { 'text-red': line.source === 1, 'text-blue': line.source === 2 }]"
+          >[{{ formatZonedTime(instantToZoned(line.time)) }}] {{ line.line }}</span
         >
-          [<CTimeInstant :when="line.time" :date="false" />]
-          <span class="whitespace-pre-wrap">{{ line.line }}</span>
-        </div>
       </div>
     </template>
   </div>
