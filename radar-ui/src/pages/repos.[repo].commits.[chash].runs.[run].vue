@@ -7,9 +7,12 @@ import { useCommitRun } from "@/composables/useCommitRun.ts";
 import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/CTimeRange.vue";
 import { formatZonedTime, instantToZoned } from "@/lib/utils.ts";
+import CCommitHash from "@/components/CCommitHash.vue";
+import { useRepo } from "@/composables/useRepo.ts";
 
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 
+const repo = useRepo(route.params.repo);
 const run = reactive(
   useCommitRun(
     () => route.params.repo,
@@ -30,9 +33,8 @@ const run = reactive(
     <div>Script:</div>
     <div>{{ run.data.script }}</div>
 
-    <!-- TODO Link to github -->
     <div>Bench commit:</div>
-    <div>{{ run.data.benchChash }}</div>
+    <CCommitHash :url="repo?.benchUrl" :chash="run.data.benchChash" />
 
     <div>Duration:</div>
     <div>

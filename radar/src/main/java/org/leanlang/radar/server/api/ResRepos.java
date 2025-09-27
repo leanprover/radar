@@ -16,9 +16,14 @@ public record ResRepos(Repos repos) {
     public record JsonRepo(
             @JsonProperty(required = true) String name,
             @JsonProperty(required = true) URI url,
+            @JsonProperty(required = true) URI benchUrl,
             @JsonProperty(required = true) String description) {
         public JsonRepo(Repo repo) {
-            this(repo.config().name(), repo.config().url(), repo.config().description());
+            this(
+                    repo.config().name(),
+                    repo.config().url(),
+                    repo.config().benchUrl(),
+                    repo.config().description());
         }
     }
 

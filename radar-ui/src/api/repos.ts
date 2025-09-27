@@ -4,6 +4,7 @@ import { fetchJson } from "@/api/utils.ts";
 const JsonRepo = z.object({
   name: z.string(),
   url: z.url(),
+  benchUrl: z.url(),
   description: z.string(),
 });
 

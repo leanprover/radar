@@ -12,10 +12,13 @@ import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
 import CTimeInstant from "@/components/CTimeInstant.vue";
 import CTimeAgo from "@/components/CTimeAgo.vue";
+import { useRepo } from "@/composables/useRepo.ts";
+import CCommitHash from "@/components/CCommitHash.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
 
+const repo = useRepo(route.params.repo);
 const commit = reactive(
   useCommit(
     () => route.params.repo,
@@ -48,8 +51,7 @@ onBeforeRouteUpdate(() => {
   <div v-else class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
     <CSectionTitle>Commit</CSectionTitle>
 
-    <!-- TODO Link to GitHub -->
-    <div class="text-yellow col-span-2">commit {{ commit.data.chash }}</div>
+    <div class="text-yellow col-span-2">commit <CCommitHash :url="repo?.url" :chash="route.params.chash" /></div>
 
     <div>Author:</div>
     <div>{{ commit.data.author.name }} &lt;{{ commit.data.author.email }}&gt;</div>
