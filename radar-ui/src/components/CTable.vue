@@ -19,7 +19,9 @@ const sorting = ref<SortingState>([]);
 
 const tableData = useVueTable({
   columns,
-  data,
+  get data() {
+    return data;
+  },
   state: {
     get sorting() {
       return sorting.value;
