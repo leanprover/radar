@@ -19,7 +19,10 @@ const JsonGet = z.object({
   author: JsonPersonIdent,
   committer: JsonPersonIdent,
   title: z.string(),
-  body: z.string().nullable(),
+  body: z
+    .string()
+    .nullish()
+    .transform((it) => it ?? undefined),
   parents: z.array(JsonLinkedCommit),
   children: z.array(JsonLinkedCommit),
   runs: z.array(JsonRun),

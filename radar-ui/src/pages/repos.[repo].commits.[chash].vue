@@ -7,7 +7,7 @@ import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui
 import { cn, setsEqual } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCompare } from "@/composables/useCompare.ts";
-import CCommitMeasurementsTable from "@/components/CCommitMeasurementsTable.vue";
+import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
 import CTimeInstant from "@/components/CTimeInstant.vue";
@@ -16,6 +16,7 @@ import { useRepo } from "@/composables/useRepo.ts";
 import CCommitHash from "@/components/CCommitHash.vue";
 import { useIntervalFn } from "@vueuse/core";
 import CRunInfo from "@/components/CRunInfo.vue";
+import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
@@ -68,10 +69,7 @@ watch(completedRuns, (newValue, oldValue) => {
   void compare.refetch();
 });
 
-const open = ref(false);
-
 onBeforeRouteUpdate(() => {
-  open.value = false;
   tick.resume();
 });
 </script>
@@ -92,29 +90,7 @@ onBeforeRouteUpdate(() => {
       <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.author.time" />)</span>
     </div>
 
-    <CollapsibleRoot v-model:open="open" :disabled="!commit.data.body" class="col-span-2 my-3 ml-[4ch] flex flex-col">
-      <CollapsibleTrigger
-        :class="
-          cn(
-            'text-left',
-
-            { 'cursor-pointer': commit.data.body },
-          )
-        "
-      >
-        <span>{{ commit.data.body ? (open ? "v" : "^") : "-" }}{{ " " }}</span>
-        <span class="font-bold">{{ commit.data.title }}</span>
-      </CollapsibleTrigger>
-      <CollapsibleContent
-        :class="[
-          'overflow-hidden',
-          'data-[state=closed]:animate-[slideUp_200ms_ease-out]',
-          'data-[state=open]:animate-[slideDown_200ms_ease-out]',
-        ]"
-      >
-        <pre class="max-w-[80ch] pt-3 whitespace-pre-wrap">{{ commit.data.body }}</pre>
-      </CollapsibleContent>
-    </CollapsibleRoot>
+    <PCommitMessage :title="commit.data.title" :body="commit.data.body" />
 
     <template v-for="parent in commit.data.parents" :key="parent.chash">
       <div>Parent:</div>
@@ -161,26 +137,6 @@ onBeforeRouteUpdate(() => {
   <CLoading v-if="!compare.isSuccess" :error="compare.error" />
   <div v-else-if="measurements !== undefined" class="flex flex-col">
     <CSectionTitle>Measurements</CSectionTitle>
-    <CCommitMeasurementsTable :measurements="measurements" />
+    <PMeasurementsTable :measurements="measurements" />
   </div>
 </template>
-
-<style>
-@keyframes slideDown {
-  from {
-    height: 0;
-  }
-  to {
-    height: var(--reka-collapsible-content-height);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    height: var(--reka-collapsible-content-height);
-  }
-  to {
-    height: 0;
-  }
-}
-</style>
