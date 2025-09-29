@@ -9,6 +9,7 @@ import CTimeRange from "@/components/CTimeRange.vue";
 import { formatZonedTime, instantToZoned } from "@/lib/utils.ts";
 import CCommitHash from "@/components/CCommitHash.vue";
 import { useRepo } from "@/composables/useRepo.ts";
+import CSection from "@/components/CSection.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 
@@ -24,43 +25,45 @@ const run = reactive(
 
 <template>
   <CLoading v-if="!run.isSuccess" :error="run.error" />
-  <div v-else class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
-    <CSectionTitle class="col-span-full">Run</CSectionTitle>
+  <CSection v-else>
+    <CSectionTitle>Run</CSectionTitle>
 
-    <div>Runner:</div>
-    <div>{{ run.data.runner }}</div>
+    <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
+      <div>Runner:</div>
+      <div>{{ run.data.runner }}</div>
 
-    <div>Script:</div>
-    <div>{{ run.data.script }}</div>
+      <div>Script:</div>
+      <div>{{ run.data.script }}</div>
 
-    <div>Bench commit:</div>
-    <CCommitHash :url="repo?.benchUrl" :chash="run.data.benchChash" />
+      <div>Bench commit:</div>
+      <CCommitHash :url="repo?.benchUrl" :chash="run.data.benchChash" />
 
-    <div>Duration:</div>
-    <div>
-      <CTimeDurationBetween :start="run.data.startTime" :end="run.data.endTime" />
-      <span class="text-foreground-alt text-xs">
-        (<CTimeRange :start="run.data.startTime" :end="run.data.endTime" />)</span
-      >
-    </div>
-
-    <template v-if="run.data.scriptStartTime && run.data.scriptEndTime">
-      <div>Script duration:</div>
+      <div>Duration:</div>
       <div>
-        <CTimeDurationBetween :start="run.data.scriptStartTime" :end="run.data.scriptEndTime" />
-        {{ " " }}
-        <span class="text-foreground-alt text-xs"
-          >(<CTimeRange :start="run.data.scriptStartTime" :end="run.data.scriptEndTime" />)</span
+        <CTimeDurationBetween :start="run.data.startTime" :end="run.data.endTime" />
+        <span class="text-foreground-alt text-xs">
+          (<CTimeRange :start="run.data.startTime" :end="run.data.endTime" />)</span
         >
       </div>
-    </template>
-  </div>
 
-  <div v-if="run.isSuccess" class="flex flex-col">
+      <template v-if="run.data.scriptStartTime && run.data.scriptEndTime">
+        <div>Script duration:</div>
+        <div>
+          <CTimeDurationBetween :start="run.data.scriptStartTime" :end="run.data.scriptEndTime" />
+          {{ " " }}
+          <span class="text-foreground-alt text-xs"
+            >(<CTimeRange :start="run.data.scriptStartTime" :end="run.data.scriptEndTime" />)</span
+          >
+        </div>
+      </template>
+    </div>
+  </CSection>
+
+  <CSection v-if="run.isSuccess">
     <CSectionTitle>Logs</CSectionTitle>
     <div v-if="run.data.lines === undefined">No logs available.</div>
     <template v-else>
-      <div class="mb-2">Lines: {{ run.data.lines.length }}</div>
+      <div>Lines: {{ run.data.lines.length }}</div>
       <div class="flex flex-col">
         <span
           v-for="(line, index) in run.data.lines"
@@ -70,5 +73,5 @@ const run = reactive(
         >
       </div>
     </template>
-  </div>
+  </CSection>
 </template>

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
-import { computed, reactive, ref, watch } from "vue";
+import { computed, reactive, watch } from "vue";
 import { useCommit } from "@/composables/useCommit.ts";
 import CLoading from "@/components/CLoading.vue";
-import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui";
 import { cn, setsEqual } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCompare } from "@/composables/useCompare.ts";
@@ -17,6 +16,7 @@ import CCommitHash from "@/components/CCommitHash.vue";
 import { useIntervalFn } from "@vueuse/core";
 import CRunInfo from "@/components/CRunInfo.vue";
 import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
+import CSection from "@/components/CSection.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
@@ -76,45 +76,47 @@ onBeforeRouteUpdate(() => {
 
 <template>
   <CLoading v-if="!commit.isSuccess" :error="commit.error" />
-  <div v-else class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
+  <CSection v-else>
     <CSectionTitle>Commit</CSectionTitle>
 
-    <div class="text-yellow col-span-2">commit <CCommitHash :url="repo?.url" :chash="route.params.chash" /></div>
+    <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
+      <div class="text-yellow col-span-full">commit <CCommitHash :url="repo?.url" :chash="route.params.chash" /></div>
 
-    <div>Author:</div>
-    <div>{{ commit.data.author.name }} &lt;{{ commit.data.author.email }}&gt;</div>
+      <div>Author:</div>
+      <div>{{ commit.data.author.name }} &lt;{{ commit.data.author.email }}&gt;</div>
 
-    <div>Date:</div>
-    <div>
-      <CTimeInstant :when="commit.data.author.time" />
-      <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.author.time" />)</span>
+      <div>Date:</div>
+      <div>
+        <CTimeInstant :when="commit.data.author.time" />
+        <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.author.time" />)</span>
+      </div>
+
+      <PCommitMessage :title="commit.data.title" :body="commit.data.body" />
+
+      <template v-for="parent in commit.data.parents" :key="parent.chash">
+        <div>Parent:</div>
+        <RouterLink
+          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: parent.chash } }"
+          :title="parent.title"
+          :class="cn('cursor-pointer truncate italic hover:underline', { 'text-foreground-alt': !parent.tracked })"
+        >
+          &lt; {{ parent.title }}
+        </RouterLink>
+      </template>
+      <template v-for="child in commit.data.children" :key="child.chash">
+        <div>Child:</div>
+        <RouterLink
+          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: child.chash } }"
+          :title="child.title"
+          :class="cn('cursor-pointer truncate italic hover:underline', { 'text-foreground-alt': !child.tracked })"
+        >
+          &gt; {{ child.title }}
+        </RouterLink>
+      </template>
     </div>
+  </CSection>
 
-    <PCommitMessage :title="commit.data.title" :body="commit.data.body" />
-
-    <template v-for="parent in commit.data.parents" :key="parent.chash">
-      <div>Parent:</div>
-      <RouterLink
-        :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: parent.chash } }"
-        :title="parent.title"
-        :class="cn('cursor-pointer truncate italic hover:underline', { 'text-foreground-alt': !parent.tracked })"
-      >
-        &lt; {{ parent.title }}
-      </RouterLink>
-    </template>
-    <template v-for="child in commit.data.children" :key="child.chash">
-      <div>Child:</div>
-      <RouterLink
-        :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: child.chash } }"
-        :title="child.title"
-        :class="cn('cursor-pointer truncate italic hover:underline', { 'text-foreground-alt': !child.tracked })"
-      >
-        &gt; {{ child.title }}
-      </RouterLink>
-    </template>
-  </div>
-
-  <div v-if="admin.token !== undefined" class="col-span-2 flex flex-col">
+  <CSection v-if="admin.token !== undefined">
     <CSectionTitle>Admin</CSectionTitle>
     <div class="flex gap-2">
       <button
@@ -124,19 +126,21 @@ onBeforeRouteUpdate(() => {
         Enqueue
       </button>
     </div>
-  </div>
+  </CSection>
 
-  <div v-if="commit.isSuccess && commit.data.runs.length > 0" class="flex flex-col">
+  <CSection v-if="commit.isSuccess && commit.data.runs.length > 0">
     <CSectionTitle>Runs</CSectionTitle>
-    <div v-for="run in commit.data.runs" :key="run.name" class="flex gap-2">
-      <div>-</div>
-      <CRunInfo :repo="route.params.repo" :chash="route.params.chash" :run />
+    <div class="flex flex-col">
+      <div v-for="run in commit.data.runs" :key="run.name" class="flex gap-2">
+        <div>-</div>
+        <CRunInfo :repo="route.params.repo" :chash="route.params.chash" :run />
+      </div>
     </div>
-  </div>
+  </CSection>
 
   <CLoading v-if="!compare.isSuccess" :error="compare.error" />
-  <div v-else-if="measurements !== undefined" class="flex flex-col">
+  <CSection v-else-if="measurements !== undefined">
     <CSectionTitle>Measurements</CSectionTitle>
     <PMeasurementsTable :measurements="measurements" />
-  </div>
+  </CSection>
 </template>
