@@ -45,3 +45,17 @@ export async function postAdminJson(path: string, adminToken: string, data: unkn
 export const enc = encodeURIComponent;
 
 export const Timestamp = z.number().transform((it) => Temporal.Instant.fromEpochMilliseconds(Math.round(it * 1000)));
+
+export const JsonRun = z.object({
+  name: z.string(),
+  script: z.string(),
+  runner: z.string(),
+  active: z
+    .object({ startTime: Timestamp })
+    .nullish()
+    .transform((it) => it ?? undefined),
+  finished: z
+    .object({ startTime: Timestamp, endTime: Timestamp, exitCode: z.int() })
+    .nullish()
+    .transform((it) => it ?? undefined),
+});

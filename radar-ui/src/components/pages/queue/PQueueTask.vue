@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import PQueueTaskRun, { type RunWithActiveRun } from "@/components/pages/queue/PQueueTaskRun.vue";
+import PQueueTaskRun, { type Run } from "@/components/pages/queue/PQueueTaskRun.vue";
 
-export interface TaskWithActiveRun {
+export interface Task {
   repo: string;
   chash: string;
   title: string;
-  runs: RunWithActiveRun[];
+  runs: Run[];
 }
 
-const { repo, chash, title, runs } = defineProps<TaskWithActiveRun>();
+const { repo, chash, title, runs } = defineProps<Task>();
 </script>
 
 <template>

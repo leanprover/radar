@@ -35,18 +35,28 @@ import org.slf4j.LoggerFactory;
 public record Queue(Repos repos, Runners runners) {
     private static final Logger log = LoggerFactory.getLogger(Queue.class);
 
-    private record RunFinishedId(String chash, String name) {}
+    private record RunId(String repo, String chash, String name) {}
 
-    private List<Task> getTasksForRepo(Repo repo) {
+    private Map<RunId, JsonRun.Active> getActiveRuns() {
+        return runners.runners().stream()
+                .flatMap(it -> it.status().stream())
+                .flatMap(it -> it.activeRun().stream())
+                .collect(Collectors.toUnmodifiableMap(
+                        it -> new RunId(
+                                it.job().repo(), it.job().chash(), it.job().name()),
+                        it -> new JsonRun.Active(it.startTime())));
+    }
+
+    private List<Task> getTasksForRepo(Repo repo, Map<RunId, JsonRun.Active> activeRuns) {
         return repo.db().readTransactionResult(ctx -> {
-            Map<RunFinishedId, RunFinished> finishedRuns = ctx
+            Map<RunId, JsonRun.Finished> finishedRuns = ctx
                     .dsl()
                     .select(RUNS.CHASH, RUNS.NAME, RUNS.START_TIME, RUNS.END_TIME, RUNS.EXIT_CODE)
                     .from(QUEUE.join(RUNS).on(RUNS.CHASH.eq(QUEUE.CHASH)))
                     .stream()
                     .collect(Collectors.toUnmodifiableMap(
-                            it -> new RunFinishedId(it.value1(), it.value2()),
-                            it -> new RunFinished(it.value3(), it.value4(), it.value5())));
+                            it -> new RunId(repo.name(), it.value1(), it.value2()),
+                            it -> new JsonRun.Finished(it.value3(), it.value4(), it.value5())));
 
             return ctx.dsl().selectFrom(QUEUE).stream()
                     .map(task -> new Task(
@@ -55,26 +65,28 @@ public record Queue(Repos repos, Runners runners) {
                             task.getQueuedTime(),
                             task.getBumpedTime(),
                             repo.config().benchRuns().stream()
-                                    .map(run -> new Run(
-                                            run.name(),
-                                            run.script(),
-                                            run.runner(),
-                                            Optional.ofNullable(
-                                                    finishedRuns.get(new RunFinishedId(task.getChash(), run.name())))))
+                                    .map(run -> {
+                                        RunId id = new RunId(repo.name(), task.getChash(), run.name());
+                                        return new JsonRun(
+                                                run.name(),
+                                                run.script(),
+                                                run.runner(),
+                                                Optional.ofNullable(activeRuns.get(id)),
+                                                Optional.ofNullable(finishedRuns.get(id)));
+                                    })
                                     .toList()))
                     .toList();
         });
     }
 
     public List<Task> getTasks() {
+        Map<RunId, JsonRun.Active> activeRuns = getActiveRuns();
+
         List<Task> result = new ArrayList<>();
-
         for (Repo repo : repos.repos()) {
-            result.addAll(getTasksForRepo(repo));
+            result.addAll(getTasksForRepo(repo, activeRuns));
         }
-
         result.sort(Comparator.comparing(Task::bumped).reversed());
-
         return result;
     }
 
@@ -172,7 +184,7 @@ public record Queue(Repos repos, Runners runners) {
         }
     }
 
-    private JsonJob makeJob(Task task, Run run) throws IOException {
+    private JsonJob makeJob(Task task, JsonRun run) throws IOException {
         Repo repo = task.repo();
         ServerConfigRepo repoConfig = repo.config();
 
@@ -191,7 +203,7 @@ public record Queue(Repos repos, Runners runners) {
 
     public Optional<JsonJob> takeJob(String runner) throws IOException {
         for (Task task : getTasks()) {
-            for (Run run : task.runs()) {
+            for (JsonRun run : task.runs()) {
                 if (run.finished().isPresent()) continue;
                 if (!run.runner().equals(runner)) continue;
                 return Optional.of(makeJob(task, run));

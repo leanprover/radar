@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import PQueueTask, { type TaskWithActiveRun } from "@/components/pages/queue/PQueueTask.vue";
+import PQueueTask, { type Task } from "@/components/pages/queue/PQueueTask.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 
-const { tasks } = defineProps<{ tasks: TaskWithActiveRun[] }>();
+const { tasks } = defineProps<{ tasks: Task[] }>();
 </script>
 
 <template>
