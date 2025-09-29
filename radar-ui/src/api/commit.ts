@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { enc, fetchJson, Timestamp } from "@/api/utils.ts";
+import { enc, fetchJson, JsonRun, Timestamp } from "@/api/utils.ts";
 
 const JsonPersonIdent = z.object({
   name: z.string(),
@@ -12,16 +12,6 @@ const JsonLinkedCommit = z.object({
   chash: z.string(),
   title: z.string(),
   tracked: z.boolean(),
-});
-
-const JsonRun = z.object({
-  name: z.string(),
-  script: z.string(),
-  runner: z.string(),
-  benchChash: z.string(),
-  startTime: Timestamp,
-  endTime: Timestamp,
-  exitCode: z.int(),
 });
 
 const JsonGet = z.object({

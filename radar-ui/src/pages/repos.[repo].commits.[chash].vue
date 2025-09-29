@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useCommit } from "@/composables/useCommit.ts";
 import CLoading from "@/components/CLoading.vue";
 import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui";
-import { cn, formatDuration } from "@/lib/utils.ts";
+import { cn, setsEqual } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCompare } from "@/composables/useCompare.ts";
 import CCommitMeasurementsTable from "@/components/CCommitMeasurementsTable.vue";
@@ -14,6 +14,8 @@ import CTimeInstant from "@/components/CTimeInstant.vue";
 import CTimeAgo from "@/components/CTimeAgo.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import CCommitHash from "@/components/CCommitHash.vue";
+import { useIntervalFn } from "@vueuse/core";
+import CRunInfo from "@/components/CRunInfo.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
@@ -39,10 +41,38 @@ const measurements = computed(() => {
   return data;
 });
 
+const tick = useIntervalFn(onTick, 5000);
+function onTick() {
+  if (!commit.isSuccess) return;
+
+  if (commit.data.runs.every((it) => it.finished)) {
+    // We've already fetched this data plus the corresponding measurement data the last time around,
+    // so there's no need to re-fetch or re-check again.
+    // Pausing this interval doesn't affect correctness,
+    // but there's little point in re-running the function until something changes.
+    tick.pause();
+    return;
+  }
+
+  void commit.refetch();
+}
+
+// Re-fetch the measurement data every time a new run is completed.
+const completedRuns = computed(() => {
+  const result = new Set<string>();
+  if (commit.isSuccess) for (const run of commit.data.runs) if (run.finished) result.add(run.name);
+  return result;
+});
+watch(completedRuns, (newValue, oldValue) => {
+  if (setsEqual(newValue, oldValue)) return; // No new runs
+  void compare.refetch();
+});
+
 const open = ref(false);
 
 onBeforeRouteUpdate(() => {
   open.value = false;
+  tick.resume();
 });
 </script>
 
@@ -124,15 +154,7 @@ onBeforeRouteUpdate(() => {
     <CSectionTitle>Runs</CSectionTitle>
     <div v-for="run in commit.data.runs" :key="run.name" class="flex gap-2">
       <div>-</div>
-      <RouterLink
-        :to="{
-          name: '/repos.[repo].commits.[chash].runs.[run]',
-          params: { repo: route.params.repo, chash: route.params.chash, run: run.name },
-        }"
-        class="hover:underline"
-      >
-        {{ run.name }} ({{ run.script }} on {{ run.runner }}) in {{ formatDuration(run.startTime.until(run.endTime)) }}
-      </RouterLink>
+      <CRunInfo :repo="route.params.repo" :chash="route.params.chash" :run />
     </div>
   </div>
 

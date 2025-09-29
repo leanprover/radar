@@ -17,9 +17,12 @@ import java.util.Optional;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
+import org.leanlang.radar.server.queue.JsonRun;
+import org.leanlang.radar.server.queue.Queue;
+import org.leanlang.radar.server.queue.Task;
 
 @Path("/commits/{repo}/{chash}/")
-public record ResCommit(Repos repos) {
+public record ResCommit(Repos repos, Queue queue) {
 
     public record JsonPersonIdent(
             @JsonProperty(required = true) String name,
@@ -31,15 +34,6 @@ public record ResCommit(Repos repos) {
             @JsonProperty(required = true) String chash,
             @JsonProperty(required = true) String title,
             @JsonProperty(required = true) boolean tracked) {}
-
-    public record JsonRun(
-            @JsonProperty(required = true) String name,
-            @JsonProperty(required = true) String script,
-            @JsonProperty(required = true) String runner,
-            @JsonProperty(required = true) String benchChash,
-            @JsonProperty(required = true) Instant startTime,
-            @JsonProperty(required = true) Instant endTime,
-            @JsonProperty(required = true) int exitCode) {}
 
     public record JsonGet(
             @JsonProperty(required = true) String chash,
@@ -53,8 +47,8 @@ public record ResCommit(Repos repos) {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonGet get(@PathParam("repo") String name, @PathParam("chash") String chash) {
-        Repo repo = repos.repo(name);
+    public JsonGet get(@PathParam("repo") String repoName, @PathParam("chash") String chash) {
+        Repo repo = repos.repo(repoName);
 
         CommitsRecord commit = repo.db()
                 .read()
@@ -105,16 +99,17 @@ public record ResCommit(Repos repos) {
                 commit.getCommitterTime(),
                 commit.getCommitterOffset());
 
-        List<JsonRun> runs = repo.db().read().dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).stream()
-                .map(it -> new JsonRun(
-                        it.getName(),
-                        it.getScript(),
-                        it.getRunner(),
-                        it.getChashBench(),
-                        it.getStartTime(),
-                        it.getEndTime(),
-                        it.getExitCode()))
-                .toList();
+        List<JsonRun> runs = queue.getTask(repoName, chash)
+                .map(Task::runs)
+                .orElseGet(() -> repo.db().read().dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).stream()
+                        .map(it -> new JsonRun(
+                                it.getName(),
+                                it.getScript(),
+                                it.getRunner(),
+                                Optional.empty(),
+                                Optional.of(
+                                        new JsonRun.Finished(it.getStartTime(), it.getEndTime(), it.getExitCode()))))
+                        .toList());
 
         return new JsonGet(
                 chash,

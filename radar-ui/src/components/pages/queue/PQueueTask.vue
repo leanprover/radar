@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PQueueTaskRun, { type Run } from "@/components/pages/queue/PQueueTaskRun.vue";
+import CRunInfo, { type Run } from "@/components/CRunInfo.vue";
 
 export interface Task {
   repo: string;
@@ -28,7 +28,7 @@ const { repo, chash, title, runs } = defineProps<Task>();
         </RouterLink>
       </div>
 
-      <PQueueTaskRun v-for="run in runs" :key="run.name" v-bind="run" />
+      <CRunInfo v-for="run in runs" :key="run.name" :repo :chash :run small green />
     </div>
   </div>
 </template>

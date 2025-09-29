@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jooq.Record1;
 import org.leanlang.radar.Constants;
+import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
@@ -26,6 +27,7 @@ import org.leanlang.radar.runner.supervisor.JsonJob;
 import org.leanlang.radar.runner.supervisor.JsonRunResult;
 import org.leanlang.radar.runner.supervisor.JsonRunResultEntry;
 import org.leanlang.radar.server.config.ServerConfigRepo;
+import org.leanlang.radar.server.config.ServerConfigRepoRun;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.runners.Runners;
@@ -47,36 +49,45 @@ public record Queue(Repos repos, Runners runners) {
                         it -> new JsonRun.Active(it.startTime())));
     }
 
-    private List<Task> getTasksForRepo(Repo repo, Map<RunId, JsonRun.Active> activeRuns) {
-        return repo.db().readTransactionResult(ctx -> {
-            Map<RunId, JsonRun.Finished> finishedRuns = ctx
-                    .dsl()
-                    .select(RUNS.CHASH, RUNS.NAME, RUNS.START_TIME, RUNS.END_TIME, RUNS.EXIT_CODE)
-                    .from(QUEUE.join(RUNS).on(RUNS.CHASH.eq(QUEUE.CHASH)))
-                    .stream()
-                    .collect(Collectors.toUnmodifiableMap(
-                            it -> new RunId(repo.name(), it.value1(), it.value2()),
-                            it -> new JsonRun.Finished(it.value3(), it.value4(), it.value5())));
+    private static Map<RunId, JsonRun.Finished> getFinishedRunsForRepo(Repo repo, Configuration ctx) {
+        return ctx
+                .dsl()
+                .select(RUNS.CHASH, RUNS.NAME, RUNS.START_TIME, RUNS.END_TIME, RUNS.EXIT_CODE)
+                .from(QUEUE.join(RUNS).on(RUNS.CHASH.eq(QUEUE.CHASH)))
+                .stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        it -> new RunId(repo.name(), it.value1(), it.value2()),
+                        it -> new JsonRun.Finished(it.value3(), it.value4(), it.value5())));
+    }
 
-            return ctx.dsl().selectFrom(QUEUE).stream()
-                    .map(task -> new Task(
-                            repo,
-                            task.getChash(),
-                            task.getQueuedTime(),
-                            task.getBumpedTime(),
-                            repo.config().benchRuns().stream()
-                                    .map(run -> {
-                                        RunId id = new RunId(repo.name(), task.getChash(), run.name());
-                                        return new JsonRun(
-                                                run.name(),
-                                                run.script(),
-                                                run.runner(),
-                                                Optional.ofNullable(activeRuns.get(id)),
-                                                Optional.ofNullable(finishedRuns.get(id)));
-                                    })
-                                    .toList()))
-                    .toList();
-        });
+    private static JsonRun buildJsonRun(
+            String repo,
+            String chash,
+            ServerConfigRepoRun run,
+            Map<RunId, JsonRun.Active> activeRuns,
+            Map<RunId, JsonRun.Finished> finishedRuns) {
+        RunId id = new RunId(repo, chash, run.name());
+        return new JsonRun(
+                run.name(),
+                run.script(),
+                run.runner(),
+                Optional.ofNullable(activeRuns.get(id)),
+                Optional.ofNullable(finishedRuns.get(id)));
+    }
+
+    private static Task buildTask(
+            Repo repo,
+            QueueRecord task,
+            Map<RunId, JsonRun.Active> activeRuns,
+            Map<RunId, JsonRun.Finished> finishedRuns) {
+        return new Task(
+                repo,
+                task.getChash(),
+                task.getQueuedTime(),
+                task.getBumpedTime(),
+                repo.config().benchRuns().stream()
+                        .map(run -> buildJsonRun(repo.name(), task.getChash(), run, activeRuns, finishedRuns))
+                        .toList());
     }
 
     public List<Task> getTasks() {
@@ -84,10 +95,32 @@ public record Queue(Repos repos, Runners runners) {
 
         List<Task> result = new ArrayList<>();
         for (Repo repo : repos.repos()) {
-            result.addAll(getTasksForRepo(repo, activeRuns));
+            result.addAll(repo.db().readTransactionResult(ctx -> {
+                Map<RunId, JsonRun.Finished> finishedRuns = getFinishedRunsForRepo(repo, ctx);
+                return ctx.dsl().selectFrom(Tables.QUEUE).stream()
+                        .map(task -> Queue.buildTask(repo, task, activeRuns, finishedRuns))
+                        .toList();
+            }));
         }
         result.sort(Comparator.comparing(Task::bumped).reversed());
         return result;
+    }
+
+    public Optional<Task> getTask(String repoName, String chash) {
+        Repo repo = repos.repo(repoName);
+        return repo.db().readTransactionResult(ctx -> {
+            QueueRecord record = repo.db()
+                    .read()
+                    .dsl()
+                    .selectFrom(QUEUE)
+                    .where(QUEUE.CHASH.eq(chash))
+                    .fetchOne();
+            if (record == null) return Optional.empty();
+
+            Map<RunId, JsonRun.Active> activeRuns = getActiveRuns();
+            Map<RunId, JsonRun.Finished> finishedRuns = getFinishedRunsForRepo(repo, ctx);
+            return Optional.of(buildTask(repo, record, activeRuns, finishedRuns));
+        });
     }
 
     private static void enqueueBump(Configuration ctx, QueueRecord inQueue, int priority) {
