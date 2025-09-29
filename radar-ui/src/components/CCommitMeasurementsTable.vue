@@ -10,6 +10,7 @@ interface Measurement {
   metric: string;
   first?: number;
   second?: number;
+  secondSource?: string;
   unit?: string;
   direction: -1 | 0 | 1;
 }
@@ -97,6 +98,16 @@ const columns: ColumnDef<Measurement>[] = [
         column,
         title: "Unit",
         align: "left",
+      }),
+  },
+  {
+    accessorKey: "secondSource",
+    header: ({ table, column }) =>
+      h(CTableHeader<Measurement>, {
+        table,
+        column,
+        title: "Source",
+        align: "right",
       }),
   },
 ];

@@ -273,7 +273,7 @@ public record Queue(Repos repos, Runners runners) {
             // Add run data to db
             updateMetrics(ctx, runResult);
             addRun(ctx, runnerName, runResult);
-            addMeasurements(ctx, runResult);
+            addMeasurements(ctx, runnerName, runResult);
             runs.add(runResult.name());
 
             // Remove task from queue if all its runs are finished
@@ -321,11 +321,16 @@ public record Queue(Repos repos, Runners runners) {
         ctx.dsl().batchInsert(record).execute();
     }
 
-    private void addMeasurements(Configuration ctx, JsonRunResult runResult) {
+    private void addMeasurements(Configuration ctx, String runnerName, JsonRunResult runResult) {
         for (JsonRunResultEntry entry : runResult.entries()) {
             ctx.dsl()
-                    .insertInto(MEASUREMENTS, MEASUREMENTS.CHASH, MEASUREMENTS.METRIC, MEASUREMENTS.VALUE)
-                    .values(runResult.chash(), entry.metric(), entry.value())
+                    .insertInto(
+                            MEASUREMENTS,
+                            MEASUREMENTS.CHASH,
+                            MEASUREMENTS.METRIC,
+                            MEASUREMENTS.VALUE,
+                            MEASUREMENTS.SOURCE)
+                    .values(runResult.chash(), entry.metric(), entry.value(), runnerName)
                     .onDuplicateKeyIgnore()
                     .execute();
         }

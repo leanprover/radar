@@ -11,6 +11,14 @@ const JsonMeasurement = z.object({
     .number()
     .nullish()
     .transform((x) => x ?? undefined),
+  firstSource: z
+    .string()
+    .nullish()
+    .transform((x) => x ?? undefined),
+  secondSource: z
+    .string()
+    .nullish()
+    .transform((x) => x ?? undefined),
   unit: z
     .string()
     .nullish()

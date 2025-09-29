@@ -25,6 +25,8 @@ public record ResCompare(Repos repos) {
             @JsonProperty(required = true) String metric,
             Optional<Float> first,
             Optional<Float> second,
+            Optional<String> firstSource,
+            Optional<String> secondSource,
             Optional<String> unit,
             @JsonProperty(required = true) int direction) {}
 
@@ -32,6 +34,8 @@ public record ResCompare(Repos repos) {
             Optional<String> chashFirst,
             Optional<String> chashSecond,
             @JsonProperty(required = true) List<JsonMeasurement> measurements) {}
+
+    private record Measurement(float value, Optional<String> source) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -42,19 +46,27 @@ public record ResCompare(Repos repos) {
             Optional<String> chashFirst = resolveRelativeTo(ctx, first, second);
             Optional<String> chashSecond = resolveRelativeTo(ctx, second, first);
 
-            Map<String, Float> measurementsFirst =
+            Map<String, Measurement> measurementsFirst =
                     chashFirst.map(it -> measurementsFor(ctx, it)).orElse(Map.of());
-            Map<String, Float> measurementsSecond =
+            Map<String, Measurement> measurementsSecond =
                     chashSecond.map(it -> measurementsFor(ctx, it)).orElse(Map.of());
 
             List<JsonMeasurement> measurements =
                     ctx.dsl().selectFrom(Tables.METRICS).orderBy(Tables.METRICS.METRIC.asc()).stream()
-                            .map(metric -> new JsonMeasurement(
-                                    metric.getMetric(),
-                                    Optional.ofNullable(measurementsFirst.get(metric.getMetric())),
-                                    Optional.ofNullable(measurementsSecond.get(metric.getMetric())),
-                                    Optional.ofNullable(metric.getUnit()),
-                                    metric.getDirection()))
+                            .map(metric -> {
+                                Optional<Measurement> mmFirst =
+                                        Optional.ofNullable(measurementsFirst.get(metric.getMetric()));
+                                Optional<Measurement> mmSecond =
+                                        Optional.ofNullable(measurementsSecond.get(metric.getMetric()));
+                                return new JsonMeasurement(
+                                        metric.getMetric(),
+                                        mmFirst.map(Measurement::value),
+                                        mmSecond.map(Measurement::value),
+                                        mmFirst.flatMap(Measurement::source),
+                                        mmSecond.flatMap(Measurement::source),
+                                        Optional.ofNullable(metric.getUnit()),
+                                        metric.getDirection());
+                            })
                             .filter(it -> it.first.isPresent() || it.second.isPresent())
                             .toList();
 
@@ -85,8 +97,10 @@ public record ResCompare(Repos repos) {
         return Optional.of(chash);
     }
 
-    private Map<String, Float> measurementsFor(Configuration ctx, String chash) {
+    private Map<String, Measurement> measurementsFor(Configuration ctx, String chash) {
         return ctx.dsl().selectFrom(MEASUREMENTS).where(MEASUREMENTS.CHASH.eq(chash)).stream()
-                .collect(Collectors.toMap(MeasurementsRecord::getMetric, MeasurementsRecord::getValue));
+                .collect(Collectors.toMap(
+                        MeasurementsRecord::getMetric,
+                        it -> new Measurement(it.getValue(), Optional.ofNullable(it.getSource()))));
     }
 }
