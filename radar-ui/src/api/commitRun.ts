@@ -1,9 +1,5 @@
 import * as z from "zod";
-import { enc, fetchJson, Timestamp } from "@/api/utils.ts";
-
-const JsonOutputLine = z
-  .tuple([Timestamp, z.int(), z.string()])
-  .transform(([time, source, line]) => ({ time, source, line }));
+import { enc, fetchJson, JsonOutputLine, Timestamp } from "@/api/utils.ts";
 
 const JsonGet = z.object({
   runner: z.string(),

@@ -19,7 +19,6 @@ import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.JsonRun;
 import org.leanlang.radar.server.queue.Queue;
-import org.leanlang.radar.server.queue.Task;
 
 @Path("/commits/{repo}/{chash}/")
 public record ResCommit(Repos repos, Queue queue) {
@@ -100,7 +99,7 @@ public record ResCommit(Repos repos, Queue queue) {
                 commit.getCommitterOffset());
 
         List<JsonRun> runs = queue.getTask(repoName, chash)
-                .map(Task::runs)
+                .map(it -> it.runs().stream().map(JsonRun::new).toList())
                 .orElseGet(() -> repo.db().read().dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).stream()
                         .map(it -> new JsonRun(
                                 it.getName(),

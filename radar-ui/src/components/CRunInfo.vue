@@ -46,8 +46,17 @@ const {
       :end="run.finished.endTime"
     />)
   </RouterLink>
-  <div v-else-if="run.active" :class="{ 'text-blue': true, 'text-xs': small }">
+  <RouterLink
+    v-else-if="run.active"
+    :to="{ name: '/queue.runs.[repo].[chash].[run]', params: { repo, chash, run: run.name } }"
+    :class="{ 'text-blue hover:underline': true, 'text-xs': small }"
+  >
     {{ run.name }} on {{ run.runner }}: running (<CTimeDurationSince :start="run.active.startTime" />)
-  </div>
-  <div v-else :class="{ 'text-foreground-alt': true, 'text-xs': small }">{{ run.name }} on {{ run.runner }}: ready</div>
+  </RouterLink>
+  <RouterLink
+    v-else
+    :to="{ name: '/queue.runs.[repo].[chash].[run]', params: { repo, chash, run: run.name } }"
+    :class="{ 'text-foreground-alt hover:underline': true, 'text-xs': small }"
+    >{{ run.name }} on {{ run.runner }}: ready</RouterLink
+  >
 </template>

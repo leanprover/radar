@@ -17,4 +17,13 @@ public record JsonRun(
             @JsonProperty(required = true) Instant startTime,
             @JsonProperty(required = true) Instant endTime,
             @JsonProperty(required = true) int exitCode) {}
+
+    public JsonRun(Run run) {
+        this(
+                run.name(),
+                run.script(),
+                run.runner(),
+                run.active().map(it -> new Active(it.startTime())),
+                run.finished().map(it -> new Finished(it.startTime(), it.endTime(), it.exitCode())));
+    }
 }

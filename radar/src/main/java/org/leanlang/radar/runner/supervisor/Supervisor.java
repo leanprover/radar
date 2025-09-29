@@ -6,7 +6,6 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -15,9 +14,9 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.FsUtil;
-import org.leanlang.radar.runner.StatusUpdater;
 import org.leanlang.radar.runner.config.Dirs;
 import org.leanlang.radar.runner.config.RunnerConfig;
+import org.leanlang.radar.runner.statusupdater.StatusUpdater;
 import org.leanlang.radar.server.api.ResQueueRunnerFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerTake;
 import org.leanlang.radar.server.data.RepoGit;
@@ -68,16 +67,26 @@ public class Supervisor {
         int exitCode;
         List<JsonRunResultEntry> entries = new ArrayList<>();
         try {
-            clearTmpDir();
-            fetchAndCloneRepo(job);
-            fetchAndCloneBenchRepo(job);
+            lines.addInternal("Clearing tmp directory...");
+            FsUtil.removeDirRecursively(dirs.tmp());
+
+            fetchAndCloneRepo(lines, job);
+            fetchAndCloneBenchRepo(lines, job);
+
+            lines.addInternal("Executing bench script...");
             try (BenchScriptExecutor benchScriptExecutor = new BenchScriptExecutor(dirs, job, lines)) {
                 scriptStartTime = Instant.now();
                 exitCode = benchScriptExecutor.result();
                 scriptEndTime = Instant.now();
             }
-            entries = readResultFile();
-            clearTmpDir(); // Being considerate towards the next run :)
+
+            entries = readResultFile(lines);
+
+            // Being considerate towards the next run :)
+            lines.addInternal("Clearing tmp directory again...");
+            FsUtil.removeDirRecursively(dirs.tmp());
+
+            lines.addInternal("Run complete, yay :D");
         } catch (Exception e) {
             lines.addInternal(e);
             exitCode = -1;
@@ -112,30 +121,26 @@ public class Supervisor {
                 .job();
     }
 
-    private void clearTmpDir() throws IOException {
-        log.debug("Clearing tmp directory");
-        FsUtil.removeDirRecursively(dirs.tmp());
-    }
-
-    private void fetchAndCloneRepo(JsonJob job) throws Exception {
+    private void fetchAndCloneRepo(OutputLines lines, JsonJob job) throws Exception {
         try (RepoGit repo = new RepoGit(dirs.bareRepo(job.repo()), job.url())) {
-            log.debug("Fetching repo");
+            lines.addInternal("Fetching repo...");
             repo.fetch();
-            log.debug("Cloning repo");
+            lines.addInternal("Cloning repo...");
             repo.cloneTo(dirs.tmpRepo(), job.chash());
         }
     }
 
-    private void fetchAndCloneBenchRepo(JsonJob job) throws Exception {
+    private void fetchAndCloneBenchRepo(OutputLines lines, JsonJob job) throws Exception {
         try (RepoGit repo = new RepoGit(dirs.bareBenchRepo(job.repo()), job.benchUrl())) {
-            log.debug("Fetching bench repo");
+            lines.addInternal("Fetching bench repo...");
             repo.fetch();
-            log.debug("Cloning bench repo");
+            lines.addInternal("Cloning bench repo...");
             repo.cloneTo(dirs.tmpBenchRepo(), job.benchChash());
         }
     }
 
-    private List<JsonRunResultEntry> readResultFile() throws Exception {
+    private List<JsonRunResultEntry> readResultFile(OutputLines lines) throws Exception {
+        lines.addInternal("Reading result file...");
         List<JsonRunResultEntry> entries = new ArrayList<>();
         for (String line : Files.readString(dirs.tmpResultFile()).lines().toList()) {
             entries.add(mapper.readValue(line, JsonRunResultEntry.class));

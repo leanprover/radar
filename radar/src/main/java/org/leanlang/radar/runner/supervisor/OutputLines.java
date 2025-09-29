@@ -45,9 +45,10 @@ public class OutputLines {
         return lines.stream().toList();
     }
 
-    public synchronized List<JsonOutputLine> getLast(int n) {
+    public synchronized JsonOutputLineBatch getLast(int n) {
         int end = lines.size();
         int start = Math.max(0, end - n);
-        return List.copyOf(lines.subList(start, end));
+        List<JsonOutputLine> lines = List.copyOf(this.lines.subList(start, end));
+        return new JsonOutputLineBatch(lines, start);
     }
 }

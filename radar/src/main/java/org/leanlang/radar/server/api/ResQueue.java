@@ -52,7 +52,10 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
 
         List<JsonTask> tasks = queue.getTasks().stream()
                 .map(task -> new JsonTask(
-                        task.repo().name(), task.chash(), getCommitTitle(task.repo(), task.chash()), task.runs()))
+                        task.repo().name(),
+                        task.chash(),
+                        getCommitTitle(task.repo(), task.chash()),
+                        task.runs().stream().map(JsonRun::new).toList()))
                 .toList();
 
         return new JsonGet(runners, tasks);

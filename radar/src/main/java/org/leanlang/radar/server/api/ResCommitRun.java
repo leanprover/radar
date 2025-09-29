@@ -18,10 +18,9 @@ import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.Queue;
-import org.leanlang.radar.server.runners.Runners;
 
 @Path("/commits/{repo}/{chash}/runs/{run}/")
-public record ResCommitRun(Repos repos, Runners runners, Queue queue) {
+public record ResCommitRun(Repos repos, Queue queue) {
 
     public record JsonGet(
             @JsonProperty(required = true) String runner,

@@ -1,6 +1,8 @@
 import * as z from "zod";
 import { Temporal } from "temporal-polyfill";
 
+export class NotFoundError extends Error {}
+
 function buildUrl(path: string, queryParams?: URLSearchParams): string {
   if (!path.startsWith("/")) throw new Error("path must start with /");
   if (queryParams === undefined || queryParams.size === 0) return `/api${path}`;
@@ -8,9 +10,8 @@ function buildUrl(path: string, queryParams?: URLSearchParams): string {
 }
 
 function checkResponse(url: string, response: Response): void {
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}:\n${response.statusText}`);
-  }
+  if (response.status === 404) throw new NotFoundError(`${url} not found:\n${response.statusText}`);
+  else if (!response.ok) throw new Error(`Failed to fetch ${url}:\n${response.statusText}`);
 }
 
 export async function fetchJson<S extends z.ZodType>(
@@ -59,3 +60,7 @@ export const JsonRun = z.object({
     .nullish()
     .transform((it) => it ?? undefined),
 });
+
+export const JsonOutputLine = z
+  .tuple([Timestamp, z.int(), z.string()])
+  .transform(([time, source, line]) => ({ time, source, line }));
