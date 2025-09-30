@@ -49,4 +49,9 @@ public class Constants {
      * Direction used for new metrics where the bench script specified none.
      */
     public static final int DEFAULT_DIRECTION = 0;
+
+    /**
+     * Queue priority of commits added because they newly appeared on one of the tracked branches.
+     */
+    public static final int PRIORITY_NEW_COMMIT = 0;
 }

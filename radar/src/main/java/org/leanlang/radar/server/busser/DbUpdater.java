@@ -17,6 +17,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jooq.Configuration;
 import org.jooq.impl.DSL;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
@@ -125,7 +126,7 @@ public record DbUpdater(Repo repo, Queue queue) {
         log.info("Adding {} commits to queue", toEnqueue.size());
 
         for (String chash : toEnqueue) {
-            queue.enqueueSoft(repo.name(), chash, 0);
+            queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_NEW_COMMIT);
         }
 
         log.info("Added {} commits to queue", toEnqueue.size());
