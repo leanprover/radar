@@ -19,7 +19,8 @@ const { measurements } = defineProps<{ measurements: Measurement[] }>();
 
 const columns: ColumnDef<Measurement>[] = [
   {
-    accessorKey: "metric",
+    id: "metric",
+    accessorFn: (it) => it.metric.split("//")[0] ?? it.metric,
     sortingFn: "textCaseSensitive",
     sortDescFirst: true,
     header: ({ table, column }) =>
@@ -27,6 +28,19 @@ const columns: ColumnDef<Measurement>[] = [
         table,
         column,
         title: "Metric",
+        align: "left",
+      }),
+  },
+  {
+    id: "submetric",
+    accessorFn: (it) => it.metric.split("//")[1],
+    sortingFn: "textCaseSensitive",
+    sortDescFirst: true,
+    header: ({ table, column }) =>
+      h(CTableHeader<Measurement>, {
+        table,
+        column,
+        title: "Submetric",
         align: "left",
       }),
   },
