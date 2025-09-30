@@ -1,12 +1,5 @@
 import * as z from "zod";
-import { enc, fetchJson, JsonRun, Timestamp } from "@/api/utils.ts";
-
-const JsonPersonIdent = z.object({
-  name: z.string(),
-  email: z.string(),
-  time: Timestamp,
-  offset: z.int(),
-});
+import { enc, fetchJson, JsonCommit, JsonRun } from "@/api/utils.ts";
 
 const JsonLinkedCommit = z.object({
   chash: z.string(),
@@ -15,14 +8,7 @@ const JsonLinkedCommit = z.object({
 });
 
 const JsonGet = z.object({
-  chash: z.string(),
-  author: JsonPersonIdent,
-  committer: JsonPersonIdent,
-  title: z.string(),
-  body: z
-    .string()
-    .nullish()
-    .transform((it) => it ?? undefined),
+  commit: JsonCommit,
   parents: z.array(JsonLinkedCommit),
   children: z.array(JsonLinkedCommit),
   runs: z.array(JsonRun),

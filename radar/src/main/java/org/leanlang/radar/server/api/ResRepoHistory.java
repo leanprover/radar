@@ -10,7 +10,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.server.data.Repo;
@@ -18,52 +17,25 @@ import org.leanlang.radar.server.data.Repos;
 
 @Path("/repos/{repo}/history/")
 public record ResRepoHistory(Repos repos) {
-
-    public record JsonCommit(
-            @JsonProperty(required = true) String chash,
-            @JsonProperty(required = true) String title,
-            @JsonProperty(required = true) String author,
-            @JsonProperty(required = true) Instant committerTime) {}
-
-    public record JsonGet(@JsonProperty(required = true) List<JsonCommit> commits, Optional<Integer> nextAt) {}
+    public record JsonGet(@JsonProperty(required = true) List<JsonCommit> commits) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonGet get(
-            @PathParam("repo") String name,
-            @QueryParam("n") Optional<Integer> nOptional,
-            @QueryParam("at") Optional<Integer> atOptional) {
-
+    public JsonGet get(@PathParam("repo") String name, @QueryParam("n") Optional<Integer> nOptional) {
         Repo repo = repos.repo(name);
         int n = Math.clamp(nOptional.orElse(32), 0, 1000);
-        int at = atOptional.orElse(Integer.MAX_VALUE);
 
-        var history = repo
+        List<JsonCommit> commits = repo
                 .db()
                 .read()
                 .dsl()
-                .select(
-                        HISTORY.POSITION,
-                        COMMITS.CHASH,
-                        COMMITS.MESSAGE_TITLE,
-                        COMMITS.AUTHOR_NAME,
-                        COMMITS.COMMITTER_TIME)
-                .from(HISTORY.join(COMMITS).onKey())
-                .where(HISTORY.POSITION.lt(at))
+                .selectFrom(HISTORY.join(COMMITS).onKey())
                 .orderBy(HISTORY.POSITION.desc())
                 .limit(n)
                 .stream()
+                .map(it -> new JsonCommit(it.into(COMMITS)))
                 .toList();
 
-        List<JsonCommit> commits = history.stream()
-                .map(it -> new JsonCommit(it.component2(), it.component3(), it.component4(), it.component5()))
-                .toList();
-
-        Optional<Integer> nextAt = Optional.of(history)
-                .filter(it -> !it.isEmpty())
-                .map(it -> it.getLast().component1() - 1)
-                .filter(it -> it > 0);
-
-        return new JsonGet(commits, nextAt);
+        return new JsonGet(commits);
     }
 }

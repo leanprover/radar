@@ -12,7 +12,7 @@ import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
 import CTimeInstant from "@/components/CTimeInstant.vue";
 import CTimeAgo from "@/components/CTimeAgo.vue";
 import { useRepo } from "@/composables/useRepo.ts";
-import CCommitHash from "@/components/CCommitHash.vue";
+import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import { useIntervalFn } from "@vueuse/core";
 import CRunInfo from "@/components/CRunInfo.vue";
 import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
@@ -80,18 +80,20 @@ onBeforeRouteUpdate(() => {
     <CSectionTitle>Commit</CSectionTitle>
 
     <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
-      <div class="text-yellow col-span-full">commit <CCommitHash :url="repo?.url" :chash="route.params.chash" /></div>
+      <div class="text-yellow col-span-full">
+        commit <CLinkCommitHash :url="repo?.url" :chash="route.params.chash" />
+      </div>
 
       <div>Author:</div>
-      <div>{{ commit.data.author.name }} &lt;{{ commit.data.author.email }}&gt;</div>
+      <div>{{ commit.data.commit.author.name }} &lt;{{ commit.data.commit.author.email }}&gt;</div>
 
       <div>Date:</div>
       <div>
-        <CTimeInstant :when="commit.data.author.time" />
-        <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.author.time" />)</span>
+        <CTimeInstant :when="commit.data.commit.author.time" />
+        <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.commit.author.time" />)</span>
       </div>
 
-      <PCommitMessage :title="commit.data.title" :body="commit.data.body" />
+      <PCommitMessage :title="commit.data.commit.title" :body="commit.data.commit.body" />
 
       <template v-for="parent in commit.data.parents" :key="parent.chash">
         <div>Parent:</div>

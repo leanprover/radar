@@ -4,11 +4,12 @@ import { reactive, watch } from "vue";
 import CLoading from "@/components/CLoading.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { formatZonedTime, instantToZoned } from "@/lib/utils.ts";
-import CCommitHash from "@/components/CCommitHash.vue";
+import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import { useQueueRun } from "@/composables/useQueueRun.ts";
 import CTimeDurationSince from "@/components/CTimeDurationSince.vue";
 import CSection from "@/components/CSection.vue";
+import CLinkRepo from "@/components/CLinkRepo.vue";
 
 const router = useRouter();
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
@@ -34,9 +35,20 @@ watch(run, (newValue) => {
   <CLoading v-if="!run.isSuccess" :error="run.error" />
   <div v-else-if="run.data === 'not found'" class="text-foreground-alt">Redirecting...</div>
   <CSection v-else>
-    <CSectionTitle class="col-span-full">Run</CSectionTitle>
+    <CSectionTitle class="col-span-full">Run {{ route.params.run }}</CSectionTitle>
 
     <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
+      <div>Repo:</div>
+      <CLinkRepo :repo="route.params.repo" />
+
+      <div>Commit:</div>
+      <CLinkCommitHash :repo="route.params.repo" :url="repo?.url" :chash="route.params.chash" />
+
+      <template v-if="run.data.activeRun">
+        <div>Bench commit:</div>
+        <CLinkCommitHash :url="repo?.benchUrl" :chash="run.data.activeRun.benchChash" />
+      </template>
+
       <div>Runner:</div>
       <div>{{ run.data.runner }}</div>
 
@@ -44,9 +56,6 @@ watch(run, (newValue) => {
       <div>{{ run.data.script }}</div>
 
       <template v-if="run.data.activeRun">
-        <div>Bench commit:</div>
-        <CCommitHash :url="repo?.benchUrl" :chash="run.data.activeRun.benchChash" />
-
         <div>Duration:</div>
         <CTimeDurationSince :start="run.data.activeRun.startTime" />
       </template>

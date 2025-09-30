@@ -7,9 +7,10 @@ import { useCommitRun } from "@/composables/useCommitRun.ts";
 import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/CTimeRange.vue";
 import { formatZonedTime, instantToZoned } from "@/lib/utils.ts";
-import CCommitHash from "@/components/CCommitHash.vue";
+import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import CSection from "@/components/CSection.vue";
+import CLinkRepo from "@/components/CLinkRepo.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 
@@ -26,17 +27,23 @@ const run = reactive(
 <template>
   <CLoading v-if="!run.isSuccess" :error="run.error" />
   <CSection v-else>
-    <CSectionTitle>Run</CSectionTitle>
+    <CSectionTitle>Run {{ route.params.run }}</CSectionTitle>
 
     <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
+      <div>Repo:</div>
+      <CLinkRepo :repo="route.params.repo" />
+
+      <div>Commit:</div>
+      <CLinkCommitHash :repo="route.params.repo" :url="repo?.url" :chash="route.params.chash" />
+
+      <div>Bench commit:</div>
+      <CLinkCommitHash :url="repo?.benchUrl" :chash="run.data.benchChash" />
+
       <div>Runner:</div>
       <div>{{ run.data.runner }}</div>
 
       <div>Script:</div>
       <div>{{ run.data.script }}</div>
-
-      <div>Bench commit:</div>
-      <CCommitHash :url="repo?.benchUrl" :chash="run.data.benchChash" />
 
       <div>Duration:</div>
       <div>

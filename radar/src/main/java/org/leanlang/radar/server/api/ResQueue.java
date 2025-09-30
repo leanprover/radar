@@ -4,6 +4,7 @@ import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -12,7 +13,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.Constants;
-import org.leanlang.radar.server.data.Repo;
+import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.JsonRun;
 import org.leanlang.radar.server.queue.Queue;
@@ -28,8 +29,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
 
     public record JsonTask(
             @JsonProperty(required = true) String repo,
-            @JsonProperty(required = true) String chash,
-            @JsonProperty(required = true) String title,
+            @JsonProperty(required = true) JsonCommit commit,
             @JsonProperty(required = true) List<JsonRun> runs) {}
 
     public record JsonGet(
@@ -51,22 +51,23 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
                 .toList();
 
         List<JsonTask> tasks = queue.getTasks().stream()
-                .map(task -> new JsonTask(
-                        task.repo().name(),
-                        task.chash(),
-                        getCommitTitle(task.repo(), task.chash()),
-                        task.runs().stream().map(JsonRun::new).toList()))
+                .map(task -> {
+                    CommitsRecord commit = task.repo()
+                            .db()
+                            .read()
+                            .dsl()
+                            .selectFrom(COMMITS)
+                            .where(COMMITS.CHASH.eq(task.chash()))
+                            .fetchOne();
+                    if (commit == null) throw new InternalServerErrorException("commit not found");
+
+                    return new JsonTask(
+                            task.repo().name(),
+                            new JsonCommit(commit),
+                            task.runs().stream().map(JsonRun::new).toList());
+                })
                 .toList();
 
         return new JsonGet(runners, tasks);
-    }
-
-    private static String getCommitTitle(Repo repo, String chash) {
-        return repo.db()
-                .read()
-                .dsl()
-                .selectFrom(COMMITS)
-                .where(COMMITS.CHASH.eq(chash))
-                .fetchOne(COMMITS.MESSAGE_TITLE);
     }
 }

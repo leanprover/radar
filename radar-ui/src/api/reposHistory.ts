@@ -1,21 +1,12 @@
 import * as z from "zod";
-import { enc, fetchJson, Timestamp } from "@/api/utils.ts";
-
-const JsonCommit = z.object({
-  chash: z.string(),
-  title: z.string(),
-  author: z.string(),
-  committerTime: Timestamp,
-});
+import { enc, fetchJson, JsonCommit } from "@/api/utils.ts";
 
 const JsonGet = z.object({
-  commits: z.array(JsonCommit),
-  nextAt: z.int().nullable(),
+  commits: JsonCommit.array(),
 });
 
-export async function getRepoHistory(repo: string, params?: { n?: number; at?: number }) {
+export async function getRepoHistory(repo: string, params?: { n?: number }) {
   const queryParams = new URLSearchParams();
   if (params?.n !== undefined) queryParams.set("n", params.n.toFixed());
-  if (params?.at !== undefined) queryParams.set("at", params.at.toFixed());
   return await fetchJson(JsonGet, `/repos/${enc(repo)}/history/`, queryParams);
 }

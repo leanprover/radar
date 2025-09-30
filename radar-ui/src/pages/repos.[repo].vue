@@ -5,8 +5,8 @@ import { computed, reactive } from "vue";
 import { useRepos } from "@/composables/useRepos.ts";
 import CLoading from "@/components/CLoading.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import CTimeAgo from "@/components/CTimeAgo.vue";
 import CSection from "@/components/CSection.vue";
+import CLinkCommit from "@/components/CLinkCommit.vue";
 
 const route = useRoute("/repos.[repo]");
 const repos = reactive(useRepos());
@@ -35,18 +35,13 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     <div class="flex flex-col">
       <div v-for="commit in history.data.commits" :key="commit.chash" class="flex gap-2">
         <div>*</div>
-        <div class="flex flex-wrap items-baseline gap-x-2">
-          <RouterLink
-            :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: commit.chash } }"
-            class="hover:underline"
-          >
-            {{ commit.title }}
-          </RouterLink>
-          <div class="text-foreground-alt text-xs">
-            <CTimeAgo :when="commit.committerTime" class="hover:text-foreground" />
-            by {{ commit.author }}
-          </div>
-        </div>
+        <CLinkCommit
+          :repo="route.params.repo"
+          :chash="commit.chash"
+          :title="commit.title"
+          :author="commit.author.name"
+          :time="commit.committer.time"
+        />
       </div>
     </div>
   </CSection>

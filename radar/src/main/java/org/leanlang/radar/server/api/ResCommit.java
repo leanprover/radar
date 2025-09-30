@@ -11,7 +11,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
@@ -22,24 +21,13 @@ import org.leanlang.radar.server.queue.Queue;
 
 @Path("/commits/{repo}/{chash}/")
 public record ResCommit(Repos repos, Queue queue) {
-
-    public record JsonPersonIdent(
-            @JsonProperty(required = true) String name,
-            @JsonProperty(required = true) String email,
-            @JsonProperty(required = true) Instant time,
-            @JsonProperty(required = true) int offset) {}
-
     public record JsonLinkedCommit(
             @JsonProperty(required = true) String chash,
             @JsonProperty(required = true) String title,
             @JsonProperty(required = true) boolean tracked) {}
 
     public record JsonGet(
-            @JsonProperty(required = true) String chash,
-            @JsonProperty(required = true) JsonPersonIdent author,
-            @JsonProperty(required = true) JsonPersonIdent committer,
-            @JsonProperty(required = true) String title,
-            Optional<String> body,
+            @JsonProperty(required = true) JsonCommit commit,
             @JsonProperty(required = true) List<JsonLinkedCommit> parents,
             @JsonProperty(required = true) List<JsonLinkedCommit> children,
             @JsonProperty(required = true) List<JsonRun> runs) {}
@@ -89,15 +77,6 @@ public record ResCommit(Repos repos, Queue queue) {
                 .map(it -> new JsonLinkedCommit(it.component1(), it.component2(), it.component3()))
                 .toList();
 
-        JsonPersonIdent author = new JsonPersonIdent(
-                commit.getAuthorName(), commit.getAuthorEmail(), commit.getAuthorTime(), commit.getAuthorOffset());
-
-        JsonPersonIdent committer = new JsonPersonIdent(
-                commit.getCommitterName(),
-                commit.getCommitterEmail(),
-                commit.getCommitterTime(),
-                commit.getCommitterOffset());
-
         List<JsonRun> runs = queue.getTask(repoName, chash)
                 .map(it -> it.runs().stream().map(JsonRun::new).toList())
                 .orElseGet(() -> repo.db().read().dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).stream()
@@ -110,14 +89,6 @@ public record ResCommit(Repos repos, Queue queue) {
                                         new JsonRun.Finished(it.getStartTime(), it.getEndTime(), it.getExitCode()))))
                         .toList());
 
-        return new JsonGet(
-                chash,
-                author,
-                committer,
-                commit.getMessageTitle(),
-                Optional.ofNullable(commit.getMessageBody()),
-                parents,
-                children,
-                runs);
+        return new JsonGet(new JsonCommit(commit), parents, children, runs);
     }
 }

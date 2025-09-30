@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { fetchJson, JsonRun, Timestamp } from "@/api/utils.ts";
+import { fetchJson, JsonCommit, JsonRun, Timestamp } from "@/api/utils.ts";
 
 export type JsonActiveRun = z.infer<typeof JsonActiveRun>;
 const JsonActiveRun = z.object({
@@ -19,8 +19,7 @@ const JsonRunner = z.object({
 export type JsonTask = z.infer<typeof JsonTask>;
 const JsonTask = z.object({
   repo: z.string(),
-  chash: z.string(),
-  title: z.string(),
+  commit: JsonCommit,
   runs: JsonRun.array(),
 });
 
