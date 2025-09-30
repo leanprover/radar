@@ -21,6 +21,14 @@ import CSection from "@/components/CSection.vue";
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
 
+const queryParent = computed(() => {
+  let value = route.query["parent"];
+  if (!value) return;
+  if (typeof value === "object") value = value[0];
+  if (!value) return;
+  return value;
+});
+
 const repo = useRepo(route.params.repo);
 const commit = reactive(
   useCommit(
@@ -31,7 +39,7 @@ const commit = reactive(
 const compare = reactive(
   useCompare(
     () => route.params.repo,
-    "parent",
+    () => queryParent.value ?? "parent",
     () => route.params.chash,
   ),
 );
