@@ -1,12 +1,12 @@
 package org.leanlang.radar.server.config;
 
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.file.Path;
 
 public class ServerConfigDirs {
-    @NotNull
+    @JsonProperty(required = true)
     public Path state = Path.of("state");
 
-    @NotNull
+    @JsonProperty(required = true)
     public Path cache = Path.of("cache");
 }

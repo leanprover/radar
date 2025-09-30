@@ -1,9 +1,9 @@
 package org.leanlang.radar.runner.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.logging.common.LoggingFactory;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import org.jspecify.annotations.Nullable;
 
@@ -13,16 +13,19 @@ public class RunnerConfig {
     public LoggingFactory logging;
 
     @NotEmpty
+    @JsonProperty(required = true)
     public String name;
 
-    @NotNull
+    @NotEmpty
+    @JsonProperty(required = true)
     public URI url;
 
     @NotEmpty
+    @JsonProperty(required = true)
     public String token;
 
     @Valid
-    @NotNull
+    @JsonProperty(required = true)
     public RunnerConfigDirs dirs = new RunnerConfigDirs();
 
     public URI apiUrl(String path) {
