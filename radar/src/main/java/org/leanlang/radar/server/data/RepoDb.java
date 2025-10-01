@@ -2,7 +2,6 @@ package org.leanlang.radar.server.data;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
-public final class RepoDb implements Closeable {
+public final class RepoDb implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(RepoDb.class);
 
     private final String name;

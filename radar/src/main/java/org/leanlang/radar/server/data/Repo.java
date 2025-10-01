@@ -2,7 +2,6 @@ package org.leanlang.radar.server.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedWriter;
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +13,7 @@ import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 
-public final class Repo implements Closeable {
+public final class Repo implements AutoCloseable {
     private final ObjectMapper mapper;
     private final Dirs dirs;
     private final ServerConfigRepo config;
