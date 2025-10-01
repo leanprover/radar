@@ -89,7 +89,7 @@ public record DbUpdater(Repo repo, Queue queue) {
     private void updateHistory(Configuration tx) throws IOException, GitAPIException {
         LogCommand logCommand = repo.git().porcelain().log();
 
-        for (String refName : repo.config().track()) {
+        for (String refName : repo.track()) {
             ObjectId id = repo.git().plumbing().resolve(refName);
             if (id == null) continue;
             logCommand.add(id);

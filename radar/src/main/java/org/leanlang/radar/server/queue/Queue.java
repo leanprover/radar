@@ -26,7 +26,6 @@ import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 import org.leanlang.radar.runner.supervisor.JsonJob;
 import org.leanlang.radar.runner.supervisor.JsonRunResult;
 import org.leanlang.radar.runner.supervisor.JsonRunResultEntry;
-import org.leanlang.radar.server.config.ServerConfigRepo;
 import org.leanlang.radar.server.config.ServerConfigRepoRun;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
@@ -96,7 +95,7 @@ public record Queue(Repos repos, Runners runners) {
                 task.getChash(),
                 task.getQueuedTime(),
                 task.getBumpedTime(),
-                repo.config().benchRuns().stream()
+                repo.benchRuns().stream()
                         .map(run -> buildRun(repo.name(), task.getChash(), run, activeRuns, finishedRuns))
                         .toList());
     }
@@ -230,16 +229,14 @@ public record Queue(Repos repos, Runners runners) {
 
     private JsonJob makeJob(Task task, Run run) throws IOException {
         Repo repo = task.repo();
-        ServerConfigRepo repoConfig = repo.config();
 
-        String benchChash =
-                repo.gitBench().plumbing().resolve(repoConfig.benchRef()).name();
+        String benchChash = repo.gitBench().plumbing().resolve(repo.benchRef()).name();
 
         return new JsonJob(
                 repo.name(),
-                repoConfig.url(),
+                repo.source().gitUrl(),
                 task.chash(),
-                repoConfig.benchUrl(),
+                repo.benchSource().gitUrl(),
                 benchChash,
                 run.name(),
                 run.script());
@@ -277,7 +274,7 @@ public record Queue(Repos repos, Runners runners) {
             runs.add(runResult.name());
 
             // Remove task from queue if all its runs are finished
-            boolean allRunsFinished = repo.config().benchRuns().stream().allMatch(it -> runs.contains(it.name()));
+            boolean allRunsFinished = repo.benchRuns().stream().allMatch(it -> runs.contains(it.name()));
             if (!allRunsFinished) return;
             ctx.dsl().deleteFrom(QUEUE).where(QUEUE.CHASH.eq(runResult.chash())).execute();
         });

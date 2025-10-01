@@ -8,16 +8,27 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.FsUtil;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
+import org.leanlang.radar.server.config.ServerConfigRepoRun;
+import org.leanlang.radar.server.repos.source.RepoSource;
 
 public final class Repo implements AutoCloseable {
     private final ObjectMapper mapper;
     private final Dirs dirs;
-    private final ServerConfigRepo config;
+
+    private final String name;
+    private final String description;
+    private final RepoSource source;
+    private final Set<String> track;
+    private final RepoSource benchSource;
+    private final String benchRef;
+    private final List<ServerConfigRepoRun> benchRuns;
 
     private final RepoDb db;
     private final RepoGit git;
@@ -28,11 +39,18 @@ public final class Repo implements AutoCloseable {
 
         this.mapper = mapper;
         this.dirs = dirs;
-        this.config = config;
 
-        this.db = new RepoDb(config.name(), dirs.repoDb(config.name()));
-        this.git = new RepoGit(dirs.repoGit(config.name()), config.url());
-        this.gitBench = new RepoGit(dirs.repoGitBench(config.name()), config.benchUrl());
+        this.name = config.name();
+        this.description = config.description();
+        this.source = RepoSource.parse(config.url());
+        this.track = config.track().stream().collect(Collectors.toUnmodifiableSet()); // Just to make sure
+        this.benchSource = RepoSource.parse(config.benchUrl());
+        this.benchRef = config.benchRef();
+        this.benchRuns = config.benchRuns();
+
+        this.db = new RepoDb(this.name, dirs.repoDb(this.name));
+        this.git = new RepoGit(dirs.repoGit(this.name), this.source.gitUrl());
+        this.gitBench = new RepoGit(dirs.repoGitBench(this.name), this.benchSource.gitUrl());
     }
 
     @Override
@@ -43,11 +61,31 @@ public final class Repo implements AutoCloseable {
     }
 
     public String name() {
-        return config.name();
+        return name;
     }
 
-    public ServerConfigRepo config() {
-        return config;
+    public String description() {
+        return description;
+    }
+
+    public RepoSource source() {
+        return source;
+    }
+
+    public Set<String> track() {
+        return track;
+    }
+
+    public RepoSource benchSource() {
+        return benchSource;
+    }
+
+    public String benchRef() {
+        return benchRef;
+    }
+
+    public List<ServerConfigRepoRun> benchRuns() {
+        return benchRuns;
     }
 
     public RepoDb db() {
@@ -63,7 +101,7 @@ public final class Repo implements AutoCloseable {
     }
 
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
-        Path file = dirs.repoRunLog(config.name(), chash, run);
+        Path file = dirs.repoRunLog(this.name, chash, run);
         Files.createDirectories(file.getParent());
         try (BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
             for (JsonOutputLine line : lines) {
@@ -74,7 +112,7 @@ public final class Repo implements AutoCloseable {
     }
 
     public List<JsonOutputLine> loadRunLog(String chash, String run) throws IOException {
-        Path file = dirs.repoRunLog(config.name(), chash, run);
+        Path file = dirs.repoRunLog(this.name, chash, run);
         List<JsonOutputLine> lines = new ArrayList<>();
         for (String line : Files.readString(file).lines().toList()) {
             lines.add(mapper.readValue(line, JsonOutputLine.class));
@@ -83,7 +121,7 @@ public final class Repo implements AutoCloseable {
     }
 
     public void deleteRunLogs(String chash) throws IOException {
-        Path dir = dirs.repoRunLogs(config.name(), chash);
+        Path dir = dirs.repoRunLogs(this.name, chash);
         FsUtil.removeDirRecursively(dir);
     }
 }
