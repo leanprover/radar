@@ -14,18 +14,24 @@ public final class Main {
 
     @Command(name = "server", description = "Start the server.")
     void runServer(
-            @Parameters(index = "0", description = "Path to the config file.") Path configFile,
-            @Option(names = "--state-dir", description = "Path to the state dir.") @Nullable Path stateDir,
-            @Option(names = "--cache-dir", description = "Path to the cache dir.") @Nullable Path cacheDir)
+            @Parameters(index = "0", description = "Path to the config file.", paramLabel = "<config-file>")
+                    Path configFile,
+            @Option(names = "--state-dir", description = "Path to the state dir.", paramLabel = "<path>") @Nullable
+                    Path stateDir,
+            @Option(names = "--cache-dir", description = "Path to the cache dir.", paramLabel = "<path>") @Nullable
+                    Path cacheDir)
             throws Exception {
         new ServerApplication(configFile, stateDir, cacheDir).run();
     }
 
     @Command(name = "runner", description = "Start the runner.")
     void runRunner(
-            @Parameters(index = "0", description = "Path to the config file.") Path configFile,
-            @Option(names = "--cache-dir", description = "Path to the cache dir.") @Nullable Path cacheDir,
-            @Option(names = "--tmp-dir", description = "Path to the tmp dir.") @Nullable Path tmpDir)
+            @Parameters(index = "0", description = "Path to the config file.", paramLabel = "<config-file>")
+                    Path configFile,
+            @Option(names = "--cache-dir", description = "Path to the cache dir.", paramLabel = "<path>") @Nullable
+                    Path cacheDir,
+            @Option(names = "--tmp-dir", description = "Path to the tmp dir.", paramLabel = "<path>") @Nullable
+                    Path tmpDir)
             throws Exception {
         new RunnerMain(configFile, cacheDir, tmpDir).run();
     }
