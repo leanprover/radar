@@ -9,9 +9,9 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.Optional;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.server.api.auth.Admin;
-import org.leanlang.radar.server.data.Repo;
-import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.Queue;
+import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.Repos;
 
 @Path("/admin/enqueue/")
 public record ResAdminEnqueue(Repos repos, Queue queue) {

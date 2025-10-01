@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
-import org.leanlang.radar.server.data.Repo;
-import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.Queue;
+import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.Repos;
 
 @Path("/commits/{repo}/{chash}/runs/{run}/")
 public record ResCommitRun(Repos repos, Queue queue) {

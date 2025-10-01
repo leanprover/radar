@@ -6,9 +6,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.leanlang.radar.Constants;
-import org.leanlang.radar.server.data.Repo;
-import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.Queue;
+import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.Repos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -27,8 +27,8 @@ import org.leanlang.radar.server.api.auth.AdminAuthenticator;
 import org.leanlang.radar.server.busser.Busser;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfig;
-import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.Queue;
+import org.leanlang.radar.server.repos.Repos;
 import org.leanlang.radar.server.runners.Runners;
 
 public final class ServerApplication extends Application<ServerConfig> {

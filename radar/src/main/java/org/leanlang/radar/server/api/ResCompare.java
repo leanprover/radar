@@ -17,7 +17,7 @@ import org.jooq.Configuration;
 import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
-import org.leanlang.radar.server.data.Repos;
+import org.leanlang.radar.server.repos.Repos;
 
 @Path("/compare/{repo}/{first}/{second}/")
 public record ResCompare(Repos repos) {

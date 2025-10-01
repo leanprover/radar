@@ -1,4 +1,4 @@
-package org.leanlang.radar.server.data;
+package org.leanlang.radar.server.repos;
 
 import java.util.concurrent.locks.Lock;
 import org.jooq.DSLContext;

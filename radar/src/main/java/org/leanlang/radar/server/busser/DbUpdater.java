@@ -21,8 +21,8 @@ import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
-import org.leanlang.radar.server.data.Repo;
 import org.leanlang.radar.server.queue.Queue;
+import org.leanlang.radar.server.repos.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -7,8 +7,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.net.URI;
 import java.util.List;
-import org.leanlang.radar.server.data.Repo;
-import org.leanlang.radar.server.data.Repos;
+import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.Repos;
 
 @Path("/repos/")
 public record ResRepos(Repos repos) {

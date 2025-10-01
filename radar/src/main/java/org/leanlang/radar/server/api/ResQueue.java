@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
-import org.leanlang.radar.server.data.Repos;
 import org.leanlang.radar.server.queue.JsonRun;
 import org.leanlang.radar.server.queue.Queue;
+import org.leanlang.radar.server.repos.Repos;
 import org.leanlang.radar.server.runners.RunnerStatus;
 import org.leanlang.radar.server.runners.Runners;
 

@@ -19,7 +19,7 @@ import org.leanlang.radar.runner.config.RunnerConfig;
 import org.leanlang.radar.runner.statusupdater.StatusUpdater;
 import org.leanlang.radar.server.api.ResQueueRunnerFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerTake;
-import org.leanlang.radar.server.data.RepoGit;
+import org.leanlang.radar.server.repos.RepoGit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

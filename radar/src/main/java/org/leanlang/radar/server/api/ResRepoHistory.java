@@ -12,8 +12,8 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Optional;
-import org.leanlang.radar.server.data.Repo;
-import org.leanlang.radar.server.data.Repos;
+import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.Repos;
 
 @Path("/repos/{repo}/history/")
 public record ResRepoHistory(Repos repos) {

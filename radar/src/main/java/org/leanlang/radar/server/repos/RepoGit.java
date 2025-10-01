@@ -1,4 +1,4 @@
-package org.leanlang.radar.server.data;
+package org.leanlang.radar.server.repos;
 
 import java.io.IOException;
 import java.net.URI;
