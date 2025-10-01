@@ -1,6 +1,8 @@
 package org.leanlang.radar.server.repos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.core.setup.Environment;
+import jakarta.ws.rs.client.Client;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
@@ -17,9 +20,10 @@ import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 import org.leanlang.radar.server.config.ServerConfigRepoRun;
 import org.leanlang.radar.server.repos.source.RepoSource;
+import org.leanlang.radar.server.repos.source.RepoSourceGithub;
 
 public final class Repo implements AutoCloseable {
-    private final ObjectMapper mapper;
+    private final Environment environment;
     private final Dirs dirs;
 
     private final String name;
@@ -33,11 +37,13 @@ public final class Repo implements AutoCloseable {
     private final RepoDb db;
     private final RepoGit git;
     private final RepoGit gitBench;
+    private final @Nullable RepoGh gh;
 
-    public Repo(ObjectMapper mapper, Dirs dirs, ServerConfigRepo config, @Nullable Path githubPatFile)
+    public Repo(
+            Environment environment, Client client, Dirs dirs, ServerConfigRepo config, @Nullable Path githubPatFile)
             throws IOException {
 
-        this.mapper = mapper;
+        this.environment = environment;
         this.dirs = dirs;
 
         this.name = config.name();
@@ -51,6 +57,16 @@ public final class Repo implements AutoCloseable {
         this.db = new RepoDb(this.name, dirs.repoDb(this.name));
         this.git = new RepoGit(dirs.repoGit(this.name), this.source.gitUrl());
         this.gitBench = new RepoGit(dirs.repoGitBench(this.name), this.benchSource.gitUrl());
+        this.gh = mkGh(client, this.source, githubPatFile).orElse(null);
+    }
+
+    private static Optional<RepoGh> mkGh(Client client, RepoSource source, @Nullable Path githubPatFile)
+            throws IOException {
+
+        if (!(source instanceof RepoSourceGithub(String owner, String repo))) return Optional.empty();
+        if (githubPatFile == null) return Optional.empty();
+        String pat = Files.readString(githubPatFile).strip();
+        return Optional.of(new RepoGh(client, owner, repo, pat));
     }
 
     @Override
@@ -100,9 +116,14 @@ public final class Repo implements AutoCloseable {
         return gitBench;
     }
 
+    public Optional<RepoGh> gh() {
+        return Optional.ofNullable(gh);
+    }
+
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
         Path file = dirs.repoRunLog(this.name, chash, run);
         Files.createDirectories(file.getParent());
+        ObjectMapper mapper = environment.getObjectMapper();
         try (BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
             for (JsonOutputLine line : lines) {
                 writer.write(mapper.writeValueAsString(line));
@@ -113,6 +134,7 @@ public final class Repo implements AutoCloseable {
 
     public List<JsonOutputLine> loadRunLog(String chash, String run) throws IOException {
         Path file = dirs.repoRunLog(this.name, chash, run);
+        ObjectMapper mapper = environment.getObjectMapper();
         List<JsonOutputLine> lines = new ArrayList<>();
         for (String line : Files.readString(file).lines().toList()) {
             lines.add(mapper.readValue(line, JsonOutputLine.class));

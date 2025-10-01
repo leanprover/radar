@@ -29,7 +29,12 @@ import org.slf4j.LoggerFactory;
 public record DbUpdater(Repo repo, Queue queue) {
     private static final Logger log = LoggerFactory.getLogger(DbUpdater.class);
 
-    public void updateRepoData() {
+    public void update() {
+        updateRepoData();
+        updateQueue();
+    }
+
+    private void updateRepoData() {
         repo.db().writeTransaction(tx -> {
             insertNewCommits(tx);
             updateHistory(tx);
@@ -112,7 +117,7 @@ public record DbUpdater(Repo repo, Queue queue) {
         log.info("Updated {} history commits", records.size());
     }
 
-    public void updateQueue() {
+    private void updateQueue() {
         // Find all commits that are now in the history and have never been in the queue (i.e. seen).
         List<String> toEnqueue = repo.db()
                 .read()

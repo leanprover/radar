@@ -1,7 +1,8 @@
 package org.leanlang.radar.server.repos;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.core.setup.Environment;
 import io.dropwizard.lifecycle.Managed;
+import jakarta.ws.rs.client.Client;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -15,14 +16,19 @@ public final class Repos implements Managed {
     private final List<String> repoNames;
     private final Map<String, Repo> repos;
 
-    public Repos(ObjectMapper mapper, Dirs dirs, List<ServerConfigRepo> repoList, Map<String, Path> githubPatFiles)
+    public Repos(
+            Environment environment,
+            Client client,
+            Dirs dirs,
+            List<ServerConfigRepo> repoList,
+            Map<String, Path> githubPatFiles)
             throws IOException {
 
         repoNames = new ArrayList<>();
         repos = new HashMap<>();
         for (ServerConfigRepo repo : repoList) {
             repoNames.add(repo.name());
-            repos.put(repo.name(), new Repo(mapper, dirs, repo, githubPatFiles.get(repo.name())));
+            repos.put(repo.name(), new Repo(environment, client, dirs, repo, githubPatFiles.get(repo.name())));
         }
     }
 

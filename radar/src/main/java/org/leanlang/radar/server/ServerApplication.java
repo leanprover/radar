@@ -5,9 +5,11 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
+import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
+import jakarta.ws.rs.client.Client;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -67,9 +69,10 @@ public final class ServerApplication extends Application<ServerConfig> {
     public void run(ServerConfig configuration, Environment environment) throws IOException {
         configureDummyHealthCheck(environment);
         configureAdminAuth(environment, configuration.adminToken);
+        var client = configureJerseyClient(configuration, environment);
 
         var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
-        var repos = new Repos(environment.getObjectMapper(), dirs, configuration.repos, githubPatFiles);
+        var repos = new Repos(environment, client, dirs, configuration.repos, githubPatFiles);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos, runners);
         var busser = new Busser(repos, queue);
@@ -108,5 +111,11 @@ public final class ServerApplication extends Application<ServerConfig> {
                         .buildAuthFilter()));
 
         environment.jersey().register(new AuthValueFactoryProvider.Binder<>(Admin.class));
+    }
+
+    private Client configureJerseyClient(ServerConfig configuration, Environment environment) {
+        return new JerseyClientBuilder(environment)
+                .using(configuration.jerseyClient)
+                .build(getName());
     }
 }

@@ -1,6 +1,8 @@
 package org.leanlang.radar.server.busser;
 
 import io.dropwizard.lifecycle.Managed;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +11,7 @@ import org.leanlang.radar.Constants;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
+import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +64,18 @@ public final class Busser implements Managed {
         repo.git().fetch();
         repo.gitBench().fetch();
 
-        DbUpdater updater = new DbUpdater(repo, queue);
-        updater.updateRepoData();
-        updater.updateQueue();
+        DbUpdater dbUpdater = new DbUpdater(repo, queue);
+        Optional<GhUpdater> ghUpdaterOpt = repo.gh().map(it -> new GhUpdater(repo, queue, it));
+
+        if (ghUpdaterOpt.isPresent()) {
+            GhUpdater ghUpdater = ghUpdaterOpt.get();
+            List<JsonGhComment> comments = ghUpdater.searchForComments();
+            dbUpdater.update();
+            ghUpdater.addCommands(comments);
+            ghUpdater.executeCommands();
+            ghUpdater.updateReplies();
+        } else {
+            dbUpdater.update();
+        }
     }
 }
