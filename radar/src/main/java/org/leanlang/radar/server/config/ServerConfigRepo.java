@@ -10,8 +10,8 @@ import java.util.Set;
 public record ServerConfigRepo(
         @NotEmpty @JsonProperty(required = true) String name,
         @NotEmpty @JsonProperty(required = true) String description,
-        @NotEmpty @JsonProperty(required = true) URI url,
+        @JsonProperty(required = true) URI url,
         @NotEmpty @JsonProperty(required = true) Set<String> track,
-        @NotEmpty @JsonProperty(required = true) URI benchUrl,
+        @JsonProperty(required = true) URI benchUrl,
         @NotEmpty @JsonProperty(required = true) String benchRef,
         @Valid @NotEmpty @RepoRunNamesUnique @JsonProperty(required = true) List<ServerConfigRepoRun> benchRuns) {}

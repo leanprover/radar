@@ -16,7 +16,6 @@ public class RunnerConfig {
     @JsonProperty(required = true)
     public String name;
 
-    @NotEmpty
     @JsonProperty(required = true)
     public URI url;
 
