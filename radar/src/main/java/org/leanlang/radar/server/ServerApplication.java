@@ -10,6 +10,7 @@ import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
 import org.leanlang.radar.server.api.ResCommit;
@@ -37,11 +38,14 @@ public final class ServerApplication extends Application<ServerConfig> {
     private final Path configFile;
     private final @Nullable Path stateDir;
     private final @Nullable Path cacheDir;
+    private final Map<String, Path> githubPatFiles;
 
-    public ServerApplication(Path configFile, @Nullable Path stateDir, @Nullable Path cacheDir) {
+    public ServerApplication(
+            Path configFile, @Nullable Path stateDir, @Nullable Path cacheDir, Map<String, Path> githubPatFiles) {
         this.configFile = configFile;
         this.stateDir = stateDir;
         this.cacheDir = cacheDir;
+        this.githubPatFiles = githubPatFiles;
     }
 
     public void run() throws Exception {
@@ -65,7 +69,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         configureAdminAuth(environment, configuration.adminToken);
 
         var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
-        var repos = new Repos(environment.getObjectMapper(), dirs, configuration.repos);
+        var repos = new Repos(environment.getObjectMapper(), dirs, configuration.repos, githubPatFiles);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos, runners);
         var busser = new Busser(repos, queue);

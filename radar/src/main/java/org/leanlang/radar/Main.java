@@ -1,6 +1,7 @@
 package org.leanlang.radar;
 
 import java.nio.file.Path;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.runner.RunnerMain;
 import org.leanlang.radar.server.ServerApplication;
@@ -19,9 +20,14 @@ public final class Main {
             @Option(names = "--state-dir", description = "Path to the state dir.", paramLabel = "<path>") @Nullable
                     Path stateDir,
             @Option(names = "--cache-dir", description = "Path to the cache dir.", paramLabel = "<path>") @Nullable
-                    Path cacheDir)
+                    Path cacheDir,
+            @Option(
+                            names = "--github-pat-file",
+                            description = "Mapping from repo to GitHub personal access token files.",
+                            paramLabel = "<repo>=<path>")
+                    Map<String, Path> githubPatFiles)
             throws Exception {
-        new ServerApplication(configFile, stateDir, cacheDir).run();
+        new ServerApplication(configFile, stateDir, cacheDir, githubPatFiles).run();
     }
 
     @Command(name = "runner", description = "Start the runner.")

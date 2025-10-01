@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.FsUtil;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
@@ -22,7 +23,9 @@ public final class Repo implements AutoCloseable {
     private final RepoGit git;
     private final RepoGit gitBench;
 
-    public Repo(ObjectMapper mapper, Dirs dirs, ServerConfigRepo config) throws IOException {
+    public Repo(ObjectMapper mapper, Dirs dirs, ServerConfigRepo config, @Nullable Path githubPatFile)
+            throws IOException {
+
         this.mapper = mapper;
         this.dirs = dirs;
         this.config = config;
