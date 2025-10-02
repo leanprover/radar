@@ -62,9 +62,6 @@ public final class Busser implements Managed {
     }
 
     private void updateRepo(Repo repo) throws GitAPIException {
-        repo.git().fetch();
-        repo.gitBench().fetch();
-
         DbUpdater dbUpdater = new DbUpdater(repo, queue);
         Optional<GhUpdater> ghUpdaterOpt = repo.gh().map(it -> new GhUpdater(repo, queue, it));
 
@@ -72,11 +69,18 @@ public final class Busser implements Managed {
             GhUpdater ghUpdater = ghUpdaterOpt.get();
             Instant since = ghUpdater.since();
             List<JsonGhComment> comments = ghUpdater.searchForComments(since);
+
+            // We must fetch before we process the bench commands to ensure we're aware of every commit involved.
+            repo.git().fetch();
+            repo.gitBench().fetch();
             dbUpdater.update();
+
             ghUpdater.addCommands(comments, since);
             ghUpdater.executeCommands();
             ghUpdater.updateReplies();
         } else {
+            repo.git().fetch();
+            repo.gitBench().fetch();
             dbUpdater.update();
         }
     }

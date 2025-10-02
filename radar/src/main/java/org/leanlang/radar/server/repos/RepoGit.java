@@ -56,7 +56,7 @@ public final class RepoGit implements AutoCloseable {
         log.info("Fetching repo {} (this may take a while)", path);
         git.fetch()
                 .setRemote(url.toString())
-                .setRefSpecs(new RefSpec("+refs/heads/*:refs/heads/*"))
+                .setRefSpecs(new RefSpec("+refs/*:refs/*"))
                 .setTagOpt(TagOpt.NO_TAGS)
                 .setForceUpdate(true)
                 .setRemoveDeletedRefs(true)
