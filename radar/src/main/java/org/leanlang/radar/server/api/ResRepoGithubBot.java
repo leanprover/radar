@@ -38,6 +38,7 @@ public record ResRepoGithubBot(Repos repos) {
                         .join(GITHUB_COMMAND_RESOLVED)
                         .on(GITHUB_COMMAND.OWNER_AND_REPO.eq(GITHUB_COMMAND_RESOLVED.OWNER_AND_REPO))
                         .and(GITHUB_COMMAND.ID.eq(GITHUB_COMMAND_RESOLVED.ID)))
+                .where(GITHUB_COMMAND_RESOLVED.ACTIVE.ne(0))
                 .stream()
                 .map(it -> {
                     String ownerAndRepo = it.value1();
