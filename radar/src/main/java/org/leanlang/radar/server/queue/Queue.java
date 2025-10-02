@@ -95,6 +95,7 @@ public record Queue(Repos repos, Runners runners) {
                 task.getChash(),
                 task.getQueuedTime(),
                 task.getBumpedTime(),
+                task.getPriority(),
                 repo.benchRuns().stream()
                         .map(run -> buildRun(repo.name(), task.getChash(), run, activeRuns, finishedRuns))
                         .toList());
@@ -112,7 +113,12 @@ public record Queue(Repos repos, Runners runners) {
                         .toList();
             }));
         }
-        result.sort(Comparator.comparing(Task::bumped).reversed());
+
+        // High to low priority, then recent to old bump
+        // == (low to high priority, then old to recent bump) reversed
+        result.sort(
+                Comparator.comparing(Task::priority).thenComparing(Task::bumped).reversed());
+
         return result;
     }
 
