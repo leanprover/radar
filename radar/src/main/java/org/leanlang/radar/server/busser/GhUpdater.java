@@ -46,7 +46,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         // Remove all commands from different GitHub repos in case we have switched repos.
         repo.db().writeTransaction(ctx -> ctx.dsl()
                 .deleteFrom(GITHUB_COMMAND)
-                .where(GITHUB_COMMAND.REPO.ne(repoGh.name()))
+                .where(GITHUB_COMMAND.OWNER_AND_REPO.ne(repoGh.ownerAndRepo()))
                 .execute());
 
         for (JsonGhComment comment : comments) {
@@ -89,7 +89,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .dsl()
                 .selectOne()
                 .from(GITHUB_COMMAND)
-                .where(GITHUB_COMMAND.REPO.eq(repoGh.name()))
+                .where(GITHUB_COMMAND.OWNER_AND_REPO.eq(repoGh.ownerAndRepo()))
                 .and(GITHUB_COMMAND.ID.eq(comment.idStr()))
                 .fetch()
                 .isNotEmpty();
@@ -98,13 +98,13 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         Optional<JsonGhPull> pullOpt = repoGh.getPull(comment.issueNumberStr());
         if (pullOpt.isEmpty())
             return Optional.of(new GhCommand(
-                    repoGh.name(), comment.idStr(), comment.issueNumberStr(), msgNotInPr(), Optional.empty()));
+                    repoGh.ownerAndRepo(), comment.idStr(), comment.issueNumberStr(), msgNotInPr(), Optional.empty()));
         JsonGhPull pull = pullOpt.get();
 
         String headChash = pull.head().sha();
         String baseChash = pull.base().sha();
         return Optional.of(new GhCommand(
-                repoGh.name(),
+                repoGh.ownerAndRepo(),
                 comment.idStr(),
                 comment.issueNumberStr(),
                 msgInProgress(headChash, baseChash),
@@ -142,7 +142,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         repo.db().writeTransaction(ctx -> {
             GithubCommandRecord command = ctx.dsl()
                     .selectFrom(GITHUB_COMMAND)
-                    .where(GITHUB_COMMAND.REPO.eq(repoGh.name()))
+                    .where(GITHUB_COMMAND.OWNER_AND_REPO.eq(repoGh.ownerAndRepo()))
                     .and(GITHUB_COMMAND.ID.eq(id))
                     .fetchOne();
             if (command == null) return;
@@ -174,7 +174,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         Integer replyTries = command.getReplyTries();
 
         // When updating the DB, make sure nothing important changed since the last fetch.
-        var condition = (GITHUB_COMMAND.REPO.eq(repoGh.name()))
+        var condition = (GITHUB_COMMAND.OWNER_AND_REPO.eq(repoGh.ownerAndRepo()))
                 .and(GITHUB_COMMAND.ID.eq(id))
                 .and(replyId == null ? GITHUB_COMMAND.REPLY_ID.isNull() : GITHUB_COMMAND.REPLY_ID.eq(replyId))
                 .and(GITHUB_COMMAND.REPLY_CONTENT.eq(replyContent))

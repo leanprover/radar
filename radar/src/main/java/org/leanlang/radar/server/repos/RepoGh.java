@@ -36,8 +36,7 @@ public final class RepoGh {
         this.pat = pat;
     }
 
-    // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#list-issue-comments-for-a-repository
-    public String name() {
+    public String ownerAndRepo() {
         return owner + "/" + repo;
     }
 
@@ -48,6 +47,7 @@ public final class RepoGh {
         return result;
     }
 
+    // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#list-issue-comments-for-a-repository
     private List<JsonGhComment> getCommentsPage(Instant since, int page, int perPage) {
         JsonGhComment[] comments = client.target(API_URL)
                 .path("repos")
@@ -80,6 +80,7 @@ public final class RepoGh {
         return result;
     }
 
+    // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
     public Optional<JsonGhPull> getPull(String number) {
         try {
             JsonGhPull pull = client.target(API_URL)
@@ -99,6 +100,7 @@ public final class RepoGh {
 
     private record JsonPostCommentData(@JsonProperty(required = true) String body) {}
 
+    // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#create-an-issue-comment
     public JsonGhComment postComment(String prNumber, String content) {
         return client.target(API_URL)
                 .path("repos")
@@ -112,6 +114,7 @@ public final class RepoGh {
                 .post(Entity.json(new JsonPostCommentData(content)), JsonGhComment.class);
     }
 
+    // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#update-an-issue-comment
     public void updateComment(String id, String content) {
         client.target(API_URL)
                 .path("repos")
