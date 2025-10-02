@@ -14,6 +14,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.jooq.Result;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRecord;
@@ -63,10 +64,16 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
 
             log.info("Found command {} on #{}", command.id(), command.prNumber());
             GithubCommandRecord commandRecord = new GithubCommandRecord(
-                    command.repo(), command.id(), command.prNumber(), null, command.replyContent(), 0);
+                    command.ownerAndRepo(),
+                    command.id(),
+                    command.prNumber(),
+                    null,
+                    command.replyContent(),
+                    0,
+                    command.userLogin());
             Optional<GithubCommandResolvedRecord> commandResolvedRecord = command.resolved()
                     .map(it -> new GithubCommandResolvedRecord(
-                            command.repo(), command.id(), it.headChash(), it.baseChash(), 1));
+                            command.ownerAndRepo(), command.id(), it.headChash(), it.baseChash(), 1));
             repo.db().writeTransaction(ctx -> {
                 ctx.dsl().batchInsert(commandRecord).execute();
                 commandResolvedRecord.ifPresent(it -> ctx.dsl().batchInsert(it).execute());
@@ -103,9 +110,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         if (commandAlreadyKnown) return Optional.empty();
 
         Optional<JsonGhPull> pullOpt = repoGh.getPull(comment.issueNumberStr());
-        if (pullOpt.isEmpty())
-            return Optional.of(new GhCommand(
-                    repoGh.ownerAndRepo(), comment.idStr(), comment.issueNumberStr(), msgNotInPr(), Optional.empty()));
+        if (pullOpt.isEmpty()) return Optional.of(new GhCommand(repoGh, comment, msgNotInPr(), Optional.empty()));
         JsonGhPull pull = pullOpt.get();
         String headChash = pull.head().sha();
         String ghBaseChash = pull.base().sha();
@@ -125,37 +130,45 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
             baseChash = mergeBase.name();
         } catch (Exception e) {
             log.error("Failed to find merge base between {} and {}", headChash, ghBaseChash, e);
-            return Optional.of(new GhCommand(
-                    repoGh.ownerAndRepo(), comment.idStr(), comment.issueNumberStr(), msgNoBase(), Optional.empty()));
+            return Optional.of(new GhCommand(repoGh, comment, msgNoBase(), Optional.empty()));
         }
 
         return Optional.of(new GhCommand(
-                repoGh.ownerAndRepo(),
-                comment.idStr(),
-                comment.issueNumberStr(),
+                repoGh,
+                comment,
                 msgInProgress(headChash, baseChash),
                 Optional.of(new GhCommand.Resolved(headChash, baseChash))));
     }
 
     public void executeCommands() {
-        Result<GithubCommandResolvedRecord> commands = repo.db()
+        var commands = repo.db()
                 .read()
                 .dsl()
-                .selectFrom(GITHUB_COMMAND_RESOLVED)
+                .select(
+                        GITHUB_COMMAND.ID,
+                        GITHUB_COMMAND.USER_LOGIN,
+                        GITHUB_COMMAND_RESOLVED.HEAD_CHASH,
+                        GITHUB_COMMAND_RESOLVED.BASE_CHASH)
+                .from(GITHUB_COMMAND
+                        .join(GITHUB_COMMAND_RESOLVED)
+                        .on(GITHUB_COMMAND.OWNER_AND_REPO.eq(GITHUB_COMMAND_RESOLVED.OWNER_AND_REPO))
+                        .and(GITHUB_COMMAND.ID.eq(GITHUB_COMMAND_RESOLVED.ID)))
                 .where(GITHUB_COMMAND_RESOLVED.ACTIVE.ne(0))
                 .fetch();
 
-        for (GithubCommandResolvedRecord command : commands) {
-            String headChash = command.getHeadChash();
-            String baseChash = command.getBaseChash();
+        for (var command : commands) {
+            String id = command.value1();
+            String userLogin = command.value2();
+            String headChash = command.value3();
+            String baseChash = command.value4();
 
             boolean baseInQueue = queue.enqueueSoft(repo.name(), baseChash, Constants.PRIORITY_GITHUB_COMMAND);
             boolean headInQueue = queue.enqueueSoft(repo.name(), headChash, Constants.PRIORITY_GITHUB_COMMAND);
 
             if (baseInQueue || headInQueue) {
-                updateMessage(command.getId(), msgInProgress(headChash, baseChash));
+                updateMessage(id, msgInProgress(headChash, baseChash));
             } else {
-                updateMessage(command.getId(), msgFinished(headChash, baseChash));
+                updateMessage(id, msgFinished(headChash, baseChash, userLogin));
                 repo.db().writeTransaction(ctx -> ctx.dsl()
                         .update(GITHUB_COMMAND_RESOLVED)
                         .set(GITHUB_COMMAND_RESOLVED.ACTIVE, 0)
@@ -262,16 +275,28 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     }
 
     private String msgInProgress(String headChash, String baseChash) {
-        return "Benchmarking in progress."
-                + ("\n- Commit " + headChash + " ([status](" + radarLinkToCommit(headChash) + "))")
-                + ("\n- Against " + baseChash + " ([status](" + radarLinkToCommit(baseChash) + "))");
+        return "Benchmarking "
+                + (headChash + " ([status](" + radarLinkToCommit(headChash) + "))") + " against "
+                + (baseChash + " ([status](" + radarLinkToCommit(baseChash) + "))") + ".";
     }
 
     private String radarLinkToComparison(String first, String second) {
         return RADAR_URL + "repos/" + repo.name() + "/commits/" + second + "?parent=" + first;
     }
 
-    private String msgFinished(String headChash, String baseChash) {
-        return "Benchmarking finished, [results](" + radarLinkToComparison(baseChash, headChash) + ").";
+    private String msgFinished(String headChash, String baseChash, @Nullable String userLogin) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("[Benchmark results](")
+                .append(radarLinkToComparison(baseChash, headChash))
+                .append(") for ")
+                .append(headChash)
+                .append(" against ")
+                .append(baseChash)
+                .append(" are in!");
+
+        if (userLogin != null) sb.append(" @").append(userLogin);
+
+        return sb.toString();
     }
 }
