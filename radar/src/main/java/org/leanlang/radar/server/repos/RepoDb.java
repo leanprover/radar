@@ -97,7 +97,7 @@ public final class RepoDb implements AutoCloseable {
         return dslContext.transactionResult(transaction);
     }
 
-    public RepoDbWrite write() {
+    private RepoDbWrite write() {
         return new RepoDbWrite(dslContext, writeLock);
     }
 
