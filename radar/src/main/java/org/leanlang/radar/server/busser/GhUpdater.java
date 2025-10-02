@@ -26,15 +26,17 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     private static final Logger log = LoggerFactory.getLogger(GhUpdater.class);
     private static final String RADAR_URL = "https://radar.lean-lang.org/"; // TODO Configurable via config file
 
-    public List<JsonGhComment> searchForComments() {
-        Instant since = Optional.ofNullable(repo.db()
+    public Instant since() {
+        return Optional.ofNullable(repo.db()
                         .read()
                         .dsl()
                         .selectFrom(Tables.GITHUB_LAST_CHECKED)
                         .fetchOne())
                 .map(GithubLastCheckedRecord::getLastCheckedTime)
                 .orElse(Instant.now());
+    }
 
+    public List<JsonGhComment> searchForComments(Instant since) {
         log.info("Searching for comments since {}", since);
         List<JsonGhComment> comments = repoGh.getComments(since);
         log.info("Found {} comment{} since {}", comments.size(), comments.size() == 1 ? "" : "s", since);
@@ -42,7 +44,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         return comments;
     }
 
-    public void addCommands(List<JsonGhComment> comments) {
+    public void addCommands(List<JsonGhComment> comments, Instant since) {
         // Remove all commands from different GitHub repos in case we have switched repos.
         repo.db().writeTransaction(ctx -> ctx.dsl()
                 .deleteFrom(GITHUB_COMMAND)
@@ -67,17 +69,17 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         }
 
         // Update last checked table to ensure we don't unnecessarily request too many comments
-        if (!comments.isEmpty()) {
-            Instant lastSeen = comments.getLast().createdAt();
-            log.info("Updating last seen time to {}", lastSeen);
-            repo.db().writeTransaction(ctx -> {
-                ctx.dsl().deleteFrom(GITHUB_LAST_CHECKED).execute();
-                ctx.dsl()
-                        .insertInto(GITHUB_LAST_CHECKED, GITHUB_LAST_CHECKED.LAST_CHECKED_TIME)
-                        .values(lastSeen)
-                        .execute();
-            });
-        }
+        Instant lastSeen;
+        if (comments.isEmpty()) lastSeen = since;
+        else lastSeen = comments.getLast().createdAt();
+        log.info("Updating last seen time to {}", lastSeen);
+        repo.db().writeTransaction(ctx -> {
+            ctx.dsl().deleteFrom(GITHUB_LAST_CHECKED).execute();
+            ctx.dsl()
+                    .insertInto(GITHUB_LAST_CHECKED, GITHUB_LAST_CHECKED.LAST_CHECKED_TIME)
+                    .values(lastSeen)
+                    .execute();
+        });
     }
 
     private Optional<GhCommand> resolveCommand(JsonGhComment comment) {

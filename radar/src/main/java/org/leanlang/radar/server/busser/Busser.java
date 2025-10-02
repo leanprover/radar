@@ -1,6 +1,7 @@
 package org.leanlang.radar.server.busser;
 
 import io.dropwizard.lifecycle.Managed;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -69,9 +70,10 @@ public final class Busser implements Managed {
 
         if (ghUpdaterOpt.isPresent()) {
             GhUpdater ghUpdater = ghUpdaterOpt.get();
-            List<JsonGhComment> comments = ghUpdater.searchForComments();
+            Instant since = ghUpdater.since();
+            List<JsonGhComment> comments = ghUpdater.searchForComments(since);
             dbUpdater.update();
-            ghUpdater.addCommands(comments);
+            ghUpdater.addCommands(comments, since);
             ghUpdater.executeCommands();
             ghUpdater.updateReplies();
         } else {
