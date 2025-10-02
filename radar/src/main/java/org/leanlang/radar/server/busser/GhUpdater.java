@@ -8,6 +8,11 @@ import jakarta.ws.rs.NotFoundException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.jooq.Result;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.Tables;
@@ -102,9 +107,28 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
             return Optional.of(new GhCommand(
                     repoGh.ownerAndRepo(), comment.idStr(), comment.issueNumberStr(), msgNotInPr(), Optional.empty()));
         JsonGhPull pull = pullOpt.get();
-
         String headChash = pull.head().sha();
-        String baseChash = pull.base().sha();
+        String ghBaseChash = pull.base().sha();
+
+        // GitHub's "base.sha" doesn't seem to correspond to the merge base.
+        // Instead, I suspect it's the sha of the base branch at the time the PR was created.
+        // Thus, we need to find the actual merge base commit ourselves.
+        String baseChash;
+        try {
+            Repository plumbing = repo.git().plumbing();
+            RevWalk revWalk = new RevWalk(plumbing);
+            revWalk.setRevFilter(RevFilter.MERGE_BASE);
+            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(headChash)));
+            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(ghBaseChash)));
+            RevCommit mergeBase = revWalk.next();
+            if (mergeBase == null) throw new Exception("RevWalk returned null");
+            baseChash = mergeBase.name();
+        } catch (Exception e) {
+            log.error("Failed to find merge base between {} and {}", headChash, ghBaseChash, e);
+            return Optional.of(new GhCommand(
+                    repoGh.ownerAndRepo(), comment.idStr(), comment.issueNumberStr(), msgNoBase(), Optional.empty()));
+        }
+
         return Optional.of(new GhCommand(
                 repoGh.ownerAndRepo(),
                 comment.idStr(),
@@ -227,6 +251,10 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
 
     private String msgNotInPr() {
         return "This command can only be used in pull requests.";
+    }
+
+    private String msgNoBase() {
+        return "Failed to find a commit to compare against.";
     }
 
     private String radarLinkToCommit(String chash) {
