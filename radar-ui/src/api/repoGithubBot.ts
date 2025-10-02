@@ -8,6 +8,7 @@ const JsonCommand = z.object({
     .string()
     .nullish()
     .transform((it) => it ?? undefined),
+  active: z.boolean(),
 });
 
 const JsonGet = z.object({

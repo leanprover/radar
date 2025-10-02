@@ -16,7 +16,10 @@ import org.leanlang.radar.server.repos.Repos;
 @Path("/repos/{repo}/github-bot/")
 public record ResRepoGithubBot(Repos repos) {
     public record JsonCommand(
-            @JsonProperty(required = true) String pr, @JsonProperty(required = true) String url, String replyUrl) {}
+            @JsonProperty(required = true) String pr,
+            @JsonProperty(required = true) String url,
+            String replyUrl,
+            boolean active) {}
 
     public record JsonGet(@JsonProperty(required = true) List<JsonCommand> commands) {}
 
@@ -33,22 +36,26 @@ public record ResRepoGithubBot(Repos repos) {
                         GITHUB_COMMAND.OWNER_AND_REPO,
                         GITHUB_COMMAND.PR_NUMBER,
                         GITHUB_COMMAND.ID,
-                        GITHUB_COMMAND.REPLY_ID)
+                        GITHUB_COMMAND.REPLY_ID,
+                        GITHUB_COMMAND_RESOLVED.ACTIVE)
                 .from(GITHUB_COMMAND
                         .join(GITHUB_COMMAND_RESOLVED)
                         .on(GITHUB_COMMAND.OWNER_AND_REPO.eq(GITHUB_COMMAND_RESOLVED.OWNER_AND_REPO))
                         .and(GITHUB_COMMAND.ID.eq(GITHUB_COMMAND_RESOLVED.ID)))
-                .where(GITHUB_COMMAND_RESOLVED.ACTIVE.ne(0))
+                .orderBy(GITHUB_COMMAND_RESOLVED.ACTIVE.desc())
+                .limit(50)
                 .stream()
                 .map(it -> {
                     String ownerAndRepo = it.value1();
                     String prNumber = it.value2();
                     String id = it.value3();
                     String replyId = it.value4();
+                    boolean active = it.value5() != 0;
                     return new JsonCommand(
                             prNumber,
                             prCommentUrl(ownerAndRepo, prNumber, id),
-                            prCommentUrl(ownerAndRepo, prNumber, replyId));
+                            prCommentUrl(ownerAndRepo, prNumber, replyId),
+                            active);
                 })
                 .toList();
 

@@ -49,18 +49,18 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
   </CSection>
 
   <CSection v-if="github.isSuccess && github.data.commands.length > 0">
-    <CSectionTitle>Active GitHub bot commands</CSectionTitle>
-    <div>Completed commands are not listed.</div>
+    <CSectionTitle>Recent GitHub bot commands</CSectionTitle>
     <div class="flex flex-col">
       <div v-for="command in github.data.commands" :key="command.url" class="flex gap-2">
         <div>-</div>
-        <div>
+        <div :class="{ 'text-foreground-alt': !command.active }">
           In PR #{{ command.pr }}:
           <a :href="command.url" target="_blank" class="hover:underline">command</a>
           <template v-if="command.replyUrl"
             >,
             <a :href="command.replyUrl" target="_blank" class="hover:underline">bot reply</a>
           </template>
+          <template v-if="!command.active"> (finished)</template>
         </div>
       </div>
     </div>
