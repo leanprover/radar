@@ -54,4 +54,9 @@ public class Constants {
      * Queue priority of commits added because they newly appeared on one of the tracked branches.
      */
     public static final int PRIORITY_NEW_COMMIT = 0;
+
+    /**
+     * Queue priority of commits added because of a GitHub command.
+     */
+    public static final int PRIORITY_GITHUB_COMMAND = 1;
 }

@@ -159,12 +159,23 @@ public record Queue(Repos repos, Runners runners) {
     /**
      * Ensure a commit is in the queue if results are not already available,
      * bumping its position and priority if appropriate.
+     *
+     * @return
+     *   true if the commit is now in the queue.
+     *   Returning false implies that the commit already has runs.
      */
-    public void enqueueSoft(String repoName, String chash, int priority) {
+    public boolean enqueueSoft(String repoName, String chash, int priority) {
         log.info("Enqueueing commit {} for repo {} (soft)", chash, repoName);
         Repo repo = repos.repo(repoName);
 
-        repo.db().writeTransaction(ctx -> {
+        return repo.db().writeTransactionResult(ctx -> {
+            QueueRecord inQueue =
+                    ctx.dsl().selectFrom(QUEUE).where(QUEUE.CHASH.eq(chash)).fetchOne();
+            if (inQueue != null) {
+                enqueueBump(ctx, inQueue, priority);
+                return true;
+            }
+
             boolean runsExist = !ctx.dsl()
                     .selectOne()
                     .from(RUNS)
@@ -172,18 +183,12 @@ public record Queue(Repos repos, Runners runners) {
                     .fetch()
                     .isEmpty();
             // No need to enqueue, we already have results.
-            if (runsExist) return;
-
-            QueueRecord inQueue =
-                    ctx.dsl().selectFrom(QUEUE).where(QUEUE.CHASH.eq(chash)).fetchOne();
-            if (inQueue != null) {
-                enqueueBump(ctx, inQueue, priority);
-                return;
-            }
+            if (runsExist) return false;
 
             // Insert into queue anew.
             // No need to delete results since there aren't any.
             enqueueInsert(chash, priority, ctx);
+            return true;
         });
     }
 

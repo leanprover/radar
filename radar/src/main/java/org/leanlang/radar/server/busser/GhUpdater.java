@@ -1,12 +1,15 @@
 package org.leanlang.radar.server.busser;
 
 import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND;
+import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND_RESOLVED;
 import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_LAST_CHECKED;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.jooq.Result;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandResolvedRecord;
@@ -94,27 +97,91 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         Optional<JsonGhPull> pullOpt = repoGh.getPull(comment.issueNumberStr());
         if (pullOpt.isEmpty())
             return Optional.of(new GhCommand(
-                    repoGh.name(),
-                    comment.idStr(),
-                    comment.issueNumberStr(),
-                    "This command can only be used in pull requests.",
-                    Optional.empty()));
+                    repoGh.name(), comment.idStr(), comment.issueNumberStr(), msgNotInPr(), Optional.empty()));
         JsonGhPull pull = pullOpt.get();
 
         return Optional.of(new GhCommand(
                 repoGh.name(),
                 comment.idStr(),
                 comment.issueNumberStr(),
-                "Command registered. Please stand by for updates.",
+                msgRegistered(),
                 Optional.of(
                         new GhCommand.Resolved(pull.head().sha(), pull.base().sha()))));
     }
 
     public void executeCommands() {
-        // TODO Implement
+        Result<GithubCommandResolvedRecord> commands = repo.db()
+                .read()
+                .dsl()
+                .selectFrom(GITHUB_COMMAND_RESOLVED)
+                .where(GITHUB_COMMAND_RESOLVED.ACTIVE.ne(0))
+                .fetch();
+
+        for (GithubCommandResolvedRecord command : commands) {
+            String headChash = command.getHeadChash();
+            String baseChash = command.getBaseChash();
+
+            boolean baseInQueue = queue.enqueueSoft(repo.name(), baseChash, Constants.PRIORITY_GITHUB_COMMAND);
+            boolean headInQueue = queue.enqueueSoft(repo.name(), headChash, Constants.PRIORITY_GITHUB_COMMAND);
+
+            if (baseInQueue || headInQueue) {
+                updateMessage(command.getId(), msgInProgress(headChash, baseChash));
+            } else {
+                updateMessage(command.getId(), msgFinished(headChash, baseChash));
+                repo.db().writeTransaction(ctx -> ctx.dsl()
+                        .update(GITHUB_COMMAND_RESOLVED)
+                        .set(GITHUB_COMMAND_RESOLVED.ACTIVE, 0)
+                        .execute());
+            }
+        }
+    }
+
+    private void updateMessage(String id, String newMessage) {
+        repo.db().writeTransaction(ctx -> {
+            GithubCommandRecord command = ctx.dsl()
+                    .selectFrom(GITHUB_COMMAND)
+                    .where(GITHUB_COMMAND.REPO.eq(repoGh.name()))
+                    .and(GITHUB_COMMAND.ID.eq(id))
+                    .fetchOne();
+            if (command == null) return;
+            if (command.getReplyContent().equals(newMessage)) return;
+            command.setReplyContent(newMessage);
+            command.setReplyTries(0);
+            ctx.dsl().batchUpdate(command).execute();
+        });
     }
 
     public void updateReplies() {
         // TODO Implement
+    }
+
+    /*
+     * Messages
+     */
+
+    private String msgNotInPr() {
+        return "This command can only be used in pull requests.";
+    }
+
+    private String msgRegistered() {
+        return "Command registered. Please stand by for updates.";
+    }
+
+    private String radarLinkToCommit(String chash) {
+        return "https://radar.lean-lang.org/repos/" + repo.name() + "/commits/" + chash;
+    }
+
+    private String msgInProgress(String headChash, String baseChash) {
+        return "Benchmarking in progress."
+                + ("\n- Commit " + headChash + " ([status](" + radarLinkToCommit(headChash) + "))")
+                + ("\n- Against " + baseChash + " ([status](" + radarLinkToCommit(baseChash) + "))");
+    }
+
+    private String radarLinkToComparison(String first, String second) {
+        return "https://radar.lean-lang.org/repos/" + repo.name() + "/commits/" + second + "?parent=" + first;
+    }
+
+    private String msgFinished(String headChash, String baseChash) {
+        return "Benchmarking finished, [results](" + radarLinkToComparison(baseChash, headChash) + ").";
     }
 }
