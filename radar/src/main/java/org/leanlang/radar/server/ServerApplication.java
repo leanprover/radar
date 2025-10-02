@@ -13,6 +13,7 @@ import jakarta.ws.rs.client.Client;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
 import org.leanlang.radar.server.api.ResCommit;
@@ -41,14 +42,17 @@ public final class ServerApplication extends Application<ServerConfig> {
     private final Path configFile;
     private final @Nullable Path stateDir;
     private final @Nullable Path cacheDir;
-    private final Map<String, Path> githubPatFiles;
+    private final @NonNull Map<String, Path> githubPatFiles;
 
     public ServerApplication(
-            Path configFile, @Nullable Path stateDir, @Nullable Path cacheDir, Map<String, Path> githubPatFiles) {
+            Path configFile,
+            @Nullable Path stateDir,
+            @Nullable Path cacheDir,
+            @Nullable Map<String, Path> githubPatFiles) {
         this.configFile = configFile;
         this.stateDir = stateDir;
         this.cacheDir = cacheDir;
-        this.githubPatFiles = githubPatFiles;
+        this.githubPatFiles = githubPatFiles == null ? Map.of() : githubPatFiles;
     }
 
     public void run() throws Exception {

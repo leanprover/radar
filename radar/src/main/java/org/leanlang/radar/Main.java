@@ -25,6 +25,7 @@ public final class Main {
                             names = "--github-pat-file",
                             description = "Mapping from repo to GitHub personal access token files.",
                             paramLabel = "<repo>=<path>")
+                    @Nullable
                     Map<String, Path> githubPatFiles)
             throws Exception {
         new ServerApplication(configFile, stateDir, cacheDir, githubPatFiles).run();
