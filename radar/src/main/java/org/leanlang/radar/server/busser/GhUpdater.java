@@ -4,7 +4,7 @@ import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND;
 import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND_RESOLVED;
 import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_LAST_CHECKED;
 
-import java.time.Duration;
+import jakarta.ws.rs.NotFoundException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     private static final Logger log = LoggerFactory.getLogger(GhUpdater.class);
+    private static final String RADAR_URL = "https://radar.lean-lang.org/"; // TODO Configurable via config file
 
     public List<JsonGhComment> searchForComments() {
         Instant since = Optional.ofNullable(repo.db()
@@ -100,13 +101,14 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                     repoGh.name(), comment.idStr(), comment.issueNumberStr(), msgNotInPr(), Optional.empty()));
         JsonGhPull pull = pullOpt.get();
 
+        String headChash = pull.head().sha();
+        String baseChash = pull.base().sha();
         return Optional.of(new GhCommand(
                 repoGh.name(),
                 comment.idStr(),
                 comment.issueNumberStr(),
-                msgRegistered(),
-                Optional.of(
-                        new GhCommand.Resolved(pull.head().sha(), pull.base().sha()))));
+                msgInProgress(headChash, baseChash),
+                Optional.of(new GhCommand.Resolved(headChash, baseChash))));
     }
 
     public void executeCommands() {
@@ -152,7 +154,69 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     }
 
     public void updateReplies() {
-        // TODO Implement
+        Result<GithubCommandRecord> commands = repo.db()
+                .read()
+                .dsl()
+                .selectFrom(GITHUB_COMMAND)
+                .where(GITHUB_COMMAND.REPLY_TRIES.lt(Constants.GITHUB_MAX_TRIES))
+                .fetch();
+
+        for (GithubCommandRecord command : commands) {
+            updateReply(command);
+        }
+    }
+
+    private void updateReply(GithubCommandRecord command) {
+        String id = command.getId();
+        String prNumber = command.getPrNumber();
+        String replyId = command.getReplyId();
+        String replyContent = command.getReplyContent();
+        Integer replyTries = command.getReplyTries();
+
+        // When updating the DB, make sure nothing important changed since the last fetch.
+        var condition = (GITHUB_COMMAND.REPO.eq(repoGh.name()))
+                .and(GITHUB_COMMAND.ID.eq(id))
+                .and(replyId == null ? GITHUB_COMMAND.REPLY_ID.isNull() : GITHUB_COMMAND.REPLY_ID.eq(replyId))
+                .and(GITHUB_COMMAND.REPLY_CONTENT.eq(replyContent))
+                .and(GITHUB_COMMAND.REPLY_TRIES.eq(replyTries));
+
+        try {
+            if (replyId == null) {
+                log.info("Replying to {} in #{} (try {})", id, prNumber, replyTries);
+                JsonGhComment reply = repoGh.postComment(prNumber, replyContent);
+                repo.db().writeTransaction(ctx -> ctx.dsl()
+                        .update(GITHUB_COMMAND)
+                        .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
+                        .set(GITHUB_COMMAND.REPLY_ID, reply.idStr())
+                        .where(condition)
+                        .execute());
+
+            } else {
+                log.info("Updating reply {} to {} in {} (try {})", replyId, id, prNumber, replyTries);
+                repoGh.updateComment(replyId, replyContent);
+                repo.db().writeTransaction(ctx -> ctx.dsl()
+                        .update(GITHUB_COMMAND)
+                        .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
+                        .where(condition)
+                        .execute());
+            }
+        } catch (NotFoundException e) {
+            // Presumably our reply was deleted or something, so let's just send a new one instead the next time.
+            log.error("Reply failed because of 404", e);
+            repo.db().writeTransaction(ctx -> ctx.dsl()
+                    .update(GITHUB_COMMAND)
+                    .set(GITHUB_COMMAND.REPLY_TRIES, GITHUB_COMMAND.REPLY_TRIES.add(1))
+                    .set(GITHUB_COMMAND.REPLY_ID, (String) null)
+                    .where(condition)
+                    .execute());
+        } catch (Exception e) {
+            log.error("Reply failed", e);
+            repo.db().writeTransaction(ctx -> ctx.dsl()
+                    .update(GITHUB_COMMAND)
+                    .set(GITHUB_COMMAND.REPLY_TRIES, GITHUB_COMMAND.REPLY_TRIES.add(1))
+                    .where(condition)
+                    .execute());
+        }
     }
 
     /*
@@ -163,12 +227,8 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         return "This command can only be used in pull requests.";
     }
 
-    private String msgRegistered() {
-        return "Command registered. Please stand by for updates.";
-    }
-
     private String radarLinkToCommit(String chash) {
-        return "https://radar.lean-lang.org/repos/" + repo.name() + "/commits/" + chash;
+        return RADAR_URL + "repos/" + repo.name() + "/commits/" + chash;
     }
 
     private String msgInProgress(String headChash, String baseChash) {
@@ -178,7 +238,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     }
 
     private String radarLinkToComparison(String first, String second) {
-        return "https://radar.lean-lang.org/repos/" + repo.name() + "/commits/" + second + "?parent=" + first;
+        return RADAR_URL + "repos/" + repo.name() + "/commits/" + second + "?parent=" + first;
     }
 
     private String msgFinished(String headChash, String baseChash) {

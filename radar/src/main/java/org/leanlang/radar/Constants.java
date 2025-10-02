@@ -59,4 +59,12 @@ public class Constants {
      * Queue priority of commits added because of a GitHub command.
      */
     public static final int PRIORITY_GITHUB_COMMAND = 1;
+
+    /**
+     * How many times to try to post or update a comment before giving up.
+     * This is quite a high value because GitHub may be down for a while.
+     * It is not infinite because the bot may not have permissions to post comments
+     * or the issue may have been deleted.
+     */
+    public static final int GITHUB_MAX_TRIES = 100;
 }

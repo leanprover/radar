@@ -1,8 +1,12 @@
 package org.leanlang.radar.server.repos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,6 +41,13 @@ public final class RepoGh {
         return owner + "/" + repo;
     }
 
+    private MultivaluedMap<String, Object> headers() {
+        MultivaluedHashMap<String, Object> result = new MultivaluedHashMap<>();
+        result.add("Authorization", "Bearer " + pat);
+        result.add("X-GitHub-Api-Version", "2022-11-28");
+        return result;
+    }
+
     private List<JsonGhComment> getCommentsPage(Instant since, int page, int perPage) {
         JsonGhComment[] comments = client.target(API_URL)
                 .path("repos")
@@ -53,7 +64,7 @@ public final class RepoGh {
                 .queryParam("page", page)
                 .queryParam("per_page", perPage) // The maximum
                 .request(MediaType.APPLICATION_JSON_TYPE)
-                .header("Authorization", "Bearer " + pat)
+                .headers(headers())
                 .get(JsonGhComment[].class);
 
         return Arrays.asList(comments).reversed(); // Should be old to new, not new to old
@@ -78,11 +89,39 @@ public final class RepoGh {
                     .path("pulls")
                     .path(number)
                     .request(MediaType.APPLICATION_JSON_TYPE)
-                    .header("Authorization", "Bearer " + pat)
+                    .headers(headers())
                     .get(JsonGhPull.class);
             return Optional.of(pull);
         } catch (NotFoundException e) {
             return Optional.empty();
         }
+    }
+
+    private record JsonPostCommentData(@JsonProperty(required = true) String body) {}
+
+    public JsonGhComment postComment(String prNumber, String content) {
+        return client.target(API_URL)
+                .path("repos")
+                .path(owner)
+                .path(repo)
+                .path("issues")
+                .path(prNumber)
+                .path("comments")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .headers(headers())
+                .post(Entity.json(new JsonPostCommentData(content)), JsonGhComment.class);
+    }
+
+    public void updateComment(String id, String content) {
+        client.target(API_URL)
+                .path("repos")
+                .path(owner)
+                .path(repo)
+                .path("issues")
+                .path("comments")
+                .path(id)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .headers(headers())
+                .post(Entity.json(new JsonPostCommentData(content)), JsonGhComment.class);
     }
 }

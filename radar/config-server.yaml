@@ -3,6 +3,10 @@ logging:
   loggers:
     org.leanlang.radar: DEBUG
 
+jerseyClient:
+  gzipEnabledForRequests: false
+  timeout: 5s
+
 adminToken: admintoken
 
 server:
