@@ -7,7 +7,6 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   type Row,
-  type SortingState,
   useVueTable,
 } from "@tanstack/vue-table";
 import { computed, ref, watch } from "vue";
@@ -27,23 +26,15 @@ const filter = defineModel<string>("filter");
 
 const nColums = computed(() => columns.length);
 
-const sorting = ref<SortingState>([]);
-
 const tableData = useVueTable({
   columns,
   get data() {
     return data;
   },
   state: {
-    get sorting() {
-      return sorting.value;
-    },
     get globalFilter() {
       return filter.value;
     },
-  },
-  onSortingChange(updaterOrValue) {
-    sorting.value = typeof updaterOrValue === "function" ? updaterOrValue(sorting.value) : updaterOrValue;
   },
   globalFilterFn: filterFn,
   getCoreRowModel: getCoreRowModel(),
