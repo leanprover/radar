@@ -6,11 +6,11 @@ import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCommitRun } from "@/composables/useCommitRun.ts";
 import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/CTimeRange.vue";
-import { formatZonedTime, instantToZoned } from "@/lib/utils.ts";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import CSection from "@/components/CSection.vue";
 import CLinkRepo from "@/components/CLinkRepo.vue";
+import { formatZonedTime, instantToZoned } from "@/lib/format.ts";
 
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 

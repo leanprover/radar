@@ -3,13 +3,13 @@ import { useRoute, useRouter } from "vue-router";
 import { reactive, watch } from "vue";
 import CLoading from "@/components/CLoading.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import { formatZonedTime, instantToZoned } from "@/lib/utils.ts";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import { useQueueRun } from "@/composables/useQueueRun.ts";
 import CTimeDurationSince from "@/components/CTimeDurationSince.vue";
 import CSection from "@/components/CSection.vue";
 import CLinkRepo from "@/components/CLinkRepo.vue";
+import { formatZonedTime, instantToZoned } from "@/lib/format.ts";
 
 const router = useRouter();
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");

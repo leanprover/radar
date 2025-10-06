@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatValue } from "@/lib/utils.ts";
+import { formatValue } from "@/lib/format.ts";
 
 const { value = undefined, unit = undefined } = defineProps<{ value?: number; unit?: string }>();
 </script>
