@@ -3,7 +3,7 @@ import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { computed, reactive, watch } from "vue";
 import { useCommit } from "@/composables/useCommit.ts";
 import CLoading from "@/components/CLoading.vue";
-import { setsEqual } from "@/lib/utils.ts";
+import { queryParamAsNonemptyString, setsEqual } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCompare } from "@/composables/useCompare.ts";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
@@ -19,16 +19,26 @@ import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import CSection from "@/components/CSection.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
+import { useRouteQuery } from "@vueuse/router";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
 
-const queryParent = computed(() => {
-  let value = route.query["parent"];
-  if (!value) return;
-  if (typeof value === "object") value = value[0];
-  if (!value) return;
-  return value;
+const queryParentRaw = useRouteQuery("parent");
+const queryParent = computed(() => queryParamAsNonemptyString(queryParentRaw.value) ?? "parent");
+
+const queryFilterRaw = useRouteQuery("s");
+const queryFilter = computed({
+  get() {
+    return queryParamAsNonemptyString(queryFilterRaw.value);
+  },
+  set(value) {
+    if (value !== undefined) {
+      value = value.trim();
+      if (value === "") value = undefined;
+    }
+    queryFilterRaw.value = value;
+  },
 });
 
 const repo = useRepo(route.params.repo);
@@ -41,7 +51,7 @@ const commit = reactive(
 const compare = reactive(
   useCompare(
     () => route.params.repo,
-    () => queryParent.value ?? "parent",
+    () => queryParent.value,
     () => route.params.chash,
   ),
 );
@@ -134,6 +144,6 @@ onBeforeRouteUpdate(() => {
   <CLoading v-if="!compare.isSuccess" :error="compare.error" />
   <CSection v-else-if="measurements !== undefined">
     <CSectionTitle>Measurements</CSectionTitle>
-    <PMeasurementsTable :measurements="measurements" />
+    <PMeasurementsTable v-model:filter="queryFilter" :measurements="measurements" />
   </CSection>
 </template>

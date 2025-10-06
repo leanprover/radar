@@ -2,6 +2,7 @@ import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Temporal } from "temporal-polyfill";
+import type { LocationQueryValue } from "vue-router";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -12,6 +13,19 @@ export function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
   if (a.size !== b.size) return false;
   for (const value of a.values()) if (!b.has(value)) return false;
   return true;
+}
+
+export function queryParamAsString(value: LocationQueryValue | LocationQueryValue[] | undefined): string | undefined {
+  if (typeof value === "object" && value !== null) value = value[0];
+  return value ?? undefined;
+}
+
+export function queryParamAsNonemptyString(
+  value: LocationQueryValue | LocationQueryValue[] | undefined,
+): string | undefined {
+  const s = queryParamAsString(value);
+  if (s === "") return undefined;
+  return s;
 }
 
 // TODO Move format functions somewhere else
