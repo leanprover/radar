@@ -3,15 +3,27 @@ import {
   type ColumnDef,
   FlexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type Row,
   type SortingState,
   useVueTable,
 } from "@tanstack/vue-table";
 import { computed, ref, watch } from "vue";
 import CButton from "@/components/CButton.vue";
 
-const { columns, data } = defineProps<{ columns: ColumnDef<T>[]; data: T[] }>();
+const {
+  columns,
+  data,
+  filterFn = () => true,
+} = defineProps<{
+  columns: ColumnDef<T>[];
+  data: T[];
+  filterFn?: (row: Row<T>, col: string, data: string) => boolean;
+}>();
+
+const filter = defineModel<string>("filter");
 
 const nColums = computed(() => columns.length);
 
@@ -26,12 +38,17 @@ const tableData = useVueTable({
     get sorting() {
       return sorting.value;
     },
+    get globalFilter() {
+      return filter.value;
+    },
   },
   onSortingChange(updaterOrValue) {
     sorting.value = typeof updaterOrValue === "function" ? updaterOrValue(sorting.value) : updaterOrValue;
   },
+  globalFilterFn: filterFn,
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
 });
 
@@ -66,6 +83,12 @@ function goToLastPage() {
 
 <template>
   <div class="flex w-fit flex-col gap-1">
+    <div class="bg-background-alt col-span-full -mx-1 flex gap-2 p-1 align-baseline">
+      <div>Search</div>
+      <input v-model="filter" type="text" class="bg-background grow px-1" />
+      <CButton @click="filter = undefined">Clear</CButton>
+    </div>
+
     <div class="bg-background-alt col-span-full -mx-1 flex gap-2 p-1 align-baseline">
       <CButton @click="goToFirstPage()">first</CButton>
       <CButton @click="goToPreviousPage()">prev</CButton>

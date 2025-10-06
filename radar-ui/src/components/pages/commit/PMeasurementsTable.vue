@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type ColumnDef } from "@tanstack/vue-table";
+import { type ColumnDef, type Row } from "@tanstack/vue-table";
 import { h } from "vue";
 import CTableCellValue from "@/components/CTableCellValue.vue";
 import CTableCellDelta from "@/components/CTableCellDelta.vue";
@@ -16,6 +16,7 @@ interface Measurement {
 }
 
 const { measurements } = defineProps<{ measurements: Measurement[] }>();
+const filter = defineModel<string>("filter");
 
 const columns: ColumnDef<Measurement>[] = [
   {
@@ -30,6 +31,11 @@ const columns: ColumnDef<Measurement>[] = [
         title: "Metric",
         align: "left",
       }),
+  },
+  {
+    id: "separator",
+    accessorFn: () => "//",
+    header: () => null,
   },
   {
     id: "submetric",
@@ -125,8 +131,14 @@ const columns: ColumnDef<Measurement>[] = [
       }),
   },
 ];
+
+function filterFn(row: Row<Measurement>, col: string, data: string): boolean {
+  if (col !== "metric") return false;
+  // Yes, this is incorrect according to Unicode, but it suffices for our metric names.
+  return row.original.metric.toLowerCase().includes(data.toLowerCase());
+}
 </script>
 
 <template>
-  <CTable :columns="columns" :data="measurements" />
+  <CTable v-model:filter="filter" :columns="columns" :data="measurements" :filter-fn="filterFn" />
 </template>
