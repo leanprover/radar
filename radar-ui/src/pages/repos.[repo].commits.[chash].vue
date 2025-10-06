@@ -3,7 +3,7 @@ import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { computed, reactive, watch } from "vue";
 import { useCommit } from "@/composables/useCommit.ts";
 import CLoading from "@/components/CLoading.vue";
-import { cn, setsEqual } from "@/lib/utils.ts";
+import { setsEqual } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCompare } from "@/composables/useCompare.ts";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
@@ -17,6 +17,8 @@ import { useIntervalFn } from "@vueuse/core";
 import CRunInfo from "@/components/CRunInfo.vue";
 import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import CSection from "@/components/CSection.vue";
+import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
+import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
@@ -102,27 +104,8 @@ onBeforeRouteUpdate(() => {
       </div>
 
       <PCommitMessage :title="commit.data.commit.title" :body="commit.data.commit.body" />
-
-      <template v-for="parent in commit.data.parents" :key="parent.chash">
-        <div>Parent:</div>
-        <RouterLink
-          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: parent.chash } }"
-          :title="parent.title"
-          :class="cn('cursor-pointer truncate italic hover:underline', { 'text-foreground-alt': !parent.tracked })"
-        >
-          &lt; {{ parent.title }}
-        </RouterLink>
-      </template>
-      <template v-for="child in commit.data.children" :key="child.chash">
-        <div>Child:</div>
-        <RouterLink
-          :to="{ name: '/repos.[repo].commits.[chash]', params: { repo: route.params.repo, chash: child.chash } }"
-          :title="child.title"
-          :class="cn('cursor-pointer truncate italic hover:underline', { 'text-foreground-alt': !child.tracked })"
-        >
-          &gt; {{ child.title }}
-        </RouterLink>
-      </template>
+      <PCommitNavParents :repo="route.params.repo" :commits="commit.data.parents" />
+      <PCommitNavChildren :repo="route.params.repo" :commits="commit.data.children" />
     </div>
   </CSection>
 
