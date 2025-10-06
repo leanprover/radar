@@ -141,8 +141,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     }
 
     private Optional<GhCommand> resolveCommand(JsonGhComment comment) {
-        String body = comment.body().strip();
-        if (!(body.equals("!bench") || body.equals("!radar"))) return Optional.empty();
+        if (!GhCommand.isCommand(comment.body())) return Optional.empty();
 
         boolean commandAlreadyKnown = repo.db()
                 .read()
