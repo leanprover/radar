@@ -41,6 +41,11 @@ public final class Busser implements Managed {
         executor.close();
     }
 
+    public void updateRepo(String repoName) {
+        Repo repo = repos.repo(repoName);
+        executor.execute(() -> doUpdateRepo(repo));
+    }
+
     public void updateGhRepliesForRepo(String repoName) {
         Repo repo = repos.repo(repoName);
         executor.execute(() -> doUpdateGhReplies(repo));

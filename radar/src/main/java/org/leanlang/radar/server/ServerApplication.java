@@ -25,6 +25,7 @@ import org.leanlang.radar.server.api.ResQueueRunnerFinish;
 import org.leanlang.radar.server.api.ResQueueRunnerStatus;
 import org.leanlang.radar.server.api.ResQueueRunnerTake;
 import org.leanlang.radar.server.api.ResRepoGithubBot;
+import org.leanlang.radar.server.api.ResRepoGithubWebhook;
 import org.leanlang.radar.server.api.ResRepoHistory;
 import org.leanlang.radar.server.api.ResRepos;
 import org.leanlang.radar.server.api.auth.Admin;
@@ -96,6 +97,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().register(new ResQueueRunnerStatus(runners, queue));
         environment.jersey().register(new ResQueueRunnerTake(runners, queue));
         environment.jersey().register(new ResRepoGithubBot(repos));
+        environment.jersey().register(new ResRepoGithubWebhook(repos, busser));
         environment.jersey().register(new ResRepoHistory(repos));
         environment.jersey().register(new ResRepos(repos));
     }
