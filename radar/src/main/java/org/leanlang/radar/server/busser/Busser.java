@@ -3,7 +3,6 @@ package org.leanlang.radar.server.busser;
 import io.dropwizard.lifecycle.Managed;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +33,7 @@ public final class Busser implements Managed {
 
     @Override
     public void start() {
-        executor.scheduleWithFixedDelay(this::update, 1, Constants.BUSSER_DELAY.toMillis(), TimeUnit.MILLISECONDS);
+        executor.scheduleWithFixedDelay(this::doUpdateAll, 1, Constants.BUSSER_DELAY.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -42,46 +41,62 @@ public final class Busser implements Managed {
         executor.close();
     }
 
-    public void updateOnce() {
-        executor.execute(this::update);
+    public void updateGhRepliesForRepo(String repoName) {
+        Repo repo = repos.repo(repoName);
+        executor.execute(() -> doUpdateGhReplies(repo));
     }
 
-    private synchronized void update() {
-        updateRepos();
-    }
+    // The following methods all have the prefix "do" so they don't collide with the public names.
 
-    private void updateRepos() {
+    private synchronized void doUpdateAll() {
         for (Repo repo : repos.repos()) {
-            try {
-                log.info("Updating repo {}", repo.name());
-                updateRepo(repo);
-            } catch (Exception e) {
-                log.error("Failed to update repo {}", repo.name(), e);
-            }
+            doUpdateRepo(repo);
         }
     }
 
-    private void updateRepo(Repo repo) throws GitAPIException {
-        DbUpdater dbUpdater = new DbUpdater(repo, queue);
-        Optional<GhUpdater> ghUpdaterOpt = repo.gh().map(it -> new GhUpdater(repo, queue, it));
-
-        if (ghUpdaterOpt.isPresent()) {
-            GhUpdater ghUpdater = ghUpdaterOpt.get();
-            Instant since = ghUpdater.since();
-            List<JsonGhComment> comments = ghUpdater.searchForComments(since);
-
-            // We must fetch before we process the bench commands to ensure we're aware of every commit involved.
-            repo.git().fetch();
-            repo.gitBench().fetch();
-            dbUpdater.update();
-
-            ghUpdater.addCommands(comments, since);
-            ghUpdater.executeCommands();
-            ghUpdater.updateReplies();
-        } else {
-            repo.git().fetch();
-            repo.gitBench().fetch();
-            dbUpdater.update();
+    private synchronized void doUpdateRepo(Repo repo) {
+        try {
+            log.info("Updating repo {}", repo.name());
+            doUpdateRepoImpl(repo);
+        } catch (Exception e) {
+            log.error("Failed to update repo {}", repo.name(), e);
         }
+    }
+
+    private synchronized void doUpdateRepoImpl(Repo repo) throws GitAPIException {
+        if (repo.gh().isEmpty()) {
+            doFetch(repo);
+            return;
+        }
+
+        GhUpdater ghUpdater = new GhUpdater(repo, queue, repo.gh().get());
+        Instant since = ghUpdater.since();
+        List<JsonGhComment> comments = ghUpdater.searchForComments(since);
+
+        // We must fetch before we process the bench commands to ensure we're aware of every commit involved.
+        doFetch(repo);
+
+        ghUpdater.addCommands(comments, since);
+        ghUpdater.executeCommands();
+        ghUpdater.updateReplies();
+    }
+
+    /**
+     * Fetch commits from GitHub and update the DB accordingly.
+     */
+    private synchronized void doFetch(Repo repo) throws GitAPIException {
+        repo.git().fetch();
+        repo.gitBench().fetch();
+
+        DbUpdater dbUpdater = new DbUpdater(repo, queue);
+        dbUpdater.update();
+    }
+
+    private synchronized void doUpdateGhReplies(Repo repo) {
+        if (repo.gh().isEmpty()) return;
+        log.info("Updating gh replies for repo {}", repo.name());
+        GhUpdater ghUpdater = new GhUpdater(repo, queue, repo.gh().get());
+        ghUpdater.executeCommands(); // Otherwise the reply bodies won't be up-to-date.
+        ghUpdater.updateReplies();
     }
 }

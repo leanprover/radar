@@ -92,7 +92,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().register(new ResCompare(repos));
         environment.jersey().register(new ResQueue(repos, runners, queue));
         environment.jersey().register(new ResQueueRun(queue));
-        environment.jersey().register(new ResQueueRunnerFinish(runners, queue));
+        environment.jersey().register(new ResQueueRunnerFinish(runners, queue, busser));
         environment.jersey().register(new ResQueueRunnerStatus(runners, queue));
         environment.jersey().register(new ResQueueRunnerTake(runners, queue));
         environment.jersey().register(new ResRepoGithubBot(repos));
