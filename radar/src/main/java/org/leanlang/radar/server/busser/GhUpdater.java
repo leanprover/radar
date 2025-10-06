@@ -13,6 +13,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.jooq.Condition;
 import org.jooq.Result;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
@@ -50,11 +51,27 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         return comments;
     }
 
+    private Condition condGhCommandOwnerRepo() {
+        return (GITHUB_COMMAND.OWNER.eq(repoGh.owner())).and(GITHUB_COMMAND.REPO.eq(repoGh.repo()));
+    }
+
+    private Condition condGhCommandOwnerRepoId(long id) {
+        return condGhCommandOwnerRepo().and(GITHUB_COMMAND.COMMENT_ID_LONG.eq(id));
+    }
+
+    private Condition condGhCommandResolvedOwnerRepoId(long id) {
+        return (GITHUB_COMMAND_RESOLVED.OWNER.eq(repoGh.owner()))
+                .and(Tables.GITHUB_COMMAND_RESOLVED.REPO.eq(repoGh.repo()))
+                .and(GITHUB_COMMAND_RESOLVED.COMMENT_ID_LONG.eq(id));
+    }
+
     public void addCommands(List<JsonGhComment> comments, Instant since) {
         // Remove all commands from different GitHub repos in case we have switched repos.
+        // Because of this transaction, in theory we wouldn't need to use the owner and repo in subsequent interactions,
+        // but we still spell out the entire primary key every time, just to be on the safe side.
         repo.db().writeTransaction(ctx -> ctx.dsl()
                 .deleteFrom(GITHUB_COMMAND)
-                .where(GITHUB_COMMAND.OWNER_AND_REPO.ne(repoGh.ownerAndRepo()))
+                .where(condGhCommandOwnerRepo().not())
                 .execute());
 
         for (JsonGhComment comment : comments) {
@@ -62,18 +79,47 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
             if (commandOpt.isEmpty()) continue;
             GhCommand command = commandOpt.get();
 
-            log.info("Found command {} on #{}", command.id(), command.prNumber());
+            log.info(
+                    "Found command {} on #{}",
+                    command.json().id(),
+                    command.json().issueNumber());
+
             GithubCommandRecord commandRecord = new GithubCommandRecord(
-                    command.ownerAndRepo(),
-                    command.id(),
-                    command.prNumber(),
+                    command.owner(),
+                    command.repo(),
+                    command.json().id(),
+                    command.json().issueNumber(),
+                    command.json().createdAt(),
+                    command.json().user().id(),
+                    command.json().user().login(),
+                    command.json().authorAssociation(),
+                    command.json().body(),
                     null,
                     command.replyContent(),
-                    0,
-                    command.userLogin());
+                    0);
+
             Optional<GithubCommandResolvedRecord> commandResolvedRecord = command.resolved()
                     .map(it -> new GithubCommandResolvedRecord(
-                            command.ownerAndRepo(), command.id(), it.headChash(), it.baseChash(), 1));
+                            command.owner(),
+                            command.repo(),
+                            command.json().id(),
+                            it.json().id(),
+                            it.json().number(),
+                            it.json().createdAt(),
+                            it.json().user().id(),
+                            it.json().user().login(),
+                            it.json().author_association(),
+                            it.json().head().sha(),
+                            it.json().head().ref(),
+                            it.json().head().repo().owner().login(),
+                            it.json().head().repo().name(),
+                            it.json().base().sha(),
+                            it.json().base().ref(),
+                            it.chash(),
+                            it.againstChash(),
+                            Instant.now(),
+                            null));
+
             repo.db().writeTransaction(ctx -> {
                 ctx.dsl().batchInsert(commandRecord).execute();
                 commandResolvedRecord.ifPresent(it -> ctx.dsl().batchInsert(it).execute());
@@ -103,41 +149,40 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .dsl()
                 .selectOne()
                 .from(GITHUB_COMMAND)
-                .where(GITHUB_COMMAND.OWNER_AND_REPO.eq(repoGh.ownerAndRepo()))
-                .and(GITHUB_COMMAND.ID.eq(comment.idStr()))
+                .where(condGhCommandOwnerRepoId(comment.id()))
                 .fetch()
                 .isNotEmpty();
         if (commandAlreadyKnown) return Optional.empty();
 
-        Optional<JsonGhPull> pullOpt = repoGh.getPull(comment.issueNumberStr());
+        Optional<JsonGhPull> pullOpt = repoGh.getPull(comment.issueNumber());
         if (pullOpt.isEmpty()) return Optional.of(new GhCommand(repoGh, comment, msgNotInPr(), Optional.empty()));
         JsonGhPull pull = pullOpt.get();
         String headChash = pull.head().sha();
-        String ghBaseChash = pull.base().sha();
+        String baseChash = pull.base().sha();
 
         // GitHub's "base.sha" doesn't seem to correspond to the merge base.
         // Instead, I suspect it's the sha of the base branch at the time the PR was created.
         // Thus, we need to find the actual merge base commit ourselves.
-        String baseChash;
+        String againstChash;
         try {
             Repository plumbing = repo.git().plumbing();
             RevWalk revWalk = new RevWalk(plumbing);
             revWalk.setRevFilter(RevFilter.MERGE_BASE);
             revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(headChash)));
-            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(ghBaseChash)));
+            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(baseChash)));
             RevCommit mergeBase = revWalk.next();
             if (mergeBase == null) throw new Exception("RevWalk returned null");
-            baseChash = mergeBase.name();
+            againstChash = mergeBase.name();
         } catch (Exception e) {
-            log.error("Failed to find merge base between {} and {}", headChash, ghBaseChash, e);
+            log.error("Failed to find merge base between {} and {}", headChash, baseChash, e);
             return Optional.of(new GhCommand(repoGh, comment, msgNoBase(), Optional.empty()));
         }
 
         return Optional.of(new GhCommand(
                 repoGh,
                 comment,
-                msgInProgress(headChash, baseChash),
-                Optional.of(new GhCommand.Resolved(headChash, baseChash))));
+                msgInProgress(headChash, againstChash),
+                Optional.of(new GhCommand.Resolved(pull, headChash, againstChash))));
     }
 
     public void executeCommands() {
@@ -145,44 +190,46 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .read()
                 .dsl()
                 .select(
-                        GITHUB_COMMAND.ID,
-                        GITHUB_COMMAND.USER_LOGIN,
-                        GITHUB_COMMAND_RESOLVED.HEAD_CHASH,
-                        GITHUB_COMMAND_RESOLVED.BASE_CHASH)
+                        GITHUB_COMMAND.COMMENT_ID_LONG,
+                        GITHUB_COMMAND.COMMENT_AUTHOR_LOGIN,
+                        GITHUB_COMMAND_RESOLVED.CHASH,
+                        GITHUB_COMMAND_RESOLVED.AGAINST_CHASH)
                 .from(GITHUB_COMMAND
                         .join(GITHUB_COMMAND_RESOLVED)
-                        .on(GITHUB_COMMAND.OWNER_AND_REPO.eq(GITHUB_COMMAND_RESOLVED.OWNER_AND_REPO))
-                        .and(GITHUB_COMMAND.ID.eq(GITHUB_COMMAND_RESOLVED.ID)))
-                .where(GITHUB_COMMAND_RESOLVED.ACTIVE.ne(0))
+                        .on(GITHUB_COMMAND.OWNER.eq(GITHUB_COMMAND_RESOLVED.OWNER))
+                        .and(GITHUB_COMMAND.REPO.eq(GITHUB_COMMAND_RESOLVED.REPO))
+                        .and(GITHUB_COMMAND.COMMENT_ID_LONG.eq(GITHUB_COMMAND_RESOLVED.COMMENT_ID_LONG)))
+                .where(condGhCommandOwnerRepo())
+                .and(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME.isNull())
                 .fetch();
 
         for (var command : commands) {
-            String id = command.value1();
-            String userLogin = command.value2();
-            String headChash = command.value3();
-            String baseChash = command.value4();
+            long id = command.value1();
+            String authorLogin = command.value2();
+            String chash = command.value3();
+            String againstChash = command.value4();
 
-            boolean baseInQueue = queue.enqueueSoft(repo.name(), baseChash, Constants.PRIORITY_GITHUB_COMMAND);
-            boolean headInQueue = queue.enqueueSoft(repo.name(), headChash, Constants.PRIORITY_GITHUB_COMMAND);
+            boolean inQueue = queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_GITHUB_COMMAND);
+            boolean againstInQueue = queue.enqueueSoft(repo.name(), againstChash, Constants.PRIORITY_GITHUB_COMMAND);
 
-            if (baseInQueue || headInQueue) {
-                updateMessage(id, msgInProgress(headChash, baseChash));
+            if (inQueue || againstInQueue) {
+                updateMessage(id, msgInProgress(chash, againstChash));
             } else {
-                updateMessage(id, msgFinished(headChash, baseChash, userLogin));
+                updateMessage(id, msgFinished(chash, againstChash, authorLogin));
                 repo.db().writeTransaction(ctx -> ctx.dsl()
                         .update(GITHUB_COMMAND_RESOLVED)
-                        .set(GITHUB_COMMAND_RESOLVED.ACTIVE, 0)
+                        .set(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME, Instant.now())
+                        .where(condGhCommandResolvedOwnerRepoId(id))
                         .execute());
             }
         }
     }
 
-    private void updateMessage(String id, String newMessage) {
+    private void updateMessage(long id, String newMessage) {
         repo.db().writeTransaction(ctx -> {
             GithubCommandRecord command = ctx.dsl()
                     .selectFrom(GITHUB_COMMAND)
-                    .where(GITHUB_COMMAND.OWNER_AND_REPO.eq(repoGh.ownerAndRepo()))
-                    .and(GITHUB_COMMAND.ID.eq(id))
+                    .where(condGhCommandOwnerRepoId(id))
                     .fetchOne();
             if (command == null) return;
             if (command.getReplyContent().equals(newMessage)) return;
@@ -197,7 +244,9 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .read()
                 .dsl()
                 .selectFrom(GITHUB_COMMAND)
-                .where(GITHUB_COMMAND.REPLY_TRIES.lt(Constants.GITHUB_MAX_TRIES))
+                .where(GITHUB_COMMAND.REPLY_CONTENT.isNotNull())
+                .and(GITHUB_COMMAND.REPLY_TRIES.isNotNull())
+                .and(GITHUB_COMMAND.REPLY_TRIES.lt(Constants.GITHUB_MAX_TRIES))
                 .fetch();
 
         for (GithubCommandRecord command : commands) {
@@ -206,32 +255,35 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     }
 
     private void updateReply(GithubCommandRecord command) {
-        String id = command.getId();
-        String prNumber = command.getPrNumber();
-        String replyId = command.getReplyId();
+        long id = command.getCommentIdLong();
+        int issueNumber = command.getCommentIssueNumber();
+        Long replyId = command.getReplyIdLong();
         String replyContent = command.getReplyContent();
         Integer replyTries = command.getReplyTries();
 
         // When updating the DB, make sure nothing important changed since the last fetch.
-        var condition = (GITHUB_COMMAND.OWNER_AND_REPO.eq(repoGh.ownerAndRepo()))
-                .and(GITHUB_COMMAND.ID.eq(id))
-                .and(replyId == null ? GITHUB_COMMAND.REPLY_ID.isNull() : GITHUB_COMMAND.REPLY_ID.eq(replyId))
+        var condition = condGhCommandOwnerRepo()
+                .and(GITHUB_COMMAND.COMMENT_ID_LONG.eq(id))
+                .and(replyId == null ? GITHUB_COMMAND.REPLY_ID_LONG.isNull() : GITHUB_COMMAND.REPLY_ID_LONG.eq(replyId))
                 .and(GITHUB_COMMAND.REPLY_CONTENT.eq(replyContent))
-                .and(GITHUB_COMMAND.REPLY_TRIES.eq(replyTries));
+                .and(
+                        replyTries == null
+                                ? GITHUB_COMMAND.REPLY_TRIES.isNull()
+                                : GITHUB_COMMAND.REPLY_TRIES.eq(replyTries));
 
         try {
             if (replyId == null) {
-                log.info("Replying to {} in #{} (try {})", id, prNumber, replyTries);
-                JsonGhComment reply = repoGh.postComment(prNumber, replyContent);
+                log.info("Replying to {} in #{} (try {})", id, issueNumber, replyTries);
+                JsonGhComment reply = repoGh.postComment(issueNumber, replyContent);
                 repo.db().writeTransaction(ctx -> ctx.dsl()
                         .update(GITHUB_COMMAND)
+                        .set(GITHUB_COMMAND.REPLY_ID_LONG, reply.id())
                         .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
-                        .set(GITHUB_COMMAND.REPLY_ID, reply.idStr())
                         .where(condition)
                         .execute());
 
             } else {
-                log.info("Updating reply {} to {} in {} (try {})", replyId, id, prNumber, replyTries);
+                log.info("Updating reply {} to {} in {} (try {})", replyId, id, issueNumber, replyTries);
                 repoGh.updateComment(replyId, replyContent);
                 repo.db().writeTransaction(ctx -> ctx.dsl()
                         .update(GITHUB_COMMAND)
@@ -245,7 +297,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
             repo.db().writeTransaction(ctx -> ctx.dsl()
                     .update(GITHUB_COMMAND)
                     .set(GITHUB_COMMAND.REPLY_TRIES, GITHUB_COMMAND.REPLY_TRIES.add(1))
-                    .set(GITHUB_COMMAND.REPLY_ID, (String) null)
+                    .set(GITHUB_COMMAND.REPLY_ID_LONG, (Long) null)
                     .where(condition)
                     .execute());
         } catch (Exception e) {

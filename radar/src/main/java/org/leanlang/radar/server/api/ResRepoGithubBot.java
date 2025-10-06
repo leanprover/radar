@@ -9,14 +9,16 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import java.time.Instant;
 import java.util.List;
+import org.jooq.impl.DSL;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
 
 @Path("/repos/{repo}/github-bot/")
 public record ResRepoGithubBot(Repos repos) {
     public record JsonCommand(
-            @JsonProperty(required = true) String pr,
+            @JsonProperty(required = true) int pr,
             @JsonProperty(required = true) String url,
             String replyUrl,
             boolean active) {}
@@ -33,36 +35,46 @@ public record ResRepoGithubBot(Repos repos) {
                 .read()
                 .dsl()
                 .select(
-                        GITHUB_COMMAND.OWNER_AND_REPO,
-                        GITHUB_COMMAND.PR_NUMBER,
-                        GITHUB_COMMAND.ID,
-                        GITHUB_COMMAND.REPLY_ID,
-                        GITHUB_COMMAND_RESOLVED.ACTIVE)
+                        GITHUB_COMMAND.OWNER,
+                        GITHUB_COMMAND.REPO,
+                        GITHUB_COMMAND.COMMENT_ID_LONG,
+                        GITHUB_COMMAND.COMMENT_ISSUE_NUMBER,
+                        GITHUB_COMMAND.REPLY_ID_LONG,
+                        GITHUB_COMMAND_RESOLVED.COMPLETED_TIME)
                 .from(GITHUB_COMMAND
                         .join(GITHUB_COMMAND_RESOLVED)
-                        .on(GITHUB_COMMAND.OWNER_AND_REPO.eq(GITHUB_COMMAND_RESOLVED.OWNER_AND_REPO))
-                        .and(GITHUB_COMMAND.ID.eq(GITHUB_COMMAND_RESOLVED.ID)))
-                .orderBy(GITHUB_COMMAND_RESOLVED.ACTIVE.desc())
+                        .on(GITHUB_COMMAND.OWNER.eq(GITHUB_COMMAND_RESOLVED.OWNER))
+                        .and(GITHUB_COMMAND.REPO.eq(GITHUB_COMMAND_RESOLVED.REPO))
+                        .and(GITHUB_COMMAND.COMMENT_ID_LONG.eq(GITHUB_COMMAND_RESOLVED.COMMENT_ID_LONG)))
+                .orderBy(
+                        // First, all the in-progress commands, then all completed commands.
+                        // Within either category sorted by comment creation time, newest first.
+                        DSL.case_()
+                                .when(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME.isNull(), 0)
+                                .else_(1)
+                                .asc(),
+                        GITHUB_COMMAND.COMMENT_CREATED_TIME.desc())
                 .limit(50)
                 .stream()
                 .map(it -> {
-                    String ownerAndRepo = it.value1();
-                    String prNumber = it.value2();
-                    String id = it.value3();
-                    String replyId = it.value4();
-                    boolean active = it.value5() != 0;
+                    String ownerName = it.value1();
+                    String repoName = it.value2();
+                    long id = it.value3();
+                    int issueNumber = it.value4();
+                    Long replyId = it.value5();
+                    Instant completed = it.value6();
                     return new JsonCommand(
-                            prNumber,
-                            prCommentUrl(ownerAndRepo, prNumber, id),
-                            prCommentUrl(ownerAndRepo, prNumber, replyId),
-                            active);
+                            issueNumber,
+                            prCommentUrl(ownerName, repoName, issueNumber, id),
+                            prCommentUrl(ownerName, repoName, issueNumber, replyId),
+                            completed == null);
                 })
                 .toList();
 
         return new JsonGet(commands);
     }
 
-    private static String prCommentUrl(String ownerAndRepo, String prNumber, String id) {
-        return "https://github.com/" + ownerAndRepo + "/pull/" + prNumber + "#issuecomment-" + id;
+    private static String prCommentUrl(String owner, String repo, int prNumber, long id) {
+        return "https://github.com/" + owner + "/" + repo + "/pull/" + prNumber + "#issuecomment-" + id;
     }
 }

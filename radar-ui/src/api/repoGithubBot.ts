@@ -2,7 +2,7 @@ import * as z from "zod";
 import { enc, fetchJson } from "@/api/utils.ts";
 
 const JsonCommand = z.object({
-  pr: z.string(),
+  pr: z.int(),
   url: z.string(),
   replyUrl: z
     .string()

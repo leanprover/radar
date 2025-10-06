@@ -256,6 +256,10 @@
                   <name>INSTANT</name>
                   <includeExpression>.*_time</includeExpression>
                 </forcedType>
+                <forcedType>
+                  <name>BIGINT</name>
+                  <includeExpression>.*_long</includeExpression>
+                </forcedType>
               </forcedTypes>
             </database>
             <target>

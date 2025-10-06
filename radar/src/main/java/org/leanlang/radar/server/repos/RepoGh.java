@@ -36,8 +36,12 @@ public final class RepoGh {
         this.pat = pat;
     }
 
-    public String ownerAndRepo() {
-        return owner + "/" + repo;
+    public String owner() {
+        return owner;
+    }
+
+    public String repo() {
+        return repo;
     }
 
     private MultivaluedMap<String, Object> headers() {
@@ -81,14 +85,14 @@ public final class RepoGh {
     }
 
     // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
-    public Optional<JsonGhPull> getPull(String number) {
+    public Optional<JsonGhPull> getPull(long number) {
         try {
             JsonGhPull pull = client.target(API_URL)
                     .path("repos")
                     .path(owner)
                     .path(repo)
                     .path("pulls")
-                    .path(number)
+                    .path(String.valueOf(number))
                     .request(MediaType.APPLICATION_JSON_TYPE)
                     .headers(headers())
                     .get(JsonGhPull.class);
@@ -101,13 +105,13 @@ public final class RepoGh {
     private record JsonPostCommentData(@JsonProperty(required = true) String body) {}
 
     // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#create-an-issue-comment
-    public JsonGhComment postComment(String prNumber, String content) {
+    public JsonGhComment postComment(int prNumber, String content) {
         return client.target(API_URL)
                 .path("repos")
                 .path(owner)
                 .path(repo)
                 .path("issues")
-                .path(prNumber)
+                .path(String.valueOf(prNumber))
                 .path("comments")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .headers(headers())
@@ -115,14 +119,14 @@ public final class RepoGh {
     }
 
     // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#update-an-issue-comment
-    public void updateComment(String id, String content) {
+    public void updateComment(long id, String content) {
         client.target(API_URL)
                 .path("repos")
                 .path(owner)
                 .path(repo)
                 .path("issues")
                 .path("comments")
-                .path(id)
+                .path(String.valueOf(id))
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .headers(headers())
                 .post(Entity.json(new JsonPostCommentData(content)), JsonGhComment.class);
