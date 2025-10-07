@@ -8,6 +8,7 @@ import CSectionTitle from "@/components/CSectionTitle.vue";
 import CSection from "@/components/CSection.vue";
 import CLinkCommit from "@/components/CLinkCommit.vue";
 import { useRepoGithubBot } from "@/composables/useRepoGithubBot.ts";
+import CTimeAgo from "@/components/CTimeAgo.vue";
 
 const route = useRoute("/repos.[repo]");
 const repos = reactive(useRepos());
@@ -53,14 +54,26 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     <div class="flex flex-col">
       <div v-for="command in github.data.commands" :key="command.url" class="flex gap-2">
         <div>-</div>
-        <div :class="{ 'text-foreground-alt': !command.active }">
+        <div :class="{ 'text-foreground-alt': command.completed }">
           In PR #{{ command.pr }}:
           <a :href="command.url" target="_blank" class="hover:underline">command</a>
           <template v-if="command.replyUrl"
             >,
             <a :href="command.replyUrl" target="_blank" class="hover:underline">bot reply</a>
           </template>
-          <template v-if="!command.active"> (finished)</template>
+          <template v-if="command.completed">
+            (<RouterLink
+              :to="{
+                name: '/repos.[repo].commits.[chash]',
+                params: { repo: route.params.repo, chash: command.chash },
+                query: { parent: command.againstChash },
+              }"
+              class="hover:underline"
+              >finished</RouterLink
+            >
+            {{ " " }}
+            <CTimeAgo :when="command.completed" />)</template
+          >
         </div>
       </div>
     </div>

@@ -1,14 +1,17 @@
 import * as z from "zod";
-import { enc, fetchJson } from "@/api/utils.ts";
+import { enc, fetchJson, Timestamp } from "@/api/utils.ts";
 
 const JsonCommand = z.object({
   pr: z.int(),
+  chash: z.string(),
+  againstChash: z.string(),
   url: z.string(),
   replyUrl: z
     .string()
     .nullish()
     .transform((it) => it ?? undefined),
-  active: z.boolean(),
+  created: Timestamp,
+  completed: Timestamp.nullish().transform((it) => it ?? undefined),
 });
 
 const JsonGet = z.object({

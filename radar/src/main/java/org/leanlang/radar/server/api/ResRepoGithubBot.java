@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.time.Instant;
 import java.util.List;
 import org.jooq.impl.DSL;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
 
@@ -19,9 +20,12 @@ import org.leanlang.radar.server.repos.Repos;
 public record ResRepoGithubBot(Repos repos) {
     public record JsonCommand(
             @JsonProperty(required = true) int pr,
+            @JsonProperty(required = true) String chash,
+            @JsonProperty(required = true) String againstChash,
             @JsonProperty(required = true) String url,
-            String replyUrl,
-            boolean active) {}
+            @Nullable String replyUrl,
+            @JsonProperty(required = true) Instant created,
+            @Nullable Instant completed) {}
 
     public record JsonGet(@JsonProperty(required = true) List<JsonCommand> commands) {}
 
@@ -39,7 +43,10 @@ public record ResRepoGithubBot(Repos repos) {
                         GITHUB_COMMAND.REPO,
                         GITHUB_COMMAND.COMMENT_ID_LONG,
                         GITHUB_COMMAND.COMMENT_ISSUE_NUMBER,
+                        GITHUB_COMMAND.COMMENT_CREATED_TIME,
                         GITHUB_COMMAND.REPLY_ID_LONG,
+                        GITHUB_COMMAND_RESOLVED.CHASH,
+                        GITHUB_COMMAND_RESOLVED.AGAINST_CHASH,
                         GITHUB_COMMAND_RESOLVED.COMPLETED_TIME)
                 .from(GITHUB_COMMAND
                         .join(GITHUB_COMMAND_RESOLVED)
@@ -61,13 +68,19 @@ public record ResRepoGithubBot(Repos repos) {
                     String repoName = it.value2();
                     long id = it.value3();
                     int issueNumber = it.value4();
-                    Long replyId = it.value5();
-                    Instant completed = it.value6();
+                    Instant created = it.value5();
+                    Long replyId = it.value6();
+                    String chash = it.value7();
+                    String againstChash = it.value8();
+                    Instant completed = it.value9();
                     return new JsonCommand(
                             issueNumber,
+                            chash,
+                            againstChash,
                             prCommentUrl(ownerName, repoName, issueNumber, id),
                             prCommentUrl(ownerName, repoName, issueNumber, replyId),
-                            completed == null);
+                            created,
+                            completed);
                 })
                 .toList();
 
