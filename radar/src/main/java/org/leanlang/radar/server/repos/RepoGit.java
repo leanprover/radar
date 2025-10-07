@@ -69,8 +69,6 @@ public final class RepoGit implements AutoCloseable {
         log.info("Cloning repo {}", path);
         try (Git git = Git.init().setDirectory(target.toFile()).call()) {
             // Using the URL so we don't accidentally confuse directory and branch names.
-            System.out.println(path.toUri());
-
             git.fetch()
                     .setRemote(path.toUri().toString())
                     .setRefSpecs(hash)
