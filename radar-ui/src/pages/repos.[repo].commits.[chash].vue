@@ -144,6 +144,6 @@ onBeforeRouteUpdate(() => {
   <CLoading v-if="!compare.isSuccess" :error="compare.error" />
   <CSection v-else-if="measurements !== undefined">
     <CSectionTitle>Measurements</CSectionTitle>
-    <PMeasurementsTable v-model:filter="queryFilter" :measurements="measurements" />
+    <PMeasurementsTable v-model:filter="queryFilter" :repo="route.params.repo" :measurements="measurements" />
   </CSection>
 </template>

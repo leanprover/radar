@@ -16,10 +16,12 @@ const {
   columns,
   data,
   filterFn = () => true,
+  onClickRow = undefined,
 } = defineProps<{
   columns: ColumnDef<T>[];
   data: T[];
   filterFn?: (row: Row<T>, col: string, data: string) => boolean;
+  onClickRow?: (row: Row<T>) => void;
 }>();
 
 const filter = defineModel<string>("filter");
@@ -114,7 +116,11 @@ function goToLastPage() {
         <tr
           v-for="row in tableData.getRowModel().rows"
           :key="row.id"
-          class="border-background-alt hover:bg-background-alt border-t-[1px] border-dashed"
+          :class="[
+            'border-background-alt hover:bg-background-alt border-t-[1px] border-dashed',
+            { 'cursor-pointer': onClickRow },
+          ]"
+          @click.stop.prevent="onClickRow && onClickRow(row)"
         >
           <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="py-[1px] pl-4 first:pl-0">
             <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />

@@ -5,6 +5,7 @@ import CTableCellValue from "@/components/CTableCellValue.vue";
 import CTableCellDelta from "@/components/CTableCellDelta.vue";
 import CTable from "@/components/CTable.vue";
 import CTableHeader from "@/components/CTableHeader.vue";
+import { useRouter } from "vue-router";
 
 interface Measurement {
   metric: string;
@@ -15,8 +16,9 @@ interface Measurement {
   direction: -1 | 0 | 1;
 }
 
-const { measurements } = defineProps<{ measurements: Measurement[] }>();
+const { repo, measurements } = defineProps<{ repo: string; measurements: Measurement[] }>();
 const filter = defineModel<string>("filter");
+const router = useRouter();
 
 const columns: ColumnDef<Measurement>[] = [
   {
@@ -137,8 +139,18 @@ function filterFn(row: Row<Measurement>, col: string, data: string): boolean {
   // Yes, this is incorrect according to Unicode, but it suffices for our metric names.
   return row.original.metric.toLowerCase().includes(data.toLowerCase());
 }
+
+function onClickRow(row: Row<Measurement>): void {
+  void router.push({ name: "/repos.[repo].graph", params: { repo }, query: { m: row.original.metric } });
+}
 </script>
 
 <template>
-  <CTable v-model:filter="filter" :columns="columns" :data="measurements" :filter-fn="filterFn" />
+  <CTable
+    v-model:filter="filter"
+    :columns="columns"
+    :data="measurements"
+    :filter-fn="filterFn"
+    :on-click-row="onClickRow"
+  />
 </template>

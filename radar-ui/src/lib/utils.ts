@@ -14,15 +14,25 @@ export function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
   return true;
 }
 
-export function queryParamAsString(value: LocationQueryValue | LocationQueryValue[] | undefined): string | undefined {
+export type QueryParamValue = LocationQueryValue | LocationQueryValue[];
+
+export function queryParamAsString(value?: QueryParamValue): string | undefined {
   if (typeof value === "object" && value !== null) value = value[0];
   return value ?? undefined;
 }
 
-export function queryParamAsNonemptyString(
-  value: LocationQueryValue | LocationQueryValue[] | undefined,
-): string | undefined {
+export function queryParamAsNonemptyString(value?: QueryParamValue): string | undefined {
   const s = queryParamAsString(value);
   if (s === "") return undefined;
   return s;
+}
+
+export function queryParamAsStringArray(value?: QueryParamValue): string[] {
+  if (value === undefined || value === null) return [];
+  if (typeof value !== "object") value = [value];
+  return value.filter((it) => it !== null);
+}
+
+export function queryParamAsNonemptyStringArray(value?: QueryParamValue): string[] {
+  return queryParamAsStringArray(value).filter((it) => it !== "");
 }
