@@ -2,6 +2,8 @@ import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { LocationQueryValue } from "vue-router";
+import { useRouteQuery } from "@vueuse/router";
+import { computed } from "vue";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -13,6 +15,8 @@ export function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
   for (const value of a.values()) if (!b.has(value)) return false;
   return true;
 }
+
+// TODO Move query param stuff to separate file
 
 export type QueryParamValue = LocationQueryValue | LocationQueryValue[];
 
@@ -27,12 +31,70 @@ export function queryParamAsNonemptyString(value?: QueryParamValue): string | un
   return s;
 }
 
+export function queryParamAsInt(value?: QueryParamValue): number | undefined {
+  const s = queryParamAsString(value);
+  if (s === undefined) return;
+  const n = parseInt(s, 10);
+  if (Number.isNaN(n)) return;
+  return n;
+}
+
+export function useQueryParamAsInt(name: string, defaultValue: number, options?: { min?: number; max?: number }) {
+  const { min = undefined, max = undefined } = options ?? {};
+  const raw = useRouteQuery(name);
+  return computed({
+    get() {
+      let value = queryParamAsInt(raw.value) ?? defaultValue;
+      if (min !== undefined) value = Math.max(min, value);
+      if (max !== undefined) value = Math.min(max, value);
+      return value;
+    },
+    set(value) {
+      if (min !== undefined) value = Math.max(min, value);
+      if (max !== undefined) value = Math.min(max, value);
+      raw.value = value === defaultValue ? undefined : value.toFixed();
+    },
+  });
+}
+
+export function queryParamAsBool(value?: QueryParamValue): boolean | undefined {
+  const s = queryParamAsString(value);
+  if (s === undefined) return undefined;
+  return s !== "" && s !== "false" && s !== "no";
+}
+
+export function useQueryParamAsBool(name: string, defaultValue: boolean) {
+  const raw = useRouteQuery(name);
+  return computed({
+    get() {
+      return queryParamAsBool(raw.value) ?? defaultValue;
+    },
+    set(value) {
+      raw.value = value === defaultValue ? undefined : String(value);
+    },
+  });
+}
+
 export function queryParamAsStringArray(value?: QueryParamValue): string[] {
   if (value === undefined || value === null) return [];
   if (typeof value !== "object") value = [value];
   return value.filter((it) => it !== null);
 }
 
-export function queryParamAsNonemptyStringArray(value?: QueryParamValue): string[] {
-  return queryParamAsStringArray(value).filter((it) => it !== "");
+export function useQueryParamAsStringArray(name: string, options?: { deduplicate?: boolean; sort?: boolean }) {
+  const { deduplicate = false, sort = false } = options ?? {};
+  const raw = useRouteQuery(name);
+  return computed({
+    get() {
+      let values = queryParamAsStringArray(raw.value);
+      if (deduplicate) values = Array.from(new Set(values));
+      if (sort) values.sort();
+      return values;
+    },
+    set(values) {
+      if (deduplicate) values = Array.from(new Set(values));
+      if (sort) values.sort();
+      raw.value = values;
+    },
+  });
 }
