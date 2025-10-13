@@ -1,15 +1,5 @@
 import * as z from "zod";
-import { enc, fetchJson } from "@/api/utils.ts";
-
-// public record JsonMetric(
-//   @JsonProperty(required = true) String metric,
-// @JsonProperty(required = true) int direction,
-// @JsonProperty(required = true) List<Float> measurements) {}
-//
-// public record JsonGet(
-//   @JsonProperty(required = true) List<String> chashes,
-// @JsonProperty(required = true) List<String> titles,
-// @JsonProperty(required = true) List<JsonMetric> metrics) {}
+import { enc, fetchJson, JsonCommit } from "@/api/utils.ts";
 
 export type JsonMetric = z.infer<typeof JsonMetric>;
 export const JsonMetric = z.object({
@@ -20,8 +10,7 @@ export const JsonMetric = z.object({
 
 export type JsonGet = z.infer<typeof JsonGet>;
 export const JsonGet = z.object({
-  chashes: z.string().array(),
-  titles: z.string().array(),
+  commits: JsonCommit.array(),
   metrics: JsonMetric.array(),
 });
 

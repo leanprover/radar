@@ -28,8 +28,7 @@ public record ResRepoGraph(Repos repos) {
             @JsonProperty(required = true) List<Float> measurements) {}
 
     public record JsonGet(
-            @JsonProperty(required = true) List<String> chashes,
-            @JsonProperty(required = true) List<String> titles,
+            @JsonProperty(required = true) List<JsonCommit> commits,
             @JsonProperty(required = true) List<JsonMetric> metrics) {}
 
     @GET
@@ -40,19 +39,17 @@ public record ResRepoGraph(Repos repos) {
         if (n > 1000) throw new BadRequestException("n too large");
 
         return repo.db().readTransactionResult(ctx -> {
-            List<Record2<String, String>> chashesAndTitles = ctx
-                    .dsl()
-                    .select(COMMITS.CHASH, COMMITS.MESSAGE_TITLE)
-                    .from(HISTORY.join(COMMITS).onKey())
-                    .orderBy(HISTORY.POSITION.desc())
-                    .limit(n)
-                    .stream()
-                    .toList()
-                    .reversed();
-
-            List<String> chashes =
-                    chashesAndTitles.stream().map(Record2::value1).toList();
-            List<String> titles = chashesAndTitles.stream().map(Record2::value2).toList();
+            List<JsonCommit> commits =
+                    ctx
+                            .dsl()
+                            .selectFrom(HISTORY.join(COMMITS).onKey())
+                            .orderBy(HISTORY.POSITION.desc())
+                            .limit(n)
+                            .stream()
+                            .map(it -> it.into(COMMITS))
+                            .map(JsonCommit::new)
+                            .toList()
+                            .reversed();
 
             Map<String, Integer> directions = ctx
                     .dsl()
@@ -79,7 +76,7 @@ public record ResRepoGraph(Repos repos) {
                     })
                     .toList();
 
-            return new JsonGet(chashes.reversed(), titles.reversed(), jsonMetrics);
+            return new JsonGet(commits, jsonMetrics);
         });
     }
 }
