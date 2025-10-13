@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +82,7 @@ public class Supervisor {
                 scriptEndTime = Instant.now();
             }
 
-            entries = readResultFile(lines);
+            entries.addAll(readResultFile(lines));
 
             // Being considerate towards the next run :)
             lines.addInternal("Clearing tmp directory again...");
@@ -97,6 +98,20 @@ public class Supervisor {
         }
 
         Instant endTime = Instant.now();
+
+        entries.add(new JsonRunResultEntry(
+                "radar/run/" + job.name() + "//time",
+                (float) (Duration.between(startTime, endTime).toMillis() / 1000.0),
+                Optional.of("s"),
+                Optional.empty()));
+
+        if (scriptStartTime != null && scriptEndTime != null)
+            entries.add(new JsonRunResultEntry(
+                    "radar/run/" + job.name() + "/script//time",
+                    (float) (Duration.between(scriptStartTime, scriptEndTime).toMillis() / 1000.0),
+                    Optional.of("s"),
+                    Optional.empty()));
+
         JsonRunResult result = new JsonRunResult(
                 job, startTime, endTime, scriptStartTime, scriptEndTime, exitCode, entries, lines.getAll());
 
