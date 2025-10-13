@@ -63,6 +63,9 @@ const run = reactive(
           >
         </div>
       </template>
+
+      <div>Exit code:</div>
+      <div>{{ run.data.exitCode }}</div>
     </div>
   </CSection>
 
