@@ -20,6 +20,7 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...path]': RouteRecordInfo<'/[...path]', '/:path(.*)', { path: ParamValue<true> }, { path: ParamValue<false> }>,
+    '/admin': RouteRecordInfo<'/admin', '/admin', Record<never, never>, Record<never, never>>,
     '/queue': RouteRecordInfo<'/queue', '/queue', Record<never, never>, Record<never, never>>,
     '/queue.runs.[repo].[chash].[run]': RouteRecordInfo<'/queue.runs.[repo].[chash].[run]', '/queue/runs/:repo/:chash/:run', { repo: ParamValue<true>, chash: ParamValue<true>, run: ParamValue<true> }, { repo: ParamValue<false>, chash: ParamValue<false>, run: ParamValue<false> }>,
     '/repos.[repo]': RouteRecordInfo<'/repos.[repo]', '/repos/:repo', { repo: ParamValue<true> }, { repo: ParamValue<false> }>,
@@ -45,6 +46,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/[...path].vue': {
       routes: '/[...path]'
+      views: never
+    }
+    'src/pages/admin.vue': {
+      routes: '/admin'
       views: never
     }
     'src/pages/queue.vue': {
