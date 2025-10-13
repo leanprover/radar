@@ -7,6 +7,7 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -142,9 +143,19 @@ public class Supervisor {
     private List<JsonRunResultEntry> readResultFile(OutputLines lines) throws Exception {
         lines.addInternal("Reading result file...");
         List<JsonRunResultEntry> entries = new ArrayList<>();
-        for (String line : Files.readString(dirs.tmpResultFile()).lines().toList()) {
+
+        String contents;
+        try {
+            contents = Files.readString(dirs.tmpResultFile());
+        } catch (NoSuchFileException e) {
+            lines.addInternal("No result file found.");
+            return new ArrayList<>();
+        }
+
+        for (String line : contents.lines().toList()) {
             entries.add(mapper.readValue(line, JsonRunResultEntry.class));
         }
+
         return entries;
     }
 
