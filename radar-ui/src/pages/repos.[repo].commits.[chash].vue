@@ -113,6 +113,11 @@ onBeforeRouteUpdate(() => {
         <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.commit.author.time" />)</span>
       </div>
 
+      <template v-if="repo?.lakeprofReportUrl">
+        <div>Lakeprof:</div>
+        <a :href="repo.lakeprofReportUrl + route.params.chash" target="_blank" class="hover:underline">Report</a>
+      </template>
+
       <PCommitMessage :title="commit.data.commit.title" :body="commit.data.commit.body" />
       <PCommitNavParents :repo="route.params.repo" :commits="commit.data.parents" />
       <PCommitNavChildren :repo="route.params.repo" :commits="commit.data.children" />

@@ -7,6 +7,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
 
@@ -17,9 +18,15 @@ public record ResRepos(Repos repos) {
             @JsonProperty(required = true) String name,
             @JsonProperty(required = true) URI url,
             @JsonProperty(required = true) URI benchUrl,
-            @JsonProperty(required = true) String description) {
+            @JsonProperty(required = true) String description,
+            Optional<String> lakeprofReportUrl) {
         public JsonRepo(Repo repo) {
-            this(repo.name(), repo.source().linkUrl(), repo.benchSource().linkUrl(), repo.description());
+            this(
+                    repo.name(),
+                    repo.source().linkUrl(),
+                    repo.benchSource().linkUrl(),
+                    repo.description(),
+                    repo.lakeprofReportUrl());
         }
     }
 

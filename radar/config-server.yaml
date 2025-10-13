@@ -50,6 +50,7 @@ repos:
       - name: main
         script: main.py
         runner: testrunner
+    lakeprofReportUrl: https://speed.lean-lang.org/lean4-out/
 
   - name: mathlib4
     url: https://github.com/leanprover-community/mathlib4

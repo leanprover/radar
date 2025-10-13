@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public record ServerConfigRepo(
@@ -14,4 +15,5 @@ public record ServerConfigRepo(
         @NotEmpty @JsonProperty(required = true) Set<String> track,
         @JsonProperty(required = true) URI benchUrl,
         @NotEmpty @JsonProperty(required = true) String benchRef,
-        @Valid @NotEmpty @RepoRunNamesUnique @JsonProperty(required = true) List<ServerConfigRepoRun> benchRuns) {}
+        @Valid @NotEmpty @RepoRunNamesUnique @JsonProperty(required = true) List<ServerConfigRepoRun> benchRuns,
+        Optional<String> lakeprofReportUrl) {}

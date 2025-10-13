@@ -33,6 +33,7 @@ public final class Repo implements AutoCloseable {
     private final RepoSource benchSource;
     private final String benchRef;
     private final List<ServerConfigRepoRun> benchRuns;
+    private final @Nullable String lakeprofReportUrl;
 
     private final RepoDb db;
     private final RepoGit git;
@@ -53,6 +54,7 @@ public final class Repo implements AutoCloseable {
         this.benchSource = RepoSource.parse(config.benchUrl());
         this.benchRef = config.benchRef();
         this.benchRuns = config.benchRuns();
+        this.lakeprofReportUrl = config.lakeprofReportUrl().orElse(null);
 
         this.db = new RepoDb(this.name, dirs.repoDb(this.name));
         this.git = new RepoGit(dirs.repoGit(this.name), this.source.gitUrl());
@@ -102,6 +104,10 @@ public final class Repo implements AutoCloseable {
 
     public List<ServerConfigRepoRun> benchRuns() {
         return benchRuns;
+    }
+
+    public Optional<String> lakeprofReportUrl() {
+        return Optional.ofNullable(lakeprofReportUrl);
     }
 
     public RepoDb db() {

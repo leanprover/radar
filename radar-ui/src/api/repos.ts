@@ -6,6 +6,10 @@ const JsonRepo = z.object({
   url: z.url(),
   benchUrl: z.url(),
   description: z.string(),
+  lakeprofReportUrl: z
+    .string()
+    .nullish()
+    .transform((it) => it ?? undefined),
 });
 
 const JsonGet = z.object({
