@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="T">
 import {
   type ColumnDef,
+  type ColumnSort,
   FlexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -17,11 +18,13 @@ const {
   data,
   filterFn = () => true,
   onClickRow = undefined,
+  initialSort = undefined,
 } = defineProps<{
   columns: ColumnDef<T>[];
   data: T[];
   filterFn?: (row: Row<T>, col: string, data: string) => boolean;
   onClickRow?: (row: Row<T>) => void;
+  initialSort?: ColumnSort;
 }>();
 
 const filter = defineModel<string>("filter");
@@ -38,6 +41,9 @@ const tableData = useVueTable({
       return filter.value;
     },
   },
+  initialState: {
+    sorting: initialSort ? [initialSort] : [],
+  },
   globalFilterFn: filterFn,
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
@@ -45,7 +51,7 @@ const tableData = useVueTable({
   getPaginationRowModel: getPaginationRowModel(),
 });
 
-const pageSizes = [100, 500, 1000, 5000];
+const pageSizes = [5, 100, 500, 1000, 5000];
 const pageSize = ref<number>(100);
 watch(pageSize, (newValue) => {
   tableData.setPageSize(newValue);
@@ -76,13 +82,13 @@ function goToLastPage() {
 
 <template>
   <div class="flex w-fit flex-col gap-1">
-    <div class="bg-background-alt col-span-full -mx-1 flex gap-2 p-1 align-baseline">
+    <div class="bg-background-alt col-span-full flex gap-2 p-1 align-baseline">
       <div>Search</div>
       <input v-model="filter" type="text" class="bg-background grow px-1" />
       <CButton @click="filter = undefined">Clear</CButton>
     </div>
 
-    <div class="bg-background-alt col-span-full -mx-1 flex gap-2 p-1 align-baseline">
+    <div class="bg-background-alt col-span-full flex gap-2 p-1 align-baseline">
       <CButton @click="goToFirstPage()">first</CButton>
       <CButton @click="goToPreviousPage()">prev</CButton>
       <div>Page {{ tableData.getState().pagination.pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>

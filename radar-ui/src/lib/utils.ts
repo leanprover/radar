@@ -81,20 +81,30 @@ export function queryParamAsStringArray(value?: QueryParamValue): string[] {
   return value.filter((it) => it !== null);
 }
 
-export function useQueryParamAsStringArray(name: string, options?: { deduplicate?: boolean; sort?: boolean }) {
-  const { deduplicate = false, sort = false } = options ?? {};
+export function useQueryParamAsStringArray(name: string) {
   const raw = useRouteQuery(name);
   return computed({
     get() {
-      let values = queryParamAsStringArray(raw.value);
-      if (deduplicate) values = Array.from(new Set(values));
-      if (sort) values.sort();
-      return values;
+      return queryParamAsStringArray(raw.value);
     },
     set(values) {
-      if (deduplicate) values = Array.from(new Set(values));
-      if (sort) values.sort();
       raw.value = values;
+    },
+  });
+}
+
+export function queryParamAsStringSet(value?: QueryParamValue): Set<string> {
+  return new Set(queryParamAsStringArray(value));
+}
+
+export function useQueryParamAsStringSet(name: string) {
+  const raw = useRouteQuery(name);
+  return computed({
+    get() {
+      return queryParamAsStringSet(raw.value);
+    },
+    set(values) {
+      raw.value = Array.from(values).sort();
     },
   });
 }
