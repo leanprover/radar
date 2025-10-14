@@ -1,0 +1,66 @@
+<script setup lang="ts">
+import CButton from "@/components/CButton.vue";
+import CPlural from "@/components/CPlural.vue";
+import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
+import { parseMetric } from "@/lib/utils.ts";
+import { computed, reactive, ref } from "vue";
+
+const { repo, limit } = defineProps<{ repo: string; limit: number }>();
+const selected = defineModel<Set<string>>("selected", { required: true });
+
+const metricsQuery = reactive(useRepoMetrics(() => repo));
+const filter = ref("");
+
+const allMetrics = computed(() => {
+  const result = new Set<string>();
+  for (const metric of selected.value) result.add(metric);
+  if (metricsQuery.data) for (const metric of metricsQuery.data.metrics) result.add(metric.metric);
+  return Array.from(result).sort();
+});
+
+const visibleMetrics = computed(() => {
+  if (!filter.value) return allMetrics.value;
+  const filterLower = filter.value.toLowerCase();
+  return allMetrics.value.filter((it) => it.toLowerCase().includes(filterLower));
+});
+
+function toggle(metric: string) {
+  // Not deeply reactive, so we always create a new Set
+  const result = new Set(selected.value);
+  if (result.has(metric)) result.delete(metric);
+  else if (selected.value.size >= limit) return;
+  else result.add(metric);
+  selected.value = result;
+}
+</script>
+
+<template>
+  <div class="flex flex-col gap-2">
+    <div class="bg-background-alt flex gap-1 p-1">
+      Filter:
+      <input v-model="filter" type="text" placeholder="<all>" class="bg-background grow px-1" />
+      <CButton :disabled="visibleMetrics.length > limit" @click="selected = new Set(visibleMetrics)">
+        Select {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
+      </CButton>
+      <CButton @click="selected = new Set()">Clear</CButton>
+    </div>
+
+    <div class="grid grid-cols-[auto_auto_auto_1fr]">
+      <div v-for="metric in visibleMetrics" :key="metric" class="group contents cursor-default" @click="toggle(metric)">
+        <div class="group-hover:bg-background-alt pr-2 pl-1">
+          <input
+            type="checkbox"
+            :checked="selected.has(metric)"
+            :disabled="!selected.has(metric) && selected.size >= limit"
+            class="align-[-2px]"
+            @change="toggle(metric)"
+            @click.stop
+          />
+        </div>
+        <div class="group-hover:bg-background-alt">{{ parseMetric(metric)[0] }}</div>
+        <div class="group-hover:bg-background-alt px-2">{{ parseMetric(metric)[1] && "//" }}</div>
+        <div class="group-hover:bg-background-alt pr-1">{{ parseMetric(metric)[1] }}</div>
+      </div>
+    </div>
+  </div>
+</template>

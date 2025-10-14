@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
-import PMetricsTable from "@/components/pages/graph/PMetricsTable.vue";
+import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import { useRepoGraph } from "@/composables/useRepoGraph.ts";
-import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
 import { formatValue } from "@/lib/format.ts";
 import { useQueryParamAsBool, useQueryParamAsInt, useQueryParamAsStringSet } from "@/lib/query.ts";
 import type uPlot from "uplot";
 import UplotVue from "uplot-vue";
 import { computed, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
+
+const metricLimit = 100;
 
 const route = useRoute("/repos.[repo].graph");
 const repo = useRepo(route.params.repo);
@@ -21,7 +21,6 @@ const queryM = useQueryParamAsStringSet("m");
 const queryN = useQueryParamAsInt("n", 100, { min: 100, max: 1000 });
 const queryZero = useQueryParamAsBool("zero", true);
 
-const metrics = reactive(useRepoMetrics(route.params.repo));
 const graph = reactive(
   useRepoGraph(
     () => route.params.repo,
@@ -102,8 +101,7 @@ const data = computed<uPlot.AlignedData>(() => {
       </div>
 
       <div class="row-span-3">
-        <CLoading v-if="!metrics.isSuccess" :error="metrics.error" />
-        <PMetricsTable v-else v-model:selected="queryM" :metrics="metrics.data.metrics" />
+        <PMetricSelector v-model:selected="queryM" :repo="route.params.repo" :limit="metricLimit" />
       </div>
 
       <PCommitInfo

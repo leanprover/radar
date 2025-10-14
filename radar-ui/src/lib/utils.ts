@@ -12,3 +12,16 @@ export function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
   for (const value of a.values()) if (!b.has(value)) return false;
   return true;
 }
+
+export function pluralize(value: boolean | number, singular: string, plural?: string): string {
+  if (value === false || value === 1 || value === -1) return singular;
+  return plural ?? singular + "s";
+}
+
+// Split a metric `<topic>//<category>` into its topic and category.
+// If no `//` exists, the category is undefined.
+export function parseMetric(metric: string): [string] | [string, string] {
+  const i = metric.indexOf("//");
+  if (i < 0) return [metric];
+  return [metric.slice(0, i), metric.slice(i + 2)];
+}
