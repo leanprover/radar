@@ -20,6 +20,9 @@
       <option name="TABLE_CONTENT" value="2" />
       <option name="TABLE_CLOSING" value="2" />
     </SqlCodeStyleSettings>
+    <TypeScriptCodeStyleSettings version="0">
+      <option name="IMPORT_SORT_MODULE_NAME" value="true" />
+    </TypeScriptCodeStyleSettings>
     <XML>
       <option name="XML_KEEP_LINE_BREAKS" value="false" />
       <option name="XML_KEEP_LINE_BREAKS_IN_TEXT" value="false" />
