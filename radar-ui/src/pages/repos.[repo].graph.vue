@@ -2,7 +2,6 @@
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { computed, reactive, ref } from "vue";
-import { useQueryParamAsBool, useQueryParamAsInt, useQueryParamAsStringSet } from "@/lib/utils.ts";
 import UplotVue from "uplot-vue";
 import { useRepoGraph } from "@/composables/useRepoGraph.ts";
 import { useRoute } from "vue-router";
@@ -13,6 +12,7 @@ import { useRepo } from "@/composables/useRepo.ts";
 import PMetricsTable from "@/components/pages/graph/PMetricsTable.vue";
 import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
 import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
+import { useQueryParamAsBool, useQueryParamAsInt, useQueryParamAsStringSet } from "@/lib/query.ts";
 
 const route = useRoute("/repos.[repo].graph");
 const repo = useRepo(route.params.repo);

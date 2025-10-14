@@ -3,7 +3,7 @@ import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { computed, reactive, watch } from "vue";
 import { useCommit } from "@/composables/useCommit.ts";
 import CLoading from "@/components/CLoading.vue";
-import { queryParamAsNonemptyString, setsEqual } from "@/lib/utils.ts";
+import { setsEqual } from "@/lib/utils.ts";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { useCompare } from "@/composables/useCompare.ts";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
@@ -20,6 +20,7 @@ import CSection from "@/components/CSection.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import { useRouteQuery } from "@vueuse/router";
+import { queryParamAsNonemptyString } from "@/lib/query.ts";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
