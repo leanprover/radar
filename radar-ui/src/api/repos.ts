@@ -1,5 +1,5 @@
-import * as z from "zod";
 import { fetchJson } from "@/api/utils.ts";
+import * as z from "zod";
 
 const JsonRepo = z.object({
   name: z.string(),

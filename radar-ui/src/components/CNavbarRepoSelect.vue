@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRepos } from "@/composables/useRepos.ts";
-import { reactive, watchEffect } from "vue";
 import { SelectContent, SelectIcon, SelectItem, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "reka-ui";
+import { reactive, watchEffect } from "vue";
 
 const repos = reactive(useRepos());
 const selected = defineModel<string>();

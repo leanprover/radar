@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import PQueueTask, { type Task } from "@/components/pages/queue/PQueueTask.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import CSection from "@/components/CSection.vue";
+import CSectionTitle from "@/components/CSectionTitle.vue";
+import PQueueTask, { type Task } from "@/components/pages/queue/PQueueTask.vue";
 
 const { tasks } = defineProps<{ tasks: Task[] }>();
 </script>

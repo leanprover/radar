@@ -1,7 +1,7 @@
-import { toValue } from "vue";
-import type { MaybeRefOrGetter } from "@vueuse/core";
-import { useQuery } from "@tanstack/vue-query";
 import { getCompare } from "@/api/compare.ts";
+import { useQuery } from "@tanstack/vue-query";
+import type { MaybeRefOrGetter } from "@vueuse/core";
+import { toValue } from "vue";
 
 export function useCompare(
   repo: MaybeRefOrGetter<string>,

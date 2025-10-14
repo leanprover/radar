@@ -1,5 +1,5 @@
-import * as z from "zod";
 import { fetchJson, JsonCommit, JsonRun, Timestamp } from "@/api/utils.ts";
+import * as z from "zod";
 
 export type JsonActiveRun = z.infer<typeof JsonActiveRun>;
 const JsonActiveRun = z.object({

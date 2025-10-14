@@ -10,7 +10,6 @@ import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
-import org.leanlang.radar.runner.statusupdater.JsonActiveRun;
 import org.leanlang.radar.runner.supervisor.JsonOutputLineBatch;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.queue.Run;

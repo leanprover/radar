@@ -1,4 +1,5 @@
 <script setup lang="ts" generic="T">
+import CButton from "@/components/CButton.vue";
 import {
   type ColumnDef,
   type ColumnSort,
@@ -11,7 +12,6 @@ import {
   useVueTable,
 } from "@tanstack/vue-table";
 import { computed, ref, watch } from "vue";
-import CButton from "@/components/CButton.vue";
 
 const {
   columns,

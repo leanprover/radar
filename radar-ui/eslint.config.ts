@@ -1,8 +1,8 @@
-import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
-import ts from "typescript-eslint";
-import vue from "eslint-plugin-vue";
 import prettier from "eslint-config-prettier";
+import vue from "eslint-plugin-vue";
+import { defineConfig } from "eslint/config";
+import ts from "typescript-eslint";
 
 export default defineConfig([
   { ignores: ["dist/"] },

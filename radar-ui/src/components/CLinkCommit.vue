@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Temporal } from "temporal-polyfill";
 import CTimeAgo from "@/components/CTimeAgo.vue";
+import { Temporal } from "temporal-polyfill";
 
 const { repo, chash, title, author, time } = defineProps<{
   repo: string;

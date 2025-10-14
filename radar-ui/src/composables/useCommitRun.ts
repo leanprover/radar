@@ -1,7 +1,7 @@
+import { getCommitRun } from "@/api/commitRun.ts";
 import { useQuery } from "@tanstack/vue-query";
 import type { MaybeRefOrGetter } from "@vueuse/core";
 import { toValue } from "vue";
-import { getCommitRun } from "@/api/commitRun.ts";
 
 export function useCommitRun(
   repo: MaybeRefOrGetter<string>,

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import CTimeInstant from "@/components/CTimeInstant.vue";
-import CTimeAgo from "@/components/CTimeAgo.vue";
-import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
+import CTimeAgo from "@/components/CTimeAgo.vue";
+import CTimeInstant from "@/components/CTimeInstant.vue";
+import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import { Temporal } from "temporal-polyfill";
 
 const { repo, url, chash, author, title, body } = defineProps<{

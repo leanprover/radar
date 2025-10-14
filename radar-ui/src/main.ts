@@ -1,11 +1,11 @@
+import { VueQueryPlugin } from "@tanstack/vue-query";
+import { createPinia } from "pinia";
 import { createApp } from "vue";
 import "./style.css";
 import "uplot/dist/uPlot.min.css";
-import App from "./App.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { routes } from "vue-router/auto-routes";
-import { createPinia } from "pinia";
-import { VueQueryPlugin } from "@tanstack/vue-query";
+import App from "./App.vue";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 createApp(App)

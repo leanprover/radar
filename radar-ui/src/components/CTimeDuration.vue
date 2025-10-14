@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Temporal } from "temporal-polyfill";
 import { formatDuration } from "@/lib/format.ts";
+import { Temporal } from "temporal-polyfill";
 
 const { duration } = defineProps<{ duration: Temporal.Duration }>();
 </script>

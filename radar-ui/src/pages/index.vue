@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import { useRepoStore } from "@/stores/useRepoStore.ts";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 const repoStore = useRepoStore();

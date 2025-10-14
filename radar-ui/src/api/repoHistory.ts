@@ -1,5 +1,5 @@
-import * as z from "zod";
 import { enc, fetchJson, JsonCommit } from "@/api/utils.ts";
+import * as z from "zod";
 
 const JsonGet = z.object({
   commits: JsonCommit.array(),

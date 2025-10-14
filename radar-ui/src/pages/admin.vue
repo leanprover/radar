@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useAdminStore } from "@/stores/useAdminStore.ts";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
+import { useAdminStore } from "@/stores/useAdminStore.ts";
 
 const admin = useAdminStore();
 </script>

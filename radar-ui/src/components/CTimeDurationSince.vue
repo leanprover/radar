@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Temporal, toTemporalInstant } from "temporal-polyfill";
-import { useNow } from "@vueuse/core";
-import { computed } from "vue";
 import { formatDuration, formatZoned, instantToZoned } from "@/lib/format.ts";
+import { useNow } from "@vueuse/core";
+import { Temporal, toTemporalInstant } from "temporal-polyfill";
+import { computed } from "vue";
 
 const { start } = defineProps<{ start: Temporal.Instant }>();
 const startTime = computed(() => instantToZoned(start));

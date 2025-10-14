@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ClassValue } from "clsx";
 import { cn } from "@/lib/utils.ts";
+import type { ClassValue } from "clsx";
 
 const { repo, class: clazz = undefined } = defineProps<{ repo: string; class?: ClassValue }>();
 </script>

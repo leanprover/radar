@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { type ColumnDef, type Row } from "@tanstack/vue-table";
-import { computed, h } from "vue";
 import CTable from "@/components/CTable.vue";
 import CTableHeader from "@/components/CTableHeader.vue";
+import { type ColumnDef, type Row } from "@tanstack/vue-table";
+import { computed, h } from "vue";
 
 interface Metric {
   metric: string;

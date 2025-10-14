@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { useRoute } from "vue-router";
-import { reactive } from "vue";
+import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
+import CLinkRepo from "@/components/CLinkRepo.vue";
 import CLoading from "@/components/CLoading.vue";
+import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import { useCommitRun } from "@/composables/useCommitRun.ts";
 import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/CTimeRange.vue";
-import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
+import { useCommitRun } from "@/composables/useCommitRun.ts";
 import { useRepo } from "@/composables/useRepo.ts";
-import CSection from "@/components/CSection.vue";
-import CLinkRepo from "@/components/CLinkRepo.vue";
 import { formatZonedTime, instantToZoned } from "@/lib/format.ts";
+import { reactive } from "vue";
+import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 

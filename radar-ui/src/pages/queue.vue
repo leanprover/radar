@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { reactive } from "vue";
-import { useQueue } from "@/composables/useQueue.ts";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import CLoading from "@/components/CLoading.vue";
-import PQueue from "@/components/pages/queue/PQueue.vue";
-import CTimeAgo from "@/components/CTimeAgo.vue";
 import CSection from "@/components/CSection.vue";
+import CSectionTitle from "@/components/CSectionTitle.vue";
+import CTimeAgo from "@/components/CTimeAgo.vue";
+import PQueue from "@/components/pages/queue/PQueue.vue";
+import { useQueue } from "@/composables/useQueue.ts";
+import { reactive } from "vue";
 
 const queue = reactive(useQueue());
 </script>

@@ -1,6 +1,6 @@
-import type { LocationQueryValue } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
 import { computed } from "vue";
+import type { LocationQueryValue } from "vue-router";
 
 export type QueryParamValue = LocationQueryValue | LocationQueryValue[];
 

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useRoute } from "vue-router";
-import { useRepoHistory } from "@/composables/useRepoHistory.ts";
-import { computed, reactive } from "vue";
-import { useRepos } from "@/composables/useRepos.ts";
-import CLoading from "@/components/CLoading.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
-import CSection from "@/components/CSection.vue";
 import CLinkCommit from "@/components/CLinkCommit.vue";
-import { useRepoGithubBot } from "@/composables/useRepoGithubBot.ts";
+import CLoading from "@/components/CLoading.vue";
+import CSection from "@/components/CSection.vue";
+import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeAgo from "@/components/CTimeAgo.vue";
+import { useRepoGithubBot } from "@/composables/useRepoGithubBot.ts";
+import { useRepoHistory } from "@/composables/useRepoHistory.ts";
+import { useRepos } from "@/composables/useRepos.ts";
+import { computed, reactive } from "vue";
+import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo]");
 const repos = reactive(useRepos());

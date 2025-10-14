@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useColorMode } from "@vueuse/core";
 import CNavbarButton from "@/components/CNavbarButton.vue";
+import { useColorMode } from "@vueuse/core";
 
 const { store } = useColorMode();
 

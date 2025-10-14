@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { formatZoned, formatZonedDate, formatZonedTime, instantToZoned } from "@/lib/format.ts";
 import { Temporal } from "temporal-polyfill";
 import { computed } from "vue";
-import { formatZoned, formatZonedDate, formatZonedTime, instantToZoned } from "@/lib/format.ts";
 
 const { when, date = true } = defineProps<{ when: Temporal.Instant; date?: boolean }>();
 const whenTime = computed(() => instantToZoned(when));

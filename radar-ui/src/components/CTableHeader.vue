@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T">
-import { computed } from "vue";
 import { type Column, type Table } from "@tanstack/vue-table";
+import { computed } from "vue";
 
 const {
   table,

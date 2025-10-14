@@ -1,5 +1,5 @@
-import * as z from "zod";
 import { enc, fetchJson, JsonCommit } from "@/api/utils.ts";
+import * as z from "zod";
 
 export type JsonMetric = z.infer<typeof JsonMetric>;
 export const JsonMetric = z.object({

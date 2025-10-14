@@ -1,6 +1,6 @@
+import { getCommit } from "@/api/commit.ts";
 import { useQuery } from "@tanstack/vue-query";
 import type { MaybeRefOrGetter } from "@vueuse/core";
-import { getCommit } from "@/api/commit.ts";
 import { toValue } from "vue";
 
 export function useCommit(repo: MaybeRefOrGetter<string>, chash: MaybeRefOrGetter<string>) {

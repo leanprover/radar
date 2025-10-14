@@ -1,5 +1,5 @@
-import * as z from "zod";
 import { enc, fetchJson } from "@/api/utils.ts";
+import * as z from "zod";
 
 const JsonMetric = z.object({
   metric: z.string(),

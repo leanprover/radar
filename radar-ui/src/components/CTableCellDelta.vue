@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { formatValue } from "@/lib/format.ts";
 import { cn } from "@/lib/utils.ts";
 import { computed } from "vue";
-import { formatValue } from "@/lib/format.ts";
 
 const {
   from = undefined,

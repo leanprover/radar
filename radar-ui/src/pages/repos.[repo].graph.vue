@@ -1,18 +1,18 @@
 <script setup lang="ts">
+import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import { computed, reactive, ref } from "vue";
-import UplotVue from "uplot-vue";
-import { useRepoGraph } from "@/composables/useRepoGraph.ts";
-import { useRoute } from "vue-router";
-import CLoading from "@/components/CLoading.vue";
-import type uPlot from "uplot";
-import { formatValue } from "@/lib/format.ts";
-import { useRepo } from "@/composables/useRepo.ts";
-import PMetricsTable from "@/components/pages/graph/PMetricsTable.vue";
-import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
 import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
+import PMetricsTable from "@/components/pages/graph/PMetricsTable.vue";
+import { useRepo } from "@/composables/useRepo.ts";
+import { useRepoGraph } from "@/composables/useRepoGraph.ts";
+import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
+import { formatValue } from "@/lib/format.ts";
 import { useQueryParamAsBool, useQueryParamAsInt, useQueryParamAsStringSet } from "@/lib/query.ts";
+import type uPlot from "uplot";
+import UplotVue from "uplot-vue";
+import { computed, reactive, ref } from "vue";
+import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo].graph");
 const repo = useRepo(route.params.repo);

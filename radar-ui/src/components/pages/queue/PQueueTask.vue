@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import CRunInfo, { type Run } from "@/components/CRunInfo.vue";
-import CLinkRepo from "@/components/CLinkRepo.vue";
 import CLinkCommit from "@/components/CLinkCommit.vue";
+import CLinkRepo from "@/components/CLinkRepo.vue";
+import CRunInfo, { type Run } from "@/components/CRunInfo.vue";
 import { Temporal } from "temporal-polyfill";
 
 export interface Task {
