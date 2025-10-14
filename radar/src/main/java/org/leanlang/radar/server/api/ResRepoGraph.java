@@ -36,8 +36,8 @@ public record ResRepoGraph(Repos repos) {
     @Produces(MediaType.APPLICATION_JSON)
     public JsonGet get(@PathParam("repo") String name, @QueryParam("m") List<String> metrics, @QueryParam("n") int n) {
         Repo repo = repos.repo(name);
-        if (metrics.size() > 10) throw new BadRequestException("too many metrics");
-        if (n > 1000) throw new BadRequestException("n too large");
+        if (metrics.size() > 100) throw new BadRequestException("too many metrics");
+        if (n > 10000) throw new BadRequestException("n too large");
 
         return repo.db()
                 .readTransactionResult(ctx -> {
