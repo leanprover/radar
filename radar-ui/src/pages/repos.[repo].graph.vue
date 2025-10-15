@@ -81,8 +81,8 @@ const options = computed<uPlot.Options>(() => {
     })) ?? [];
 
   const options: uPlot.Options = {
-    width: 670,
-    height: 400,
+    width: 900,
+    height: 500,
     axes: [
       {},
       {
@@ -133,8 +133,8 @@ const data = computed<uPlot.AlignedData>(() => {
   <CSection>
     <CSectionTitle>Graph</CSectionTitle>
 
-    <div class="flex gap-8">
-      <div class="flex w-[80ch] flex-col gap-4">
+    <div class="flex gap-4">
+      <div class="flex w-[900px] flex-col gap-2">
         <div class="flex flex-wrap gap-1">
           <label class="bg-background-alt w-fit p-1 align-baseline select-none">
             n:
@@ -171,7 +171,7 @@ const data = computed<uPlot.AlignedData>(() => {
         v-model:selected="queryM"
         :repo="route.params.repo"
         :limit="metricLimit"
-        class="grow"
+        class="max-w-[100ch] grow"
       />
     </div>
   </CSection>
