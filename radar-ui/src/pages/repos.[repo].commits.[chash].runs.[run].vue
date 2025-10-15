@@ -3,12 +3,12 @@ import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import CLinkRepo from "@/components/CLinkRepo.vue";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
+import CSectionLog from "@/components/CSectionLog.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/CTimeRange.vue";
 import { useCommitRun } from "@/composables/useCommitRun.ts";
 import { useRepo } from "@/composables/useRepo.ts";
-import { formatZonedTime, instantToZoned } from "@/lib/format.ts";
 import { reactive } from "vue";
 import { useRoute } from "vue-router";
 
@@ -69,19 +69,5 @@ const run = reactive(
     </div>
   </CSection>
 
-  <CSection v-if="run.isSuccess">
-    <CSectionTitle>Logs</CSectionTitle>
-    <div v-if="run.data.lines === undefined">No logs available.</div>
-    <template v-else>
-      <div>Lines: {{ run.data.lines.length }}</div>
-      <div class="flex flex-col">
-        <span
-          v-for="(line, index) in run.data.lines"
-          :key="index"
-          :class="['whitespace-pre-wrap', { 'text-red': line.source === 1, 'text-blue': line.source === 2 }]"
-          >[{{ formatZonedTime(instantToZoned(line.time)) }}] {{ line.line }}</span
-        >
-      </div>
-    </template>
-  </CSection>
+  <CSectionLog v-if="run.isSuccess" :lines="run.data.lines" />
 </template>
