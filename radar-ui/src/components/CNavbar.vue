@@ -64,6 +64,11 @@ setSelectedToRoute();
     </RouterLink>
     <CNavbarButton v-else disabled>Overview</CNavbarButton>
 
+    <RouterLink v-if="repo.selected" :to="{ name: '/repos.[repo].graph', params: { repo: repo.selected } }">
+      <CNavbarButton :selected="route.name === '/repos.[repo].graph'">Graph</CNavbarButton>
+    </RouterLink>
+    <CNavbarButton v-else disabled>Graph</CNavbarButton>
+
     <RouterLink :to="{ name: '/queue' }">
       <CNavbarButton :selected="route.name === '/queue'">Queue</CNavbarButton>
     </RouterLink>
