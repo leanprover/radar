@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Make dark:* work in dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-background: var(--c-background);
   --color-background-alt: var(--c-background-alt);

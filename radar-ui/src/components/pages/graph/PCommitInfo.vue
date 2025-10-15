@@ -16,7 +16,7 @@ const { repo, url, chash, author, title, body } = defineProps<{
 </script>
 
 <template>
-  <div class="grid w-[80ch] grid-cols-[auto_1fr] gap-x-2">
+  <div class="grid grid-cols-[auto_1fr] gap-x-2">
     <CLinkCommitHash :repo="repo" :url="url" :chash="chash" class="text-yellow col-span-full" />
 
     <div>Author:</div>

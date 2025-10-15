@@ -84,8 +84,8 @@ const data = computed<uPlot.AlignedData>(() => {
   <CSection>
     <CSectionTitle>Graph</CSectionTitle>
 
-    <div class="grid grid-cols-[80ch_1fr] grid-rows-[auto_auto_1fr] gap-8">
-      <div class="flex flex-col gap-4">
+    <div class="flex gap-8">
+      <div class="flex w-[80ch] flex-col gap-4">
         <div class="flex flex-wrap gap-1">
           <label class="bg-background-alt w-fit p-1 align-baseline select-none">
             n:
@@ -97,22 +97,23 @@ const data = computed<uPlot.AlignedData>(() => {
           </label>
         </div>
 
-        <UplotVue key="graph" :options :data />
+        <div class="flex flex-col items-center bg-white text-black">
+          <UplotVue key="graph" :options :data />
+          <div class="hidden text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
+        </div>
+
+        <PCommitInfo
+          v-if="hoverCommit"
+          :repo="route.params.repo"
+          :url="repo?.url"
+          :chash="hoverCommit.chash"
+          :author="hoverCommit.author"
+          :title="hoverCommit.title"
+          :body="hoverCommit.body"
+        />
       </div>
 
-      <div class="row-span-3">
-        <PMetricSelector v-model:selected="queryM" :repo="route.params.repo" :limit="metricLimit" />
-      </div>
-
-      <PCommitInfo
-        v-if="hoverCommit"
-        :repo="route.params.repo"
-        :url="repo?.url"
-        :chash="hoverCommit.chash"
-        :author="hoverCommit.author"
-        :title="hoverCommit.title"
-        :body="hoverCommit.body"
-      />
+      <PMetricSelector v-model:selected="queryM" :repo="route.params.repo" :limit="metricLimit" class="grow" />
     </div>
   </CSection>
 </template>
