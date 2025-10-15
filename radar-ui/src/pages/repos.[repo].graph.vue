@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import CSection from "@/components/CSection.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
 import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
 import { useRepo } from "@/composables/useRepo.ts";
@@ -140,49 +138,45 @@ function openCurrentCommitInNewTab() {
 </script>
 
 <template>
-  <CSection>
-    <CSectionTitle>Graph</CSectionTitle>
-
-    <div class="flex gap-4">
-      <div class="flex w-[900px] flex-col gap-2">
-        <div class="flex flex-wrap gap-1">
-          <label class="bg-background-alt w-fit p-1 align-baseline select-none">
-            n:
-            <input v-model="queryN" type="number" :min="nMin" :max="nMax" :step="nStep" class="bg-background px-1" />
-          </label>
-          <label class="bg-background-alt w-fit p-1 align-baseline select-none">
-            Start at 0:
-            <input v-model="queryZero" type="checkbox" />
-          </label>
-          <label class="bg-background-alt w-fit p-1 align-baseline select-none">
-            Normalize:
-            <input v-model="queryNormalize" type="checkbox" />
-          </label>
-        </div>
-
-        <div class="flex flex-col items-center bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
-          <UplotVue key="graph" :options :data />
-          <div class="hidden text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
-        </div>
-
-        <PCommitInfo
-          v-if="hoverCommit"
-          :repo="route.params.repo"
-          :url="repo?.url"
-          :chash="hoverCommit.chash"
-          :author="hoverCommit.author"
-          :title="hoverCommit.title"
-          :body="hoverCommit.body"
-        />
+  <div class="flex gap-4">
+    <div class="flex w-[900px] flex-col gap-2">
+      <div class="flex flex-wrap gap-1">
+        <label class="bg-background-alt w-fit p-1 align-baseline select-none">
+          n:
+          <input v-model="queryN" type="number" :min="nMin" :max="nMax" :step="nStep" class="bg-background px-1" />
+        </label>
+        <label class="bg-background-alt w-fit p-1 align-baseline select-none">
+          Start at 0:
+          <input v-model="queryZero" type="checkbox" />
+        </label>
+        <label class="bg-background-alt w-fit p-1 align-baseline select-none">
+          Normalize:
+          <input v-model="queryNormalize" type="checkbox" />
+        </label>
       </div>
 
-      <PMetricSelector
-        v-model:filter="queryS"
-        v-model:selected="queryM"
+      <div class="flex flex-col items-center bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
+        <UplotVue key="graph" :options :data />
+        <div class="hidden text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
+      </div>
+
+      <PCommitInfo
+        v-if="hoverCommit"
         :repo="route.params.repo"
-        :limit="metricLimit"
-        class="max-w-[100ch] grow"
+        :url="repo?.url"
+        :chash="hoverCommit.chash"
+        :author="hoverCommit.author"
+        :title="hoverCommit.title"
+        :body="hoverCommit.body"
       />
     </div>
-  </CSection>
+
+    <PMetricSelector
+      v-model:filter="queryS"
+      v-model:selected="queryM"
+      :repo="route.params.repo"
+      :limit="metricLimit"
+      class="max-w-[100ch] grow"
+    />
+  </div>
 </template>
