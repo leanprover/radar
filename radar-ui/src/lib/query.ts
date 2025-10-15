@@ -9,6 +9,18 @@ export function queryParamAsString(value?: QueryParamValue): string | undefined 
   return value ?? undefined;
 }
 
+export function useQueryParamAsString(name: string) {
+  const raw = useRouteQuery(name);
+  return computed({
+    get() {
+      return queryParamAsString(raw.value) ?? "";
+    },
+    set(value) {
+      raw.value = value === "" ? undefined : value;
+    },
+  });
+}
+
 export function queryParamAsNonemptyString(value?: QueryParamValue): string | undefined {
   const s = queryParamAsString(value);
   if (s === "") return undefined;

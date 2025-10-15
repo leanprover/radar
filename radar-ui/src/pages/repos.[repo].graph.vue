@@ -6,7 +6,12 @@ import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import { useRepoGraph } from "@/composables/useRepoGraph.ts";
 import { formatValue } from "@/lib/format.ts";
-import { useQueryParamAsBool, useQueryParamAsInt, useQueryParamAsStringSet } from "@/lib/query.ts";
+import {
+  useQueryParamAsBool,
+  useQueryParamAsInt,
+  useQueryParamAsString,
+  useQueryParamAsStringSet,
+} from "@/lib/query.ts";
 import type uPlot from "uplot";
 import UplotVue from "uplot-vue";
 import { computed, reactive, ref } from "vue";
@@ -50,6 +55,7 @@ const repo = useRepo(route.params.repo);
 
 const queryM = useQueryParamAsStringSet("m");
 const queryN = useQueryParamAsInt("n", nDefault, { min: nMin, max: nMax });
+const queryS = useQueryParamAsString("s");
 const queryZero = useQueryParamAsBool("zero", true);
 const queryNormalize = useQueryParamAsBool("normalize", false);
 
@@ -160,7 +166,13 @@ const data = computed<uPlot.AlignedData>(() => {
         />
       </div>
 
-      <PMetricSelector v-model:selected="queryM" :repo="route.params.repo" :limit="metricLimit" class="grow" />
+      <PMetricSelector
+        v-model:filter="queryS"
+        v-model:selected="queryM"
+        :repo="route.params.repo"
+        :limit="metricLimit"
+        class="grow"
+      />
     </div>
   </CSection>
 </template>

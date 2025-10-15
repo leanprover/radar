@@ -3,13 +3,13 @@ import CButton from "@/components/CButton.vue";
 import CPlural from "@/components/CPlural.vue";
 import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
 import { parseMetric } from "@/lib/utils.ts";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive } from "vue";
 
 const { repo, limit } = defineProps<{ repo: string; limit: number }>();
+const filter = defineModel<string>("filter", { required: true });
 const selected = defineModel<Set<string>>("selected", { required: true });
 
 const metricsQuery = reactive(useRepoMetrics(() => repo));
-const filter = ref("");
 
 const allMetrics = computed(() => {
   const result = new Set<string>();
