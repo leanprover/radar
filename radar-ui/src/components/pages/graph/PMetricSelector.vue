@@ -58,7 +58,7 @@ const pageMetrics = computed(() => {
       <CButton :disabled="visibleMetrics.length > limit" @click="selected = new Set(visibleMetrics)">
         Select {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
       </CButton>
-      <CButton @click="selected = new Set()">Clear</CButton>
+      <CButton @click="selected = new Set()">Unselect all</CButton>
     </div>
 
     <div class="bg-background-alt flex gap-1 p-1">
