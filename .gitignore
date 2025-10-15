@@ -6,3 +6,5 @@
 !/.idea/inspectionProfiles/*
 !/.idea/palantir-java-format.xml
 !/.idea/prettier.xml
+!/.idea/runConfigurations/
+!/.idea/runConfigurations/*
