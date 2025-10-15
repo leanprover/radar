@@ -15,7 +15,7 @@ import {
 import type uPlot from "uplot";
 import UplotVue from "uplot-vue";
 import { computed, reactive, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const metricLimit = 100;
 
@@ -50,6 +50,7 @@ const colors = [
   "#000000",
 ];
 
+const router = useRouter();
 const route = useRoute("/repos.[repo].graph");
 const repo = useRepo(route.params.repo);
 
@@ -127,6 +128,15 @@ const data = computed<uPlot.AlignedData>(() => {
     .map((it) => (queryNormalize.value ? normalize(it) : it));
   return [indices, ...measurements];
 });
+
+function openCurrentCommitInNewTab() {
+  if (hoverCommit.value === undefined) return;
+  const resolved = router.resolve({
+    name: "/repos.[repo].commits.[chash]",
+    params: { repo: route.params.repo, chash: hoverCommit.value.chash },
+  });
+  window.open(resolved.href, "_blank");
+}
 </script>
 
 <template>
@@ -150,7 +160,7 @@ const data = computed<uPlot.AlignedData>(() => {
           </label>
         </div>
 
-        <div class="flex flex-col items-center bg-white text-black">
+        <div class="flex flex-col items-center bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
           <UplotVue key="graph" :options :data />
           <div class="hidden text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
         </div>
