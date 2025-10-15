@@ -3,7 +3,7 @@ import CButton from "@/components/CButton.vue";
 import CPlural from "@/components/CPlural.vue";
 import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
 import { parseMetric } from "@/lib/utils.ts";
-import { computed, reactive } from "vue";
+import { computed, reactive, ref, watchEffect } from "vue";
 
 const { repo, limit } = defineProps<{ repo: string; limit: number }>();
 const filter = defineModel<string>("filter", { required: true });
@@ -32,10 +32,26 @@ function toggle(metric: string) {
   else result.add(metric);
   selected.value = result;
 }
+
+const pageSize = ref(100);
+const pageSizes = [100, 500, 1000, 5000];
+const page = ref(0);
+const pages = computed(() => Math.ceil(visibleMetrics.value.length / pageSize.value));
+
+watchEffect(() => {
+  if (page.value >= pages.value) page.value = pages.value - 1;
+  if (page.value < 0) page.value = 0;
+});
+
+const pageMetrics = computed(() => {
+  const start = pageSize.value * page.value;
+  const end = start + pageSize.value;
+  return visibleMetrics.value.slice(start, end);
+});
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col gap-1">
     <div class="bg-background-alt flex gap-1 p-1">
       Filter:
       <input v-model="filter" type="text" placeholder="<all>" class="bg-background grow px-1" />
@@ -45,8 +61,22 @@ function toggle(metric: string) {
       <CButton @click="selected = new Set()">Clear</CButton>
     </div>
 
+    <div class="bg-background-alt flex gap-1 p-1">
+      <CButton @click="page = 0">First</CButton>
+      <CButton @click="page -= 1">Prev</CButton>
+      <div>Page {{ page + 1 }} / {{ pages }}</div>
+      <CButton @click="page += 1">Next</CButton>
+      <CButton @click="page = pages - 1">Last</CButton>
+      <label class="ml-auto">
+        Rows:
+        <select v-model="pageSize" class="bg-background px-1">
+          <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
+        </select>
+      </label>
+    </div>
+
     <div class="grid grid-cols-[auto_auto_auto_1fr]">
-      <div v-for="metric in visibleMetrics" :key="metric" class="group contents cursor-default" @click="toggle(metric)">
+      <div v-for="metric in pageMetrics" :key="metric" class="group contents cursor-default" @click="toggle(metric)">
         <div class="group-hover:bg-background-alt pr-2 pl-1">
           <input
             type="checkbox"
