@@ -19,6 +19,32 @@ const nMax = 1000;
 const nStep = 100;
 const nDefault = 200;
 
+// https://sashamaps.net/docs/resources/20-colors/
+const colors = [
+  "#e6194B",
+  "#3cb44b",
+  "#ffe119",
+  "#4363d8",
+  "#f58231",
+  "#911eb4",
+  "#42d4f4",
+  "#f032e6",
+  "#bfef45",
+  "#fabed4",
+  "#469990",
+  "#dcbeff",
+  "#9A6324",
+  "#fffac8",
+  "#800000",
+  "#aaffc3",
+  "#808000",
+  "#ffd8b1",
+  "#000075",
+  "#a9a9a9",
+  "#ffffff",
+  "#000000",
+];
+
 const route = useRoute("/repos.[repo].graph");
 const repo = useRepo(route.params.repo);
 
@@ -42,13 +68,11 @@ const hoverCommit = computed(() => {
 });
 
 const options = computed<uPlot.Options>(() => {
-  const series = [];
-  if (graph.data)
-    for (const metric of graph.data.metrics)
-      series.push({
-        label: metric.metric,
-        stroke: "red",
-      });
+  const series =
+    graph.data?.metrics.map((it, i) => ({
+      label: it.metric,
+      stroke: colors[i % colors.length],
+    })) ?? [];
 
   return {
     width: 670,
