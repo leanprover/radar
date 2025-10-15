@@ -116,3 +116,13 @@ The units with special support are:
 - `B`: Bytes
 - `%`: Percentage (a value of 50 corresponds to 50%)
 - `100%`: Fractional percentage (a value of 0.5 corresponds to 50%)
+
+## Opening the repo in IntelliJ IDEA
+
+1. Delete the contents of the `.idea` directory
+2. Open the project with IntelliJ
+3. Accept the "maven project detected" popup
+4. Close IntelliJ
+5. Checkout the `.idea` directory using git
+
+Opening the repo directly doesn't seem to work reliably, at least not on my machine.
