@@ -68,13 +68,13 @@ const hoverCommit = computed(() => {
 });
 
 const options = computed<uPlot.Options>(() => {
-  const series =
+  const series: uPlot.Series[] =
     graph.data?.metrics.map((it, i) => ({
       label: it.metric,
-      stroke: colors[i % colors.length],
+      stroke: colors[i % colors.length] ?? "red",
     })) ?? [];
 
-  return {
+  const options: uPlot.Options = {
     width: 670,
     height: 400,
     axes: [
@@ -90,8 +90,8 @@ const options = computed<uPlot.Options>(() => {
     },
     series: [
       {
-        label: "sha",
-        value: (_self, rawValue) => graph.data?.commits[rawValue]?.chash.slice(0, 12) ?? "--",
+        label: "Commit",
+        value: (_self, rawValue) => graph.data?.commits[rawValue]?.title ?? "--",
       },
       ...series,
     ],
@@ -103,6 +103,8 @@ const options = computed<uPlot.Options>(() => {
       setCursor: [(plot) => (hoverIdx.value = plot.cursor.idx ?? undefined)],
     },
   };
+
+  return options;
 });
 
 function normalize(values: (number | null)[]): (number | null)[] {
