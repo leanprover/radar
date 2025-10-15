@@ -95,7 +95,10 @@ const options = computed<uPlot.Options>(() => {
       },
       ...series,
     ],
-    cursor: { lock: true },
+    cursor: {
+      lock: true,
+      focus: { prox: 8 },
+    },
     hooks: {
       setCursor: [(plot) => (hoverIdx.value = plot.cursor.idx ?? undefined)],
     },
