@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
 import vue from "eslint-plugin-vue";
 import { defineConfig } from "eslint/config";
+import globals from "globals";
 import ts from "typescript-eslint";
 
 export default defineConfig([
@@ -23,16 +24,16 @@ export default defineConfig([
     },
   },
 
+  // We're in the browser
+  { files: ["src/**"], languageOptions: { globals: { ...globals.browser } } },
+
   // Parse vue files correctly
   { files: ["**/*.vue"], languageOptions: { parserOptions: { parser: ts.parser } } },
-
-  // Exception for shadcn/vue components
-  { ignores: ["src/components/ui/**"] },
 
   // Exception for typed paths
   { files: ["src/pages/**/*.vue"], rules: { "vue/multi-word-component-names": "off" } },
 
-  // Custom settings
+  // Custom lints
   {
     rules: {
       // https://eslint.org/docs/latest/rules/
