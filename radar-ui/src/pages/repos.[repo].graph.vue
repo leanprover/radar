@@ -20,6 +20,7 @@ const repo = useRepo(route.params.repo);
 const queryM = useQueryParamAsStringSet("m");
 const queryN = useQueryParamAsInt("n", 100, { min: 100, max: 1000 });
 const queryZero = useQueryParamAsBool("zero", true);
+const queryNormalize = useQueryParamAsBool("normalize", false);
 
 const graph = reactive(
   useRepoGraph(
@@ -72,10 +73,18 @@ const options = computed<uPlot.Options>(() => {
   };
 });
 
+function normalize(values: (number | null)[]): (number | null)[] {
+  const lastValue = values.find((it) => it !== null);
+  if (lastValue === undefined || lastValue === 0) return values;
+  return values.map((it) => it && it / lastValue);
+}
+
 const data = computed<uPlot.AlignedData>(() => {
   if (!graph.data) return [[]];
   const indices = graph.data.commits.map((_, i) => i);
-  const measurements = graph.data.metrics.map((it) => it.measurements);
+  const measurements = graph.data.metrics
+    .map((it) => it.measurements)
+    .map((it) => (queryNormalize.value ? normalize(it) : it));
   return [indices, ...measurements];
 });
 </script>
@@ -94,6 +103,10 @@ const data = computed<uPlot.AlignedData>(() => {
           <label class="bg-background-alt w-fit p-1 align-baseline select-none">
             Start at 0:
             <input v-model="queryZero" type="checkbox" />
+          </label>
+          <label class="bg-background-alt w-fit p-1 align-baseline select-none">
+            Normalize:
+            <input v-model="queryNormalize" type="checkbox" />
           </label>
         </div>
 
