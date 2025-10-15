@@ -14,11 +14,16 @@ import { useRoute } from "vue-router";
 
 const metricLimit = 100;
 
+const nMin = 100;
+const nMax = 1000;
+const nStep = 100;
+const nDefault = 200;
+
 const route = useRoute("/repos.[repo].graph");
 const repo = useRepo(route.params.repo);
 
 const queryM = useQueryParamAsStringSet("m");
-const queryN = useQueryParamAsInt("n", 100, { min: 100, max: 1000 });
+const queryN = useQueryParamAsInt("n", nDefault, { min: nMin, max: nMax });
 const queryZero = useQueryParamAsBool("zero", true);
 const queryNormalize = useQueryParamAsBool("normalize", false);
 
@@ -98,7 +103,7 @@ const data = computed<uPlot.AlignedData>(() => {
         <div class="flex flex-wrap gap-1">
           <label class="bg-background-alt w-fit p-1 align-baseline select-none">
             n:
-            <input v-model="queryN" type="number" min="100" max="1000" step="100" class="bg-background px-1" />
+            <input v-model="queryN" type="number" :min="nMin" :max="nMax" :step="nStep" class="bg-background px-1" />
           </label>
           <label class="bg-background-alt w-fit p-1 align-baseline select-none">
             Start at 0:
