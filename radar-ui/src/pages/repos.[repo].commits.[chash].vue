@@ -119,7 +119,7 @@ onBeforeRouteUpdate(() => {
         <a :href="repo.lakeprofReportUrl + route.params.chash" target="_blank" class="hover:underline">Report</a>
       </template>
 
-      <PCommitMessage :title="commit.data.commit.title" :body="commit.data.commit.body" />
+      <PCommitMessage :title="commit.data.commit.title" :body="commit.data.commit.body" class="my-3" />
       <PCommitNavParents :repo="route.params.repo" :commits="commit.data.parents" />
       <PCommitNavChildren :repo="route.params.repo" :commits="commit.data.children" />
     </div>

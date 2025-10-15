@@ -13,7 +13,7 @@ onBeforeRouteUpdate(() => {
 </script>
 
 <template>
-  <CollapsibleRoot v-model:open="open" :disabled="!body" class="col-span-full my-3 ml-[4ch] flex flex-col">
+  <CollapsibleRoot v-model:open="open" :disabled="!body" class="col-span-full ml-[4ch] flex flex-col">
     <CollapsibleTrigger :class="{ 'text-left': true, 'cursor-pointer': body }">
       <span>{{ body ? (open ? "v" : "^") : "-" }}{{ " " }}</span>
       <span class="font-bold">{{ title }}</span>

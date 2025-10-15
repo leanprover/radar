@@ -28,6 +28,6 @@ const { repo, url, chash, author, title, body } = defineProps<{
       <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="author.time" />)</span>
     </div>
 
-    <PCommitMessage :title="title" :body="body" />
+    <PCommitMessage :title="title" :body="body" class="mt-3" />
   </div>
 </template>

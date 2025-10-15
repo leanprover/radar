@@ -138,8 +138,8 @@ function openCurrentCommitInNewTab() {
 </script>
 
 <template>
-  <div class="flex gap-4">
-    <div class="flex w-[900px] flex-col gap-2">
+  <div class="flex min-h-0 gap-4">
+    <div class="flex w-[900px] flex-col gap-1">
       <div class="flex flex-wrap gap-1">
         <label class="bg-background-alt w-fit p-1 align-baseline select-none">
           n:
@@ -155,9 +155,9 @@ function openCurrentCommitInNewTab() {
         </label>
       </div>
 
-      <div class="flex flex-col items-center bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
-        <UplotVue key="graph" :options :data />
-        <div class="hidden text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
+      <div class="flex min-h-0 flex-col items-center bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
+        <UplotVue key="graph" :options :data class="overflow-y-scroll" />
+        <div class="hidden pt-[0.1em] text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
       </div>
 
       <PCommitInfo
@@ -168,6 +168,7 @@ function openCurrentCommitInNewTab() {
         :author="hoverCommit.author"
         :title="hoverCommit.title"
         :body="hoverCommit.body"
+        class="border-t pt-1 dark:border-none"
       />
     </div>
 

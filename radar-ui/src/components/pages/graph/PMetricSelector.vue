@@ -75,7 +75,7 @@ const pageMetrics = computed(() => {
       </label>
     </div>
 
-    <div class="grid grid-cols-[auto_auto_auto_1fr]">
+    <div class="grid grid-cols-[auto_auto_auto_1fr] overflow-y-scroll">
       <div v-for="metric in pageMetrics" :key="metric" class="group contents cursor-default" @click="toggle(metric)">
         <div class="group-hover:bg-background-alt pr-2 pl-1">
           <input
