@@ -55,7 +55,12 @@ const pageMetrics = computed(() => {
     <div class="bg-background-alt flex gap-1 p-1">
       <div class="shrink-0">Filter:</div>
       <input v-model="filter" type="text" placeholder="<all>" class="bg-background shrink-0 grow px-1" />
-      <CButton :disabled="visibleMetrics.length > limit" class="shrink-0" @click="selected = new Set(visibleMetrics)">
+      <CButton
+        :disabled="visibleMetrics.length > limit"
+        class="shrink-0"
+        :title="visibleMetrics.length > limit ? `Too many metrics, can select at most ${limit}` : undefined"
+        @click="selected = new Set(visibleMetrics)"
+      >
         Select {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
       </CButton>
       <CButton class="shrink-0" @click="selected = new Set()">Unselect all</CButton>

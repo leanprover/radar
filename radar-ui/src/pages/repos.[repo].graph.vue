@@ -115,15 +115,21 @@ function openCurrentCommitInNewTab() {
   <div class="flex min-h-0 max-w-[2000px] gap-4">
     <div class="flex min-w-[500px] flex-2 flex-col gap-2">
       <div class="flex flex-wrap gap-1">
-        <label class="bg-background-alt w-fit p-1 align-baseline select-none">
+        <label class="bg-background-alt w-fit p-1 align-baseline select-none" title="Number of recent commits to fetch">
           n:
           <input v-model="queryN" type="number" :min="nMin" :max="nMax" :step="nStep" class="bg-background px-1" />
         </label>
-        <label class="bg-background-alt w-fit p-1 align-baseline select-none">
+        <label
+          class="bg-background-alt w-fit p-1 align-baseline select-none"
+          title="Whether the y axis should start at 0 or at the lowest measured value"
+        >
           Start at 0:
           <input v-model="queryZero" type="checkbox" />
         </label>
-        <label class="bg-background-alt w-fit p-1 align-baseline select-none">
+        <label
+          class="bg-background-alt w-fit p-1 align-baseline select-none"
+          title="Whether the plots should be scaled so they all start at a value of 1"
+        >
           Normalize:
           <input v-model="queryNormalize" type="checkbox" />
         </label>
