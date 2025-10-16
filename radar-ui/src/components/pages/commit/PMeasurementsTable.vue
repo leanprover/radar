@@ -93,8 +93,9 @@ const columns: ColumnDef<Measurement>[] = [
   {
     id: "deltapercent",
     accessorFn: (it) => {
-      if (it.first === undefined) return 0;
-      if (it.second === undefined) return 0;
+      if (it.first === undefined) return undefined;
+      if (it.second === undefined) return undefined;
+      if (it.first === 0) return undefined;
       return (it.second - it.first) / it.first;
     },
     header: ({ table, column }) =>
