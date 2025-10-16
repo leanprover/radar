@@ -51,6 +51,11 @@ public final class Busser implements Managed {
         executor.execute(() -> doUpdateGhReplies(repo));
     }
 
+    public void vacuumRepo(String repoName) {
+        Repo repo = repos.repo(repoName);
+        executor.execute(() -> doVacuumRepo(repo));
+    }
+
     // The following methods all have the prefix "do" so they don't collide with the public names.
 
     private synchronized void doUpdateAll() {
@@ -93,8 +98,8 @@ public final class Busser implements Managed {
         repo.git().fetch();
         repo.gitBench().fetch();
 
-        DbUpdater dbUpdater = new DbUpdater(repo, queue);
-        dbUpdater.update();
+        DbUpdater dbUpdater = new DbUpdater(repo);
+        dbUpdater.update(queue);
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {
@@ -103,5 +108,10 @@ public final class Busser implements Managed {
         GhUpdater ghUpdater = new GhUpdater(repo, queue, repo.gh().get());
         ghUpdater.executeCommands(); // Otherwise the reply bodies won't be up-to-date.
         ghUpdater.updateReplies();
+    }
+
+    private synchronized void doVacuumRepo(Repo repo) {
+        log.info("Vacuuming repo {}", repo.name());
+        new DbUpdater(repo).runVacuum();
     }
 }

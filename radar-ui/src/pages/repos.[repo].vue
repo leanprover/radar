@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { postAdminVacuum } from "@/api/adminVacuum.ts";
+import CButton from "@/components/CButton.vue";
 import CLinkCommit from "@/components/CLinkCommit.vue";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
@@ -7,10 +9,12 @@ import CTimeAgo from "@/components/CTimeAgo.vue";
 import { useRepoGithubBot } from "@/composables/useRepoGithubBot.ts";
 import { useRepoHistory } from "@/composables/useRepoHistory.ts";
 import { useRepos } from "@/composables/useRepos.ts";
+import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { computed, reactive } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo]");
+const admin = useAdminStore();
 const repos = reactive(useRepos());
 const history = reactive(useRepoHistory(() => route.params.repo));
 const github = reactive(useRepoGithubBot(() => route.params.repo));
@@ -29,6 +33,13 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     <div v-if="info">
       Source:
       <a class="cursor-pointer hover:underline" :href="info.url" target="_blank">{{ info.url }}</a>
+    </div>
+  </CSection>
+
+  <CSection v-if="admin.token !== undefined">
+    <CSectionTitle>Admin</CSectionTitle>
+    <div class="flex gap-2">
+      <CButton @click="postAdminVacuum(admin.token, route.params.repo)">Vacuum</CButton>
     </div>
   </CSection>
 

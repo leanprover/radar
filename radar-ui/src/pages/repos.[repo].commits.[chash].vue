@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
+import CButton from "@/components/CButton.vue";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import CLoading from "@/components/CLoading.vue";
 import CRunInfo from "@/components/CRunInfo.vue";
@@ -128,12 +129,7 @@ onBeforeRouteUpdate(() => {
   <CSection v-if="admin.token !== undefined">
     <CSectionTitle>Admin</CSectionTitle>
     <div class="flex gap-2">
-      <button
-        class="bg-foreground text-background hover:bg-foreground-alt cursor-pointer px-1"
-        @click="postAdminEnqueue(admin.token, route.params.repo, route.params.chash)"
-      >
-        Enqueue
-      </button>
+      <CButton @click="postAdminEnqueue(admin.token, route.params.repo, route.params.chash)">Enqueue</CButton>
     </div>
   </CSection>
 

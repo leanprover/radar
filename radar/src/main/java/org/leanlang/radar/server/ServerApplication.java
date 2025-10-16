@@ -16,6 +16,7 @@ import java.util.Map;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
+import org.leanlang.radar.server.api.ResAdminVacuum;
 import org.leanlang.radar.server.api.ResCommit;
 import org.leanlang.radar.server.api.ResCommitRun;
 import org.leanlang.radar.server.api.ResCompare;
@@ -90,6 +91,7 @@ public final class ServerApplication extends Application<ServerConfig> {
 
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResAdminEnqueue(repos, queue));
+        environment.jersey().register(new ResAdminVacuum(busser));
         environment.jersey().register(new ResCommit(repos, queue));
         environment.jersey().register(new ResCommitRun(repos, queue));
         environment.jersey().register(new ResCompare(repos));

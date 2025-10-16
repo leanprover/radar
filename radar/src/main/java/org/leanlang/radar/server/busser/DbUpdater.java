@@ -26,12 +26,12 @@ import org.leanlang.radar.server.repos.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record DbUpdater(Repo repo, Queue queue) {
+public record DbUpdater(Repo repo) {
     private static final Logger log = LoggerFactory.getLogger(DbUpdater.class);
 
-    public void update() {
+    public void update(Queue queue) {
         updateRepoData();
-        updateQueue();
+        updateQueue(queue);
         runPragmaOptimize();
     }
 
@@ -118,7 +118,7 @@ public record DbUpdater(Repo repo, Queue queue) {
         log.info("Updated {} history commits", records.size());
     }
 
-    private void updateQueue() {
+    private void updateQueue(Queue queue) {
         // Find all commits that are now in the history and have never been in the queue (i.e. seen).
         List<String> toEnqueue = repo.db()
                 .read()
@@ -144,5 +144,10 @@ public record DbUpdater(Repo repo, Queue queue) {
         // since PRAGMA optimize is usually a no-op anyway according to the docs.
         log.info("Running pragma optimize");
         repo.db().writeTransaction(ctx -> ctx.dsl().execute("PRAGMA optimize"));
+    }
+
+    public void runVacuum() {
+        log.info("Running vacuum");
+        repo.db().writeTransaction(ctx -> ctx.dsl().execute("VACUUM"));
     }
 }
