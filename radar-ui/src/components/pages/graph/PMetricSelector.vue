@@ -53,12 +53,12 @@ const pageMetrics = computed(() => {
 <template>
   <div class="flex flex-col gap-1">
     <div class="bg-background-alt flex gap-1 p-1">
-      Filter:
-      <input v-model="filter" type="text" placeholder="<all>" class="bg-background grow px-1" />
-      <CButton :disabled="visibleMetrics.length > limit" @click="selected = new Set(visibleMetrics)">
+      <div class="shrink-0">Filter:</div>
+      <input v-model="filter" type="text" placeholder="<all>" class="bg-background shrink-0 grow px-1" />
+      <CButton :disabled="visibleMetrics.length > limit" class="shrink-0" @click="selected = new Set(visibleMetrics)">
         Select {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
       </CButton>
-      <CButton @click="selected = new Set()">Unselect all</CButton>
+      <CButton class="shrink-0" @click="selected = new Set()">Unselect all</CButton>
     </div>
 
     <div class="bg-background-alt flex gap-1 p-1">

@@ -80,9 +80,6 @@ importers:
       uplot:
         specifier: ^1.6.32
         version: 1.6.32
-      uplot-vue:
-        specifier: ^1.2.4
-        version: 1.2.4(uplot@1.6.32)
       vite:
         specifier: ^7.1.9
         version: 7.1.9(@types/node@24.3.1)(jiti@2.6.1)(lightningcss@1.30.1)(yaml@2.8.1)
@@ -1915,12 +1912,6 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
-
-  uplot-vue@1.2.4:
-    resolution: {integrity: sha512-zcM5zCrCqryVu5qS5Crk9CulFBHH/m//pFlo+0yb1ivDW7mMsEQc8fFnRal/9qC+/ArWE66EDYf+oxlQDf1F3Q==}
-    engines: {node: '>=8.10'}
-    peerDependencies:
-      uplot: ^1.6.32
 
   uplot@1.6.32:
     resolution: {integrity: sha512-KIMVnG68zvu5XXUbC4LQEPnhwOxBuLyW1AHtpm6IKTXImkbLgkMy+jabjLgSLMasNuGGzQm/ep3tOkyTxpiQIw==}
@@ -3822,10 +3813,6 @@ snapshots:
       browserslist: 4.26.3
       escalade: 3.2.0
       picocolors: 1.1.1
-
-  uplot-vue@1.2.4(uplot@1.6.32):
-    dependencies:
-      uplot: 1.6.32
 
   uplot@1.6.32: {}
 

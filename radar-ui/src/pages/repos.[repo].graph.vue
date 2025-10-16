@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
 import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
+import PUplot from "@/components/pages/graph/PUplot.vue";
 import { useRepo } from "@/composables/useRepo.ts";
 import { useRepoGraph } from "@/composables/useRepoGraph.ts";
-import { formatValue } from "@/lib/format.ts";
 import {
   useQueryParamAsBool,
   useQueryParamAsInt,
@@ -11,7 +11,6 @@ import {
   useQueryParamAsStringSet,
 } from "@/lib/query.ts";
 import type uPlot from "uplot";
-import UplotVue from "uplot-vue";
 import { computed, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -72,44 +71,19 @@ const hoverCommit = computed(() => {
   return graph.data?.commits[hoverIdx.value];
 });
 
-const options = computed<uPlot.Options>(() => {
-  const series: uPlot.Series[] =
-    graph.data?.metrics.map((it, i) => ({
-      label: it.metric,
-      stroke: colors[i % colors.length] ?? "red",
-    })) ?? [];
-
-  const options: uPlot.Options = {
-    width: 900,
-    height: 500,
-    axes: [
-      {},
-      {
-        size: 70,
-        values: (_, vals) => vals.map((it) => formatValue(it)),
-      },
-    ],
-    scales: {
-      x: { time: false },
-      y: { range: [queryZero.value ? 0 : null, null] },
-    },
-    series: [
-      {
-        label: "Commit",
-        value: (_self, rawValue) => graph.data?.commits[rawValue]?.title ?? "--",
-      },
-      ...series,
-    ],
-    cursor: {
-      lock: true,
-      focus: { prox: 8 },
-    },
-    hooks: {
-      setCursor: [(plot) => (hoverIdx.value = plot.cursor.idx ?? undefined)],
-    },
+const series = computed<uPlot.Series[]>(() => {
+  const commitSeries: uPlot.Series = {
+    label: "n",
   };
 
-  return options;
+  const metricSeries: uPlot.Series[] = Array.from(queryM.value)
+    .sort()
+    .map((it, i) => ({
+      label: it,
+      stroke: colors[i % colors.length] ?? "red",
+    }));
+
+  return [commitSeries, ...metricSeries];
 });
 
 function normalize(values: (number | null)[]): (number | null)[] {
@@ -119,7 +93,7 @@ function normalize(values: (number | null)[]): (number | null)[] {
 }
 
 const data = computed<uPlot.AlignedData>(() => {
-  if (!graph.data) return [[]];
+  if (!graph.data) return [];
   const indices = graph.data.commits.map((_, i) => i);
   const measurements = graph.data.metrics
     .map((it) => it.measurements)
@@ -138,8 +112,8 @@ function openCurrentCommitInNewTab() {
 </script>
 
 <template>
-  <div class="flex min-h-0 gap-4">
-    <div class="flex w-[900px] flex-col gap-1">
+  <div class="flex min-h-0 max-w-[2000px] gap-4">
+    <div class="flex min-w-[500px] flex-2 flex-col gap-2">
       <div class="flex flex-wrap gap-1">
         <label class="bg-background-alt w-fit p-1 align-baseline select-none">
           n:
@@ -155,9 +129,9 @@ function openCurrentCommitInNewTab() {
         </label>
       </div>
 
-      <div class="flex min-h-0 flex-col items-center bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
-        <UplotVue key="graph" :options :data class="overflow-y-scroll" />
-        <div class="hidden pt-[0.1em] text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
+      <div class="flex min-h-0 flex-col bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
+        <PUplot v-model:hover-idx="hoverIdx" :series :data :start-at-zero="queryZero" class="overflow-y-scroll" />
+        <div class="hidden pt-[0.1em] text-center text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
       </div>
 
       <PCommitInfo
@@ -177,7 +151,7 @@ function openCurrentCommitInNewTab() {
       v-model:selected="queryM"
       :repo="route.params.repo"
       :limit="metricLimit"
-      class="max-w-[100ch] grow"
+      class="min-w-fit flex-1"
     />
   </div>
 </template>
