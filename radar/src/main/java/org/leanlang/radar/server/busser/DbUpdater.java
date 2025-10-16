@@ -32,6 +32,7 @@ public record DbUpdater(Repo repo, Queue queue) {
     public void update() {
         updateRepoData();
         updateQueue();
+        runPragmaOptimize();
     }
 
     private void updateRepoData() {
@@ -135,5 +136,13 @@ public record DbUpdater(Repo repo, Queue queue) {
         }
 
         log.info("Added {} commits to queue", toEnqueue.size());
+    }
+
+    private void runPragmaOptimize() {
+        // https://sqlite.org/lang_analyze.html#periodically_run_pragma_optimize_
+        // This may run a bit more frequently than the docs recommend, but it should be fine
+        // since PRAGMA optimize is usually a no-op anyway according to the docs.
+        log.info("Running pragma optimize");
+        repo.db().writeTransaction(ctx -> ctx.dsl().execute("PRAGMA optimize"));
     }
 }
