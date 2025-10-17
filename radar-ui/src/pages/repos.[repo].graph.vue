@@ -11,7 +11,7 @@ import {
   useQueryParamAsStringSet,
 } from "@/lib/query.ts";
 import type uPlot from "uplot";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const metricLimit = 100;
@@ -51,7 +51,7 @@ const queryM = useQueryParamAsStringSet("m");
 const queryN = useQueryParamAsInt("n", nDefault, { min: nMin, max: nMax });
 const queryS = useQueryParamAsString("s");
 const queryZero = useQueryParamAsBool("zero", true);
-const queryNormalize = useQueryParamAsBool("normalize", false);
+const queryNormalize = useQueryParamAsString("normalize");
 
 const graph = reactive(
   useRepoGraph(
@@ -82,18 +82,27 @@ const series = computed<uPlot.Series[]>(() => {
   return [commitSeries, ...metricSeries];
 });
 
+function normalizeAtStart(values: (number | null)[]): (number | null)[] {
+  const firstValue = values.find((it) => it !== null);
+  if (firstValue === undefined || firstValue === 0) return values;
+  return values.map((it) => it && it / firstValue);
+}
+
+function normalizeAtEnd(values: (number | null)[]): (number | null)[] {
+  const result = Array.from(values).reverse();
+  return normalizeAtStart(result).reverse();
+}
+
 function normalize(values: (number | null)[]): (number | null)[] {
-  const lastValue = values.find((it) => it !== null);
-  if (lastValue === undefined || lastValue === 0) return values;
-  return values.map((it) => it && it / lastValue);
+  if (queryNormalize.value === "start") return normalizeAtStart(values);
+  if (queryNormalize.value === "end") return normalizeAtEnd(values);
+  return values;
 }
 
 const data = computed<uPlot.AlignedData>(() => {
   if (!graph.data) return [];
   const indices = graph.data.commits.map((_, i) => i);
-  const measurements = graph.data.metrics
-    .map((it) => it.measurements)
-    .map((it) => (queryNormalize.value ? normalize(it) : it));
+  const measurements = graph.data.metrics.map((it) => it.measurements).map((it) => normalize(it));
   return [indices, ...measurements];
 });
 
@@ -105,6 +114,12 @@ function openCurrentCommitInNewTab() {
   });
   window.open(resolved.href, "_blank");
 }
+
+// Backwards compatibility with previous queryNormalize values
+watchEffect(() => {
+  if (queryNormalize.value === "true") queryNormalize.value = "start";
+  else if (queryNormalize.value === "false") queryNormalize.value = "";
+});
 </script>
 
 <template>
@@ -124,10 +139,14 @@ function openCurrentCommitInNewTab() {
         </label>
         <label
           class="bg-background-alt w-fit p-1 align-baseline select-none"
-          title="Whether the plots should be scaled so they all start at a value of 1"
+          title="Whether the plots should be scaled so they all start or end at a value of 1"
         >
           Normalize:
-          <input v-model="queryNormalize" type="checkbox" />
+          <select v-model="queryNormalize" class="bg-background px-1">
+            <option value="">no</option>
+            <option value="start">start</option>
+            <option value="end">end</option>
+          </select>
         </label>
       </div>
 
