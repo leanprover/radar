@@ -16,7 +16,7 @@ flowchart RL
     subgraph Server machine
         Proxy -- HTTP --> Server
     end
-    Browser -- HTTPS --> Proxy["Proxy\n(e.g. nginx)"]
+    Browser -- HTTPS --> Proxy["Proxy (e.g. nginx)"]
     subgraph Runner machine
         Runner -- HTTPS --> Proxy
     end
