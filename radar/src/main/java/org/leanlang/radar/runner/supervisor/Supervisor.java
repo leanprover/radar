@@ -102,15 +102,13 @@ public class Supervisor {
         entries.add(new JsonRunResultEntry(
                 "radar/run/" + job.name() + "//time",
                 (float) (Duration.between(startTime, endTime).toMillis() / 1000.0),
-                Optional.of("s"),
-                Optional.empty()));
+                Optional.of("s")));
 
         if (scriptStartTime != null && scriptEndTime != null)
             entries.add(new JsonRunResultEntry(
                     "radar/run/" + job.name() + "/script//time",
                     (float) (Duration.between(scriptStartTime, scriptEndTime).toMillis() / 1000.0),
-                    Optional.of("s"),
-                    Optional.empty()));
+                    Optional.of("s")));
 
         JsonRunResult result = new JsonRunResult(
                 job, startTime, endTime, scriptStartTime, scriptEndTime, exitCode, entries, lines.getAll());

@@ -6,5 +6,4 @@ import java.util.Optional;
 public record JsonRunResultEntry(
         @JsonProperty(required = true) String metric,
         @JsonProperty(required = true) float value,
-        Optional<String> unit,
-        Optional<Integer> direction) {}
+        Optional<String> unit) {}

@@ -299,14 +299,12 @@ public record Queue(Repos repos, Runners runners) {
         for (JsonRunResultEntry entry : runResult.entries()) {
             MetricsRecord record = metrics.get(entry.metric());
             if (record == null) {
-                MetricsRecord newRecord = new MetricsRecord(
-                        entry.metric(),
-                        entry.unit().orElse(null),
-                        entry.direction().orElse(Constants.DEFAULT_DIRECTION));
+                // TODO Drop direction column from metrics table
+                MetricsRecord newRecord =
+                        new MetricsRecord(entry.metric(), entry.unit().orElse(null), Constants.DEFAULT_DIRECTION);
                 metrics.put(entry.metric(), newRecord);
             } else {
                 entry.unit().ifPresent(record::setUnit);
-                entry.direction().ifPresent(record::setDirection);
             }
         }
 
