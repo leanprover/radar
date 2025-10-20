@@ -38,8 +38,15 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
 
   <CSection v-if="admin.token !== undefined">
     <CSectionTitle>Admin</CSectionTitle>
-    <div class="flex gap-2">
-      <CButton @click="postAdminVacuum(admin.token, route.params.repo)">Vacuum</CButton>
+    <div class="bg-background-alt flex max-w-[80ch] flex-col gap-2 p-1">
+      <div class="flex"><CButton @click="postAdminVacuum(admin.token, route.params.repo)">Vacuum</CButton></div>
+      <details>
+        <summary>Explanation</summary>
+        <div class="mt-2">
+          Vacuum the SQLite database. This should not be necessary under normal circumstances. It might be useful once
+          we've amassed a few gigabytes of data and want to defragment the db for performance reasons.
+        </div>
+      </details>
     </div>
   </CSection>
 
