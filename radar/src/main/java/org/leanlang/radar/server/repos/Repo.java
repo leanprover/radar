@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -33,6 +34,7 @@ public final class Repo implements AutoCloseable {
     private final RepoSource benchSource;
     private final String benchRef;
     private final List<ServerConfigRepoRun> benchRuns;
+    private final List<RepoMetricMatcher> metricMatchers;
     private final @Nullable String lakeprofReportUrl;
 
     private final RepoDb db;
@@ -55,6 +57,10 @@ public final class Repo implements AutoCloseable {
         this.benchRef = config.benchRef();
         this.benchRuns = config.benchRuns();
         this.lakeprofReportUrl = config.lakeprofReportUrl().orElse(null);
+        this.metricMatchers = config.metrics().stream()
+                .flatMap(Collection::stream)
+                .map(it -> new RepoMetricMatcher(it.match, new RepoMetricMetadata(it.direction)))
+                .toList();
 
         this.db = new RepoDb(this.name, dirs.repoDb(this.name));
         this.git = new RepoGit(dirs.repoGit(this.name), this.source.gitUrl());
@@ -124,6 +130,15 @@ public final class Repo implements AutoCloseable {
 
     public Optional<RepoGh> gh() {
         return Optional.ofNullable(gh);
+    }
+
+    public RepoMetricMetadata metricMetadata(String name) {
+        for (RepoMetricMatcher matcher : metricMatchers) {
+            if (matcher.matches(name)) {
+                return matcher.metadata();
+            }
+        }
+        return new RepoMetricMetadata();
     }
 
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {

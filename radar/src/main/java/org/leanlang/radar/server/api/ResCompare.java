@@ -17,6 +17,8 @@ import org.jooq.Configuration;
 import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
+import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.RepoMetricMetadata;
 import org.leanlang.radar.server.repos.Repos;
 
 @Path("/compare/{repo}/{first}/{second}/")
@@ -42,7 +44,9 @@ public record ResCompare(Repos repos) {
     public JsonGet get(
             @PathParam("repo") String name, @PathParam("first") String first, @PathParam("second") String second) {
 
-        return repos.repo(name).db().readTransactionResult(ctx -> {
+        Repo repo = repos.repo(name);
+
+        return repo.db().readTransactionResult(ctx -> {
             Optional<String> chashFirst = resolveRelativeTo(ctx, first, second);
             Optional<String> chashSecond = resolveRelativeTo(ctx, second, first);
 
@@ -54,6 +58,7 @@ public record ResCompare(Repos repos) {
             List<JsonMeasurement> measurements =
                     ctx.dsl().selectFrom(Tables.METRICS).orderBy(Tables.METRICS.METRIC.asc()).stream()
                             .map(metric -> {
+                                RepoMetricMetadata metadata = repo.metricMetadata(metric.getMetric());
                                 Optional<Measurement> mmFirst =
                                         Optional.ofNullable(measurementsFirst.get(metric.getMetric()));
                                 Optional<Measurement> mmSecond =
@@ -65,7 +70,7 @@ public record ResCompare(Repos repos) {
                                         mmFirst.flatMap(Measurement::source),
                                         mmSecond.flatMap(Measurement::source),
                                         Optional.ofNullable(metric.getUnit()),
-                                        metric.getDirection());
+                                        metadata.direction());
                             })
                             .filter(it -> it.first.isPresent() || it.second.isPresent())
                             .toList();

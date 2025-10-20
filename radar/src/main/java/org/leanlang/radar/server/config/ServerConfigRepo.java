@@ -16,4 +16,5 @@ public record ServerConfigRepo(
         @JsonProperty(required = true) URI benchUrl,
         @NotEmpty @JsonProperty(required = true) String benchRef,
         @Valid @NotEmpty @RepoRunNamesUnique @JsonProperty(required = true) List<ServerConfigRepoRun> benchRuns,
+        Optional<List<ServerConfigRepoMetric>> metrics,
         Optional<String> lakeprofReportUrl) {}

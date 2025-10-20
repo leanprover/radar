@@ -50,6 +50,9 @@ repos:
       - name: main
         script: main.py
         runner: testrunner
+    metrics:
+      - match: .*//time$
+        direction: -1
     lakeprofReportUrl: https://speed.lean-lang.org/lean4-out/
 
   - name: mathlib4
