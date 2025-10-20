@@ -12,19 +12,21 @@ import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
-import { useCommit } from "@/composables/useCommit.ts";
-import { useCompare } from "@/composables/useCompare.ts";
+import { invalidateCommit, useCommit } from "@/composables/useCommit.ts";
+import { invalidateCompare, useCompare } from "@/composables/useCompare.ts";
 import { useRepo } from "@/composables/useRepo.ts";
 import { queryParamAsNonemptyString } from "@/lib/query.ts";
 import { setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
+import { useQueryClient } from "@tanstack/vue-query";
 import { useIntervalFn } from "@vueuse/core";
 import { useRouteQuery } from "@vueuse/router";
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
+const queryClient = useQueryClient();
 
 const queryParentRaw = useRouteQuery("parent");
 const queryParent = computed(() => queryParamAsNonemptyString(queryParentRaw.value) ?? "parent");
@@ -94,6 +96,8 @@ watch(completedRuns, (newValue, oldValue) => {
 onBeforeRouteUpdate(() => {
   tick.resume();
 });
+
+const enqueuePriority = ref(-1);
 </script>
 
 <template>
@@ -128,8 +132,30 @@ onBeforeRouteUpdate(() => {
 
   <CSection v-if="admin.token !== undefined">
     <CSectionTitle>Admin</CSectionTitle>
-    <div class="flex gap-2">
-      <CButton @click="postAdminEnqueue(admin.token, route.params.repo, route.params.chash)">Enqueue</CButton>
+    <div class="bg-background-alt flex max-w-[80ch] flex-col gap-2 p-1">
+      <div class="flex gap-2">
+        <CButton
+          @click="
+            postAdminEnqueue(admin.token, route.params.repo, route.params.chash, enqueuePriority);
+            invalidateCommit(queryClient, route.params.repo, route.params.chash);
+            invalidateCompare(queryClient, route.params.repo, queryParent, route.params.chash);
+          "
+        >
+          Enqueue
+        </CButton>
+        with priority <input v-model="enqueuePriority" type="number" class="bg-background w-[8ch] px-1" />
+      </div>
+      <details>
+        <summary>Explanation</summary>
+        <div class="mt-2">
+          Add this commit to the queue (again). Any existing measurement and run data will be deleted. Commits with
+          higher priority value appear earlier in the queue. Within a priority, the queue is FIFO.
+        </div>
+        <div class="mt-2">
+          Priority of new commits: 0 <br />
+          Priority of commits added by !bench: 1
+        </div>
+      </details>
     </div>
   </CSection>
 
