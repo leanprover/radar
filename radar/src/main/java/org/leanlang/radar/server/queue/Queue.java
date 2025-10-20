@@ -114,10 +114,8 @@ public record Queue(Repos repos, Runners runners) {
             }));
         }
 
-        // High to low priority, then recent to old bump
-        // == (low to high priority, then old to recent bump) reversed
-        result.sort(
-                Comparator.comparing(Task::priority).thenComparing(Task::bumped).reversed());
+        // High to low priority, then old to recent bump
+        result.sort(Comparator.comparing(Task::priority).reversed().thenComparing(Task::bumped));
 
         return result;
     }
@@ -140,9 +138,10 @@ public record Queue(Repos repos, Runners runners) {
     }
 
     private static void enqueueBump(Configuration ctx, QueueRecord inQueue, int priority) {
-        // Bumping the position of higher-priority queue entries
-        // could lead to runs being run earlier than "authorized".
-        if (inQueue.getPriority() > priority) return;
+        // Bumping the position of higher-priority queue entries could lead to runs being run earlier than "authorized".
+        // Bumping same-priority commits would move them to the back of the queue, which doesn't seem desirable.
+        // Thus, bumping should only happen once when the priority increases.
+        if (inQueue.getPriority() >= priority) return;
 
         // Bump as if we had freshly inserted it into the queue
         inQueue.setPriority(priority);

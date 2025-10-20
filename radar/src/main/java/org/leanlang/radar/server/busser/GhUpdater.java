@@ -208,8 +208,12 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
             String chash = command.value3();
             String againstChash = command.value4();
 
-            boolean inQueue = queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_GITHUB_COMMAND);
+            // Try to finish the benchmark for the comparison commit first,
+            // so that when the user sees results, they're also immediately seeing a comparison.
+            // Otherwise, they may falsely think that nothing has changed.
+            // Note that the commit being compared against is usually in the history and already benchmarked anyway.
             boolean againstInQueue = queue.enqueueSoft(repo.name(), againstChash, Constants.PRIORITY_GITHUB_COMMAND);
+            boolean inQueue = queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_GITHUB_COMMAND);
 
             if (inQueue || againstInQueue) {
                 updateMessage(id, msgInProgress(chash, againstChash));
