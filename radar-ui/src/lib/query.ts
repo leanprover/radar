@@ -21,12 +21,6 @@ export function useQueryParamAsString(name: string) {
   });
 }
 
-export function queryParamAsNonemptyString(value?: QueryParamValue): string | undefined {
-  const s = queryParamAsString(value);
-  if (s === "") return undefined;
-  return s;
-}
-
 export function queryParamAsInt(value?: QueryParamValue): number | undefined {
   const s = queryParamAsString(value);
   if (s === undefined) return;

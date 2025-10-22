@@ -13,17 +13,16 @@ import CTimeInstant from "@/components/CTimeInstant.vue";
 import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
-import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
+import PMeasurementsTable, { type Measurement } from "@/components/pages/commit/PMeasurementsTable.vue";
 import PMessage from "@/components/pages/commit/PMessage.vue";
 import { invalidateCommit, useCommit } from "@/composables/useCommit.ts";
 import { invalidateCompare, useCompare } from "@/composables/useCompare.ts";
 import { useRepo } from "@/composables/useRepo.ts";
-import { queryParamAsNonemptyString } from "@/lib/query.ts";
+import { useQueryParamAsString } from "@/lib/query.ts";
 import { setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { useQueryClient } from "@tanstack/vue-query";
 import { useIntervalFn } from "@vueuse/core";
-import { useRouteQuery } from "@vueuse/router";
 import { computed, reactive, ref, watch } from "vue";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 
@@ -31,22 +30,8 @@ const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
 const queryClient = useQueryClient();
 
-const queryParentRaw = useRouteQuery("parent");
-const queryParent = computed(() => queryParamAsNonemptyString(queryParentRaw.value) ?? "parent");
-
-const queryFilterRaw = useRouteQuery("s");
-const queryFilter = computed({
-  get() {
-    return queryParamAsNonemptyString(queryFilterRaw.value);
-  },
-  set(value) {
-    if (value !== undefined) {
-      value = value.trim();
-      if (value === "") value = undefined;
-    }
-    queryFilterRaw.value = value;
-  },
-});
+const queryParent = useQueryParamAsString("parent");
+const queryFilter = useQueryParamAsString("s");
 
 const repo = useRepo(route.params.repo);
 const commit = reactive(
@@ -58,15 +43,13 @@ const commit = reactive(
 const compare = reactive(
   useCompare(
     () => route.params.repo,
-    () => queryParent.value,
+    () => queryParent.value || "parent",
     () => route.params.chash,
   ),
 );
-const measurements = computed(() => {
-  if (!compare.isSuccess) return undefined;
-  const data = compare.data.measurements.filter((it) => it.second !== undefined);
-  if (data.length === 0) return undefined;
-  return data;
+const measurements = computed<Measurement[]>(() => {
+  if (!compare.isSuccess) return [];
+  return compare.data.measurements.filter((it) => it.second !== undefined);
 });
 
 const major = computed(() => {
@@ -145,8 +128,8 @@ const enqueuePriority = ref(-1);
       </template>
 
       <PCommitMessage :title="commit.data.commit.title" :body="commit.data.commit.body" class="my-3" />
-      <PCommitNavParents :repo="route.params.repo" :commits="commit.data.parents" />
-      <PCommitNavChildren :repo="route.params.repo" :commits="commit.data.children" />
+      <PCommitNavParents :repo="route.params.repo" :search="queryFilter" :commits="commit.data.parents" />
+      <PCommitNavChildren :repo="route.params.repo" :search="queryFilter" :commits="commit.data.children" />
     </div>
   </CSection>
 
@@ -208,8 +191,7 @@ const enqueuePriority = ref(-1);
     </details>
   </CSection>
 
-  <CLoading v-if="!compare.isSuccess" :error="compare.error" />
-  <CSection v-else-if="measurements !== undefined">
+  <CSection v-show="measurements.length > 0">
     <CSectionTitle>Measurements</CSectionTitle>
     <PMeasurementsTable v-model:filter="queryFilter" :repo="route.params.repo" :measurements="measurements" />
   </CSection>

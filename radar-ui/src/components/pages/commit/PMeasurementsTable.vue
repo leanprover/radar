@@ -7,7 +7,7 @@ import { type ColumnDef, type Row } from "@tanstack/vue-table";
 import { h } from "vue";
 import { useRouter } from "vue-router";
 
-interface Measurement {
+export interface Measurement {
   metric: string;
   first?: number;
   second?: number;
