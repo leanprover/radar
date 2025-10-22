@@ -3,7 +3,7 @@ package org.leanlang.radar.runner.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.file.Path;
 
-public class RunnerConfigDirs {
+public final class RunnerConfigDirs {
     @JsonProperty(required = true)
     public Path cache = Path.of("cache");
 

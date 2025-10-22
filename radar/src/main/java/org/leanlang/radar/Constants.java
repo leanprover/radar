@@ -2,7 +2,7 @@ package org.leanlang.radar;
 
 import java.time.Duration;
 
-public class Constants {
+public final class Constants {
     private Constants() {}
 
     /**

@@ -25,7 +25,7 @@ import org.leanlang.radar.server.repos.RepoGit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Supervisor {
+public final class Supervisor {
     private static final Logger log = LoggerFactory.getLogger(Supervisor.class);
 
     private final RunnerConfig config;

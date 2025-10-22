@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.net.URI;
 import org.jspecify.annotations.Nullable;
 
-public class RunnerConfig {
+public final class RunnerConfig {
     @Valid
     @Nullable
     public LoggingFactory logging;

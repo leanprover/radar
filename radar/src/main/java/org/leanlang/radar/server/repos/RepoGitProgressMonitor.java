@@ -6,7 +6,7 @@ import org.eclipse.jgit.lib.BatchingProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RepoGitProgressMonitor extends BatchingProgressMonitor {
+public final class RepoGitProgressMonitor extends BatchingProgressMonitor {
     private static final Logger log = LoggerFactory.getLogger(RepoGitProgressMonitor.class);
     private final String action;
     private final Path path;
