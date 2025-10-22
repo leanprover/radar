@@ -1,13 +1,9 @@
 package org.leanlang.radar.server.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotEmpty;
-import org.leanlang.radar.server.repos.RepoMetricMetadata;
+import org.jspecify.annotations.Nullable;
 
 public final class ServerConfigRepoMetric {
-    @NotEmpty
-    @JsonProperty(required = true)
-    public String match;
+    public String match = "";
 
-    public int direction = new RepoMetricMetadata().direction();
+    public @Nullable Integer direction = null;
 }

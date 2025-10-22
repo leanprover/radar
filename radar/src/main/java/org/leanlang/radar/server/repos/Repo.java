@@ -56,10 +56,10 @@ public final class Repo implements AutoCloseable {
         this.benchSource = RepoSource.parse(config.benchUrl());
         this.benchRef = config.benchRef();
         this.benchRuns = config.benchRuns();
-        this.lakeprofReportUrl = config.lakeprofReportUrl().orElse(null);
-        this.metricMatchers = config.metrics().stream()
+        this.lakeprofReportUrl = config.lakeprofReportUrl();
+        this.metricMatchers = Optional.ofNullable(config.metrics()).stream()
                 .flatMap(Collection::stream)
-                .map(it -> new RepoMetricMatcher(it.match, new RepoMetricMetadata(it.direction)))
+                .map(RepoMetricMatcher::new)
                 .toList();
 
         this.db = new RepoDb(this.name, dirs.repoDb(this.name));
@@ -133,12 +133,13 @@ public final class Repo implements AutoCloseable {
     }
 
     public RepoMetricMetadata metricMetadata(String name) {
+        RepoMetricMetadata result = new RepoMetricMetadata();
         for (RepoMetricMatcher matcher : metricMatchers) {
             if (matcher.matches(name)) {
-                return matcher.metadata();
+                result = matcher.update(result);
             }
         }
-        return new RepoMetricMetadata();
+        return result;
     }
 
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
