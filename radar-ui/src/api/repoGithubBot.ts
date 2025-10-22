@@ -1,4 +1,5 @@
-import { enc, fetchJson, Timestamp } from "@/api/utils.ts";
+import { Timestamp } from "@/api/types.ts";
+import { enc, fetchJson } from "@/api/utils.ts";
 import * as z from "zod";
 
 const JsonCommand = z.object({

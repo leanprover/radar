@@ -1,4 +1,5 @@
-import { enc, fetchJson, JsonOutputLine, Timestamp } from "@/api/utils.ts";
+import { JsonOutputLine, Timestamp } from "@/api/types.ts";
+import { enc, fetchJson } from "@/api/utils.ts";
 import * as z from "zod";
 
 const JsonGet = z.object({

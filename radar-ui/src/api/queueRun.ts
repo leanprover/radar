@@ -1,4 +1,5 @@
-import { enc, fetchJson, JsonOutputLine, NotFoundError, Timestamp } from "@/api/utils.ts";
+import { JsonOutputLine, Timestamp } from "@/api/types.ts";
+import { enc, fetchJson, NotFoundError } from "@/api/utils.ts";
 import * as z from "zod";
 
 const JsonOutputLineBatch = z.object({

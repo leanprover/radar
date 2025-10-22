@@ -1,4 +1,5 @@
-import { enc, fetchJson, JsonCommit, JsonRun } from "@/api/utils.ts";
+import { JsonCommit, JsonRun } from "@/api/types.ts";
+import { enc, fetchJson } from "@/api/utils.ts";
 import * as z from "zod";
 
 const JsonLinkedCommit = z.object({

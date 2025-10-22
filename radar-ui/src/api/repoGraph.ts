@@ -1,4 +1,5 @@
-import { enc, fetchJson, JsonCommit } from "@/api/utils.ts";
+import { JsonCommit } from "@/api/types.ts";
+import { enc, fetchJson } from "@/api/utils.ts";
 import * as z from "zod";
 
 export type JsonMetric = z.infer<typeof JsonMetric>;

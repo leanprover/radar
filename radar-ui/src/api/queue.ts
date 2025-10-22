@@ -1,4 +1,5 @@
-import { fetchJson, JsonCommit, JsonRun, Timestamp } from "@/api/utils.ts";
+import { JsonCommit, JsonRun, Timestamp } from "@/api/types.ts";
+import { fetchJson } from "@/api/utils.ts";
 import * as z from "zod";
 
 export type JsonActiveRun = z.infer<typeof JsonActiveRun>;
