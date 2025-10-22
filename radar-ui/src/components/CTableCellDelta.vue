@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Direction } from "@/api/types.ts";
 import { formatValue } from "@/lib/format.ts";
 import { cn } from "@/lib/utils.ts";
 import { computed } from "vue";
@@ -12,7 +13,7 @@ const {
   from?: number;
   to?: number;
   unit?: string;
-  direction: -1 | 0 | 1;
+  direction: Direction;
 }>();
 
 const amount = computed(() => {

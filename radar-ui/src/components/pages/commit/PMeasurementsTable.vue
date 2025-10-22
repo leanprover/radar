@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Direction } from "@/api/types.ts";
 import CTable from "@/components/CTable.vue";
 import CTableCellDelta from "@/components/CTableCellDelta.vue";
 import CTableCellValue from "@/components/CTableCellValue.vue";
@@ -13,7 +14,7 @@ export interface Measurement {
   second?: number;
   secondSource?: string;
   unit?: string;
-  direction: -1 | 0 | 1;
+  direction: Direction;
 }
 
 const { repo, measurements } = defineProps<{ repo: string; measurements: Measurement[] }>();

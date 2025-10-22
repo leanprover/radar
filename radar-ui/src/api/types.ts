@@ -3,6 +3,7 @@ import * as z from "zod";
 
 export const Timestamp = z.number().transform((it) => Temporal.Instant.fromEpochMilliseconds(Math.round(it * 1000)));
 
+export type Direction = -1 | 0 | 1;
 export const Direction = z.union([z.literal(-1), z.literal(-0), z.literal(1)]);
 
 export const JsonRun = z.object({
@@ -42,8 +43,8 @@ export const JsonCommit = z.object({
 });
 
 export type JsonMessageSegment =
-  | { type: "delta"; amount: number; unit?: string; direction: -1 | 0 | 1 }
-  | { type: "deltaPercent"; factor: number; direction: -1 | 0 | 1 }
+  | { type: "delta"; amount: number; unit?: string; direction: Direction }
+  | { type: "deltaPercent"; factor: number; direction: Direction }
   | { type: "metric"; metric: string }
   | { type: "text"; text: string };
 export const JsonMessageSegment = z.discriminatedUnion("type", [

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Direction } from "@/api/types.ts";
 import { formatValue } from "@/lib/format.ts";
 import { computed } from "vue";
 
@@ -9,7 +10,7 @@ const {
 } = defineProps<{
   amount: number;
   unit?: string;
-  direction?: -1 | 0 | 1;
+  direction?: Direction;
 }>();
 
 const color = computed(() => {
