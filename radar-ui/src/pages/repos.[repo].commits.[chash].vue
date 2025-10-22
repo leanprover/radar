@@ -2,6 +2,8 @@
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
 import CButton from "@/components/CButton.vue";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
+import CList from "@/components/CList.vue";
+import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
 import CRunInfo from "@/components/CRunInfo.vue";
 import CSection from "@/components/CSection.vue";
@@ -12,6 +14,7 @@ import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
+import PMessage from "@/components/pages/commit/PMessage.vue";
 import { invalidateCommit, useCommit } from "@/composables/useCommit.ts";
 import { invalidateCompare, useCompare } from "@/composables/useCompare.ts";
 import { useRepo } from "@/composables/useRepo.ts";
@@ -64,6 +67,23 @@ const measurements = computed(() => {
   const data = compare.data.measurements.filter((it) => it.second !== undefined);
   if (data.length === 0) return undefined;
   return data;
+});
+
+const major = computed(() => {
+  if (!compare.isSuccess) return [];
+  return compare.data.measurements
+    .map((it) => it.significance)
+    .filter((it) => it !== undefined)
+    .filter((it) => it.major)
+    .map((it) => it.message);
+});
+const minor = computed(() => {
+  if (!compare.isSuccess) return [];
+  return compare.data.measurements
+    .map((it) => it.significance)
+    .filter((it) => it !== undefined)
+    .filter((it) => !it.major)
+    .map((it) => it.message);
 });
 
 const tick = useIntervalFn(onTick, 5000);
@@ -167,6 +187,26 @@ const enqueuePriority = ref(-1);
         <CRunInfo :repo="route.params.repo" :chash="route.params.chash" :run />
       </div>
     </div>
+  </CSection>
+
+  <CSection v-if="major.length > 0 || minor.length > 0">
+    <CSectionTitle>Significant changes</CSectionTitle>
+    <details v-if="major.length > 0">
+      <summary>Major ({{ major.length }})</summary>
+      <CList class="mt-2">
+        <CListItem v-for="(msg, i) in major" :key="i">
+          <PMessage :segments="msg" />
+        </CListItem>
+      </CList>
+    </details>
+    <details v-if="minor.length > 0">
+      <summary>Minor ({{ minor.length }})</summary>
+      <CList class="mt-2">
+        <CListItem v-for="(msg, i) in minor" :key="i">
+          <PMessage :segments="msg" />
+        </CListItem>
+      </CList>
+    </details>
   </CSection>
 
   <CLoading v-if="!compare.isSuccess" :error="compare.error" />

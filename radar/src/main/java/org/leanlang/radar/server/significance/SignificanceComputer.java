@@ -60,7 +60,7 @@ public final class SignificanceComputer {
                     new MessageBuilder()
                             .addMetric(metric)
                             .addText(" changed by ")
-                            .addDelta(deltaAmount, unit)
+                            .addDelta(deltaAmount, unit, metadata.direction())
                             .addText(".")
                             .build());
 
@@ -76,7 +76,7 @@ public final class SignificanceComputer {
                         new MessageBuilder()
                                 .addMetric(metric)
                                 .addText(" changed by ")
-                                .addDeltaPercent(deltaFactor)
+                                .addDeltaPercent(deltaFactor, metadata.direction())
                                 .addText(".")
                                 .build());
         }

@@ -13,12 +13,12 @@ public final class MessageBuilder {
         return this;
     }
 
-    public MessageBuilder addDelta(float amount, @Nullable String unit) {
-        return add(new JsonMessageSegment.Delta(amount, Optional.ofNullable(unit)));
+    public MessageBuilder addDelta(float amount, @Nullable String unit, int direction) {
+        return add(new JsonMessageSegment.Delta(amount, Optional.ofNullable(unit), direction));
     }
 
-    public MessageBuilder addDeltaPercent(float factor) {
-        return add(new JsonMessageSegment.DeltaPercent(factor));
+    public MessageBuilder addDeltaPercent(float factor, int direction) {
+        return add(new JsonMessageSegment.DeltaPercent(factor, direction));
     }
 
     public MessageBuilder addMetric(String metric) {

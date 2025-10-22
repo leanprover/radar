@@ -7,10 +7,10 @@ import java.util.Optional;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public sealed interface JsonMessageSegment {
     @JsonTypeName("delta")
-    record Delta(float amount, Optional<String> unit) implements JsonMessageSegment {}
+    record Delta(float amount, Optional<String> unit, int direction) implements JsonMessageSegment {}
 
     @JsonTypeName("deltaPercent")
-    record DeltaPercent(float factor) implements JsonMessageSegment {}
+    record DeltaPercent(float factor, int direction) implements JsonMessageSegment {}
 
     @JsonTypeName("metric")
     record Metric(String metric) implements JsonMessageSegment {}

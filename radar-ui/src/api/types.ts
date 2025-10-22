@@ -3,6 +3,8 @@ import * as z from "zod";
 
 export const Timestamp = z.number().transform((it) => Temporal.Instant.fromEpochMilliseconds(Math.round(it * 1000)));
 
+export const Direction = z.union([z.literal(-1), z.literal(-0), z.literal(1)]);
+
 export const JsonRun = z.object({
   name: z.string(),
   script: z.string(),
@@ -40,8 +42,8 @@ export const JsonCommit = z.object({
 });
 
 export type JsonMessageSegment =
-  | { type: "delta"; amount: number; unit?: string }
-  | { type: "deltaPercent"; factor: number }
+  | { type: "delta"; amount: number; unit?: string; direction: -1 | 0 | 1 }
+  | { type: "deltaPercent"; factor: number; direction: -1 | 0 | 1 }
   | { type: "metric"; metric: string }
   | { type: "text"; text: string };
 export const JsonMessageSegment = z.discriminatedUnion("type", [
@@ -52,8 +54,9 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
       .string()
       .nullish()
       .transform((it) => it ?? undefined),
+    direction: Direction,
   }),
-  z.object({ type: z.literal("deltaPercent"), factor: z.number() }),
+  z.object({ type: z.literal("deltaPercent"), factor: z.number(), direction: Direction }),
   z.object({ type: z.literal("metric"), metric: z.string() }),
   z.object({ type: z.literal("text"), text: z.string() }),
 ]);
