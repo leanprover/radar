@@ -181,12 +181,11 @@ const enqueuePriority = ref(-1);
 
   <CSection v-if="commit.isSuccess && commit.data.runs.length > 0">
     <CSectionTitle>Runs</CSectionTitle>
-    <div class="flex flex-col">
-      <div v-for="run in commit.data.runs" :key="run.name" class="flex gap-2">
-        <div>-</div>
+    <CList>
+      <CListItem v-for="run in commit.data.runs" :key="run.name">
         <CRunInfo :repo="route.params.repo" :chash="route.params.chash" :run />
-      </div>
-    </div>
+      </CListItem>
+    </CList>
   </CSection>
 
   <CSection v-if="major.length > 0 || minor.length > 0">

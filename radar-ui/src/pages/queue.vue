@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CList from "@/components/CList.vue";
+import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
@@ -14,9 +16,8 @@ const queue = reactive(useQueue());
   <CLoading v-if="!queue.isSuccess" :error="queue.error" />
   <CSection v-else>
     <CSectionTitle>Runners</CSectionTitle>
-    <div class="flex flex-col">
-      <div v-for="runner in queue.data.runners" :key="runner.name" class="flex items-baseline gap-2">
-        <div>-</div>
+    <CList>
+      <CListItem v-for="runner in queue.data.runners" :key="runner.name" class="items-baseline">
         <div>{{ runner.name }}</div>
         <div class="text-foreground-alt text-xs">
           <template v-if="runner.connected">(connected)</template>
@@ -25,8 +26,8 @@ const queue = reactive(useQueue());
           </template>
           <template v-else>(never seen)</template>
         </div>
-      </div>
-    </div>
+      </CListItem>
+    </CList>
   </CSection>
 
   <CLoading v-if="!queue.isSuccess" :error="queue.error" />

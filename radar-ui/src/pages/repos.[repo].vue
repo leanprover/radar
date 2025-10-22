@@ -2,6 +2,8 @@
 import { postAdminVacuum } from "@/api/adminVacuum.ts";
 import CButton from "@/components/CButton.vue";
 import CLinkCommit from "@/components/CLinkCommit.vue";
+import CList from "@/components/CList.vue";
+import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
@@ -53,9 +55,8 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
   <CLoading v-if="!history.isSuccess" :error="history.error" />
   <CSection v-else>
     <CSectionTitle>Recent commits</CSectionTitle>
-    <div class="flex flex-col">
-      <div v-for="commit in history.data.commits" :key="commit.chash" class="flex gap-2">
-        <div>*</div>
+    <CList>
+      <CListItem v-for="commit in history.data.commits" :key="commit.chash">
         <CLinkCommit
           :repo="route.params.repo"
           :chash="commit.chash"
@@ -63,15 +64,14 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
           :author="commit.author.name"
           :time="commit.committer.time"
         />
-      </div>
-    </div>
+      </CListItem>
+    </CList>
   </CSection>
 
   <CSection v-if="github.isSuccess && github.data.commands.length > 0">
     <CSectionTitle>Recent GitHub bot commands</CSectionTitle>
-    <div class="flex flex-col">
-      <div v-for="command in github.data.commands" :key="command.url" class="flex gap-2">
-        <div>-</div>
+    <CList>
+      <CListItem v-for="command in github.data.commands" :key="command.url">
         <div :class="{ 'text-foreground-alt': command.completed }">
           In PR #{{ command.pr }}:
           <a :href="command.url" target="_blank" class="hover:underline">command</a>
@@ -93,7 +93,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
             <CTimeAgo :when="command.completed" />)</template
           >
         </div>
-      </div>
-    </div>
+      </CListItem>
+    </CList>
   </CSection>
 </template>
