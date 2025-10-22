@@ -38,3 +38,22 @@ export const JsonCommit = z.object({
     .nullish()
     .transform((it) => it ?? undefined),
 });
+
+export type JsonMessageSegment =
+  | { type: "delta"; amount: number; unit?: string }
+  | { type: "deltaPercent"; factor: number }
+  | { type: "metric"; metric: string }
+  | { type: "text"; text: string };
+export const JsonMessageSegment = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("delta"),
+    amount: z.number(),
+    unit: z
+      .string()
+      .nullish()
+      .transform((it) => it ?? undefined),
+  }),
+  z.object({ type: z.literal("deltaPercent"), factor: z.number() }),
+  z.object({ type: z.literal("metric"), metric: z.string() }),
+  z.object({ type: z.literal("text"), text: z.string() }),
+]);

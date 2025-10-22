@@ -51,8 +51,15 @@ repos:
         script: main.py
         runner: testrunner
     metrics:
-      - match: .*//time$
-        direction: -1
+      - direction: -1
+        majorAppear: true
+        majorDisappear: true
+      - match: //time$
+        minorDeltaFactor: 0.3
+        majorDeltaFactor: 0.6
+      - match: //loc$
+        minorDeltaAmount: 200
+        majorDeltaAmount: 500
     lakeprofReportUrl: https://speed.lean-lang.org/lean4-out/
 
   - name: mathlib4
