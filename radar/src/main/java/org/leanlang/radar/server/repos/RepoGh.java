@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.leanlang.radar.server.repos.github.JsonGhPull;
+import org.leanlang.radar.server.repos.github.JsonGhReaction;
 
 // Sadly, https://github.com/hub4j/github-api can't query all issue comments, only comments for a specific issue.
 // Thus, we need to call the relevant API ourselves.
@@ -66,7 +67,7 @@ public final class RepoGh {
                 .queryParam("direction", "desc")
                 .queryParam("since", DateTimeFormatter.ISO_INSTANT.format(since))
                 .queryParam("page", page)
-                .queryParam("per_page", perPage) // The maximum
+                .queryParam("per_page", perPage)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .headers(headers())
                 .get(JsonGhComment[].class);
@@ -78,6 +79,36 @@ public final class RepoGh {
         List<JsonGhComment> result = new ArrayList<>();
         for (int page = 1; true; page++) {
             List<JsonGhComment> comments = getCommentsPage(since, page, PER_PAGE);
+            result.addAll(comments);
+            if (comments.size() < PER_PAGE) break;
+        }
+        return result;
+    }
+
+    // https://docs.github.com/en/rest/reactions/reactions?apiVersion=2022-11-28#list-reactions-for-an-issue-comment
+    private List<JsonGhReaction> getReactionsPage(long commentId, String content, int page, int perPage) {
+        JsonGhReaction[] reactions = client.target(API_URL)
+                .path("repos")
+                .path(owner)
+                .path(repo)
+                .path("issues")
+                .path("comments")
+                .path(String.valueOf(commentId))
+                .path("reactions")
+                .queryParam("content", content)
+                .queryParam("page", page)
+                .queryParam("per_page", perPage)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .headers(headers())
+                .get(JsonGhReaction[].class);
+
+        return Arrays.asList(reactions).reversed();
+    }
+
+    public List<JsonGhReaction> getReactions(long commentId, String content) {
+        List<JsonGhReaction> result = new ArrayList<>();
+        for (int page = 1; true; page++) {
+            List<JsonGhReaction> comments = getReactionsPage(commentId, content, page, PER_PAGE);
             result.addAll(comments);
             if (comments.size() < PER_PAGE) break;
         }

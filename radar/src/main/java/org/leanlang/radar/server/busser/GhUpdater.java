@@ -8,6 +8,8 @@ import jakarta.ws.rs.NotFoundException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -223,7 +225,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
             if (inQueue || againstInQueue) {
                 updateMessage(id, msgInProgress(chash, againstChash));
             } else {
-                updateMessage(id, msgFinished(chash, againstChash, authorLogin));
+                updateMessage(id, msgFinished(chash, againstChash, authorLogin, getUsersWhoReactedToReplyWithEye(id)));
                 repo.db().writeTransaction(ctx -> ctx.dsl()
                         .update(GITHUB_COMMAND_RESOLVED)
                         .set(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME, Instant.now())
@@ -245,6 +247,24 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
             command.setReplyTries(0);
             ctx.dsl().batchUpdate(command).execute();
         });
+    }
+
+    private List<String> getUsersWhoReactedToReplyWithEye(long commentId) {
+
+        GithubCommandRecord command = repo.db()
+                .read()
+                .dsl()
+                .selectFrom(GITHUB_COMMAND)
+                .where(condGhCommandOwnerRepoId(commentId))
+                .fetchOne();
+        if (command == null) return List.of();
+
+        Long replyId = command.getReplyIdLong();
+        if (replyId == null) return List.of();
+
+        return repoGh.getReactions(replyId, "eyes").stream()
+                .map(it -> it.user().login())
+                .toList();
     }
 
     public void updateReplies() {
@@ -335,16 +355,19 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
     }
 
     private String msgInProgress(String headChash, String baseChash) {
-        return "Benchmarking "
-                + (headChash + " ([status](" + radarLinkToCommit(headChash) + "))") + " against "
-                + (baseChash + " ([status](" + radarLinkToCommit(baseChash) + "))") + ".";
+        return "Benchmarking " + (headChash + " ([status](" + radarLinkToCommit(headChash) + "))")
+                + " against "
+                + (baseChash + " ([status](" + radarLinkToCommit(baseChash) + "))")
+                + ".\n\n<sub>React with :eyes: to be notified when the results are in.</sub>";
     }
 
     private String radarLinkToComparison(String first, String second) {
         return RADAR_URL + "repos/" + repo.name() + "/commits/" + second + "?parent=" + first;
     }
 
-    private String msgFinished(String headChash, String baseChash, @Nullable String userLogin) {
+    private String msgFinished(
+            String headChash, String baseChash, @Nullable String userLogin, List<String> usersThatReactedWithEye) {
+
         StringBuilder sb = new StringBuilder();
 
         sb.append("[Benchmark results](")
@@ -355,7 +378,11 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .append(baseChash)
                 .append(" are in!");
 
-        if (userLogin != null) sb.append(" @").append(userLogin);
+        Stream.concat(Optional.ofNullable(userLogin).stream(), usersThatReactedWithEye.stream())
+                .collect(Collectors.toSet())
+                .stream()
+                .sorted()
+                .forEach(it -> sb.append(" @").append(it));
 
         List<JsonMetricComparison> comparisons = CommitComparer.compareCommits(repo, baseChash, headChash);
         List<List<JsonMessageSegment>> major = comparisons.stream()
