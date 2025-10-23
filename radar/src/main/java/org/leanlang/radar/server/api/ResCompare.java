@@ -20,12 +20,12 @@ import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
+import org.leanlang.radar.server.compare.JsonMessageSegment;
+import org.leanlang.radar.server.compare.MetricSignificance;
+import org.leanlang.radar.server.compare.SignificanceComputer;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoMetricMetadata;
 import org.leanlang.radar.server.repos.Repos;
-import org.leanlang.radar.server.significance.JsonMessageSegment;
-import org.leanlang.radar.server.significance.MetricSignificance;
-import org.leanlang.radar.server.significance.SignificanceComputer;
 
 @Path("/compare/{repo}/{first}/{second}/")
 public record ResCompare(Repos repos) {

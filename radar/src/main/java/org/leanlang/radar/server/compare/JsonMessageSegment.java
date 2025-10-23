@@ -1,4 +1,4 @@
-package org.leanlang.radar.server.significance;
+package org.leanlang.radar.server.compare;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;

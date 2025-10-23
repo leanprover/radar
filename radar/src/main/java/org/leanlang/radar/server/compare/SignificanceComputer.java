@@ -1,4 +1,4 @@
-package org.leanlang.radar.server.significance;
+package org.leanlang.radar.server.compare;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,6 +6,8 @@ import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.repos.RepoMetricMetadata;
 
 public final class SignificanceComputer {
+    private SignificanceComputer() {}
+
     public static Optional<MetricMessage> compareMetric(
             String metric,
             @Nullable String unit,

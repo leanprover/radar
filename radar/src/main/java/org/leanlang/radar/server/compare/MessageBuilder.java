@@ -1,4 +1,4 @@
-package org.leanlang.radar.server.significance;
+package org.leanlang.radar.server.compare;
 
 import java.util.ArrayList;
 import java.util.List;

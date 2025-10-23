@@ -1,4 +1,4 @@
-package org.leanlang.radar.server.significance;
+package org.leanlang.radar.server.compare;
 
 public enum MetricSignificance {
     Minor,
