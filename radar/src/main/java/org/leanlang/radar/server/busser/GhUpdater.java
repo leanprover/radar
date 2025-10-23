@@ -370,17 +370,20 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .toList();
 
         sb.append("\n");
-        formatSignificanceSection(sb, "Major changes", major);
+        formatSignificanceSection(sb, "Major changes", true, major);
         sb.append("\n");
-        formatSignificanceSection(sb, "Minor changes", minor);
+        formatSignificanceSection(sb, "Minor changes", false, minor);
 
         return sb.toString();
     }
 
-    private void formatSignificanceSection(StringBuilder sb, String name, List<List<JsonMessageSegment>> messages) {
+    private void formatSignificanceSection(
+            StringBuilder sb, String name, boolean open, List<List<JsonMessageSegment>> messages) {
+
         if (messages.isEmpty()) return;
 
-        sb.append("<details>\n");
+        if (open) sb.append("<details open>\n");
+        else sb.append("<details>\n");
 
         sb.append("<summary>")
                 .append(name)
