@@ -49,12 +49,12 @@ const compare = reactive(
 );
 const measurements = computed<Measurement[]>(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.measurements.filter((it) => it.second !== undefined);
+  return compare.data.comparisons.filter((it) => it.second !== undefined);
 });
 
 const major = computed(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.measurements
+  return compare.data.comparisons
     .map((it) => it.significance)
     .filter((it) => it !== undefined)
     .filter((it) => it.major)
@@ -62,7 +62,7 @@ const major = computed(() => {
 });
 const minor = computed(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.measurements
+  return compare.data.comparisons
     .map((it) => it.significance)
     .filter((it) => it !== undefined)
     .filter((it) => !it.major)

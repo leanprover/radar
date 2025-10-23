@@ -1,7 +1,6 @@
 package org.leanlang.radar.server.api;
 
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
-import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.GET;
@@ -9,44 +8,22 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.jooq.Configuration;
-import org.jooq.Result;
-import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.History;
-import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
-import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
-import org.leanlang.radar.server.compare.JsonMessageSegment;
-import org.leanlang.radar.server.compare.MetricSignificance;
-import org.leanlang.radar.server.compare.SignificanceComputer;
+import org.leanlang.radar.server.compare.CommitComparer;
+import org.leanlang.radar.server.compare.JsonMetricComparison;
 import org.leanlang.radar.server.repos.Repo;
-import org.leanlang.radar.server.repos.RepoMetricMetadata;
 import org.leanlang.radar.server.repos.Repos;
 
 @Path("/compare/{repo}/{first}/{second}/")
 public record ResCompare(Repos repos) {
-    public record JsonSignificance(boolean major, List<JsonMessageSegment> message) {}
-
-    public record JsonMeasurement(
-            @JsonProperty(required = true) String metric,
-            Optional<String> unit,
-            Optional<Float> first,
-            Optional<Float> second,
-            Optional<String> firstSource,
-            Optional<String> secondSource,
-            @JsonProperty(required = true) int direction,
-            Optional<JsonSignificance> significance) {}
 
     public record JsonGet(
             Optional<String> chashFirst,
             Optional<String> chashSecond,
-            @JsonProperty(required = true) List<JsonMeasurement> measurements) {}
-
-    private record Measurement(float value, Optional<String> source) {}
+            @JsonProperty(required = true) List<JsonMetricComparison> comparisons) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -61,40 +38,10 @@ public record ResCompare(Repos repos) {
             Optional<String> chashFirst = resolveRelativeTo(ctx, paramFirst, paramSecond);
             Optional<String> chashSecond = resolveRelativeTo(ctx, paramSecond, paramFirst);
 
-            Map<String, Measurement> measurementsFirst =
-                    chashFirst.map(it -> measurementsFor(ctx, it)).orElse(Map.of());
-            Map<String, Measurement> measurementsSecond =
-                    chashSecond.map(it -> measurementsFor(ctx, it)).orElse(Map.of());
+            List<JsonMetricComparison> comparisons =
+                    CommitComparer.compareCommits(repo, chashFirst.orElse(null), chashSecond.orElse(null));
 
-            List<JsonMeasurement> measurements = new ArrayList<>();
-            Result<MetricsRecord> metrics = ctx.dsl()
-                    .selectFrom(Tables.METRICS)
-                    .orderBy(Tables.METRICS.METRIC.asc())
-                    .fetch();
-            for (MetricsRecord row : metrics) {
-                String metric = row.getMetric();
-                Optional<String> unit = Optional.ofNullable(row.getUnit());
-                RepoMetricMetadata metadata = repo.metricMetadata(metric);
-
-                Optional<Measurement> first = Optional.ofNullable(measurementsFirst.get(metric));
-                Optional<Measurement> second = Optional.ofNullable(measurementsSecond.get(metric));
-                if (first.isEmpty() && second.isEmpty()) continue;
-
-                Optional<Float> firstVal = first.map(Measurement::value);
-                Optional<Float> secondVal = second.map(Measurement::value);
-                Optional<String> firstSrc = first.flatMap(Measurement::source);
-                Optional<String> secondSrc = second.flatMap(Measurement::source);
-
-                Optional<JsonSignificance> significance = SignificanceComputer.compareMetric(
-                                metric, unit.orElse(null), metadata, firstVal.orElse(null), secondVal.orElse(null))
-                        .map(it ->
-                                new JsonSignificance(it.significance().equals(MetricSignificance.Major), it.message()));
-
-                measurements.add(new JsonMeasurement(
-                        metric, unit, firstVal, secondVal, firstSrc, secondSrc, metadata.direction(), significance));
-            }
-
-            return new JsonGet(chashFirst, chashSecond, measurements);
+            return new JsonGet(chashFirst, chashSecond, comparisons);
         });
     }
 
@@ -119,12 +66,5 @@ public record ResCompare(Repos repos) {
         }
 
         return Optional.of(chash);
-    }
-
-    private Map<String, Measurement> measurementsFor(Configuration ctx, String chash) {
-        return ctx.dsl().selectFrom(MEASUREMENTS).where(MEASUREMENTS.CHASH.eq(chash)).stream()
-                .collect(Collectors.toMap(
-                        MeasurementsRecord::getMetric,
-                        it -> new Measurement(it.getValue(), Optional.ofNullable(it.getSource()))));
     }
 }

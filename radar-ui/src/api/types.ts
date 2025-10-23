@@ -61,3 +61,34 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
   z.object({ type: z.literal("metric"), metric: z.string() }),
   z.object({ type: z.literal("text"), text: z.string() }),
 ]);
+
+export const JsonMetricSignificance = z.object({
+  major: z.boolean(),
+  message: JsonMessageSegment.array(),
+});
+
+export const JsonMetricComparison = z.object({
+  metric: z.string(),
+  first: z
+    .number()
+    .nullish()
+    .transform((it) => it ?? undefined),
+  second: z
+    .number()
+    .nullish()
+    .transform((it) => it ?? undefined),
+  firstSource: z
+    .string()
+    .nullish()
+    .transform((it) => it ?? undefined),
+  secondSource: z
+    .string()
+    .nullish()
+    .transform((it) => it ?? undefined),
+  unit: z
+    .string()
+    .nullish()
+    .transform((it) => it ?? undefined),
+  direction: Direction,
+  significance: JsonMetricSignificance.nullish().transform((it) => it ?? undefined),
+});
