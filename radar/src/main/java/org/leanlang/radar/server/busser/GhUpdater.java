@@ -17,10 +17,15 @@ import org.jooq.Condition;
 import org.jooq.Result;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
+import org.leanlang.radar.Formatter;
 import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandResolvedRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubLastCheckedRecord;
+import org.leanlang.radar.server.compare.CommitComparer;
+import org.leanlang.radar.server.compare.JsonMessageSegment;
+import org.leanlang.radar.server.compare.JsonMetricComparison;
+import org.leanlang.radar.server.compare.JsonMetricSignificance;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoGh;
@@ -352,6 +357,77 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
 
         if (userLogin != null) sb.append(" @").append(userLogin);
 
+        List<JsonMetricComparison> comparisons = CommitComparer.compareCommits(repo, baseChash, headChash);
+        List<List<JsonMessageSegment>> major = comparisons.stream()
+                .flatMap(it -> it.significance().stream())
+                .filter(JsonMetricSignificance::major)
+                .map(JsonMetricSignificance::message)
+                .toList();
+        List<List<JsonMessageSegment>> minor = comparisons.stream()
+                .flatMap(it -> it.significance().stream())
+                .filter(it -> !it.major())
+                .map(JsonMetricSignificance::message)
+                .toList();
+
+        sb.append("\n");
+        formatSignificanceSection(sb, "Major changes", major);
+        sb.append("\n");
+        formatSignificanceSection(sb, "Minor changes", minor);
+
         return sb.toString();
+    }
+
+    private void formatSignificanceSection(StringBuilder sb, String name, List<List<JsonMessageSegment>> messages) {
+        if (messages.isEmpty()) return;
+
+        sb.append("<details>\n");
+
+        sb.append("<summary>")
+                .append(name)
+                .append(" (")
+                .append(messages.size())
+                .append(")")
+                .append("</summary>\n");
+
+        // If there's no empty line between the <summary> and the list, GitHub won't render it correctly.
+        sb.append("\n");
+
+        for (List<JsonMessageSegment> message : messages) {
+            sb.append("- ");
+            formatMessage(sb, message);
+            sb.append("\n");
+        }
+
+        sb.append("</details>");
+    }
+
+    private void formatMessage(StringBuilder sb, List<JsonMessageSegment> message) {
+        for (JsonMessageSegment segment : message) {
+            formatMessageSegment(sb, segment);
+        }
+    }
+
+    private void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
+        Formatter fmt = new Formatter().withSign(true);
+        switch (segment) {
+            case JsonMessageSegment.Delta it:
+                sb.append("**")
+                        .append(fmt.formatValueWithUnit(it.amount(), it.unit().orElse(null)))
+                        .append("**");
+                if (it.amount() * it.direction() > 0) sb.append(" (✅)");
+                else if (it.amount() * it.direction() < 0) sb.append(" (\uD83D\uDFE5)");
+                break;
+            case JsonMessageSegment.DeltaPercent it:
+                sb.append("**").append(fmt.formatValue(it.factor(), "100%")).append("**");
+                if (it.factor() * it.direction() > 0) sb.append(" (✅)");
+                else if (it.factor() * it.direction() < 0) sb.append(" (\uD83D\uDFE5)");
+                break;
+            case JsonMessageSegment.Metric it:
+                sb.append("`").append(it.metric()).append("`");
+                break;
+            case JsonMessageSegment.Text it:
+                sb.append(it.text());
+                break;
+        }
     }
 }

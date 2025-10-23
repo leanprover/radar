@@ -28,6 +28,14 @@ repos:
       - name: main
         script: main.py
         runner: testrunner
+    metrics:
+      - direction: -1
+        minorAppear: true
+        minorDisappear: true
+        minorDeltaAmount: 5
+        majorDeltaAmount: 10
+        minorDeltaFactor: 0.1
+        majorDeltaFactor: 0.2
 
   - name: radar
     description: Do you know how fast you were going?
