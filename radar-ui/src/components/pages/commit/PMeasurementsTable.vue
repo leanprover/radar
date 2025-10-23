@@ -4,6 +4,7 @@ import CTable from "@/components/CTable.vue";
 import CTableCellDelta from "@/components/CTableCellDelta.vue";
 import CTableCellValue from "@/components/CTableCellValue.vue";
 import CTableHeader from "@/components/CTableHeader.vue";
+import { metricFilterMatches } from "@/lib/utils.ts";
 import { type ColumnDef, type Row } from "@tanstack/vue-table";
 import { h } from "vue";
 import { useRouter } from "vue-router";
@@ -138,8 +139,7 @@ const columns: ColumnDef<Measurement>[] = [
 
 function filterFn(row: Row<Measurement>, col: string, data: string): boolean {
   if (col !== "metric") return false;
-  // Yes, this is incorrect according to Unicode, but it suffices for our metric names.
-  return row.original.metric.toLowerCase().includes(data.toLowerCase());
+  return metricFilterMatches(data, row.original.metric);
 }
 
 function onClickRow(row: Row<Measurement>): void {

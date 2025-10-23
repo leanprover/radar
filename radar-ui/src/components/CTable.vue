@@ -83,8 +83,8 @@ function goToLastPage() {
 <template>
   <div class="flex w-fit flex-col gap-1">
     <div class="bg-background-alt col-span-full flex gap-2 p-1 align-baseline">
-      <div>Search</div>
-      <input v-model="filter" type="text" class="bg-background grow px-1" />
+      <div>Filter:</div>
+      <input v-model="filter" type="text" placeholder="Enter a regex..." class="bg-background grow px-1" />
       <CButton @click="filter = undefined">Clear</CButton>
     </div>
 

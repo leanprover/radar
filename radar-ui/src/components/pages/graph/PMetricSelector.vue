@@ -2,7 +2,7 @@
 import CButton from "@/components/CButton.vue";
 import CPlural from "@/components/CPlural.vue";
 import { useRepoMetrics } from "@/composables/useRepoMetrics.ts";
-import { parseMetric } from "@/lib/utils.ts";
+import { metricFilterMatches, parseMetric } from "@/lib/utils.ts";
 import { computed, reactive, ref, watchEffect } from "vue";
 
 const { repo, limit } = defineProps<{ repo: string; limit: number }>();
@@ -20,8 +20,7 @@ const allMetrics = computed(() => {
 
 const visibleMetrics = computed(() => {
   if (!filter.value) return allMetrics.value;
-  const filterLower = filter.value.toLowerCase();
-  return allMetrics.value.filter((it) => it.toLowerCase().includes(filterLower));
+  return allMetrics.value.filter((it) => metricFilterMatches(filter.value, it));
 });
 
 function toggle(metric: string) {
@@ -54,7 +53,7 @@ const pageMetrics = computed(() => {
   <div class="flex flex-col gap-1">
     <div class="bg-background-alt flex gap-1 p-1">
       <div class="shrink-0">Filter:</div>
-      <input v-model="filter" type="text" placeholder="<all>" class="bg-background shrink-0 grow px-1" />
+      <input v-model="filter" type="text" placeholder="Enter a regex..." class="bg-background shrink-0 grow px-1" />
       <CButton
         :disabled="visibleMetrics.length > limit"
         class="shrink-0"
