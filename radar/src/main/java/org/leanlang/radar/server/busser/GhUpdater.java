@@ -358,7 +358,9 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         return "Benchmarking " + (headChash + " ([status](" + radarLinkToCommit(headChash) + "))")
                 + " against "
                 + (baseChash + " ([status](" + radarLinkToCommit(baseChash) + "))")
-                + ".\n\n<sub>React with :eyes: to be notified when the results are in.</sub>";
+                + ".\n\n"
+                + "<sub>React with :eyes: to be notified when the results are in."
+                + " The command author is always notified.</sub>";
     }
 
     private String radarLinkToComparison(String first, String second) {
