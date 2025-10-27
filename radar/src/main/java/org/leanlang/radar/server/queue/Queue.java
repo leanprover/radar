@@ -1,9 +1,9 @@
 package org.leanlang.radar.server.queue;
 
-import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
 import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
+import static org.leanlang.radar.codegen.jooq.Tables.QUEUE_SEEN;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
 import java.io.IOException;
@@ -152,11 +152,10 @@ public record Queue(Repos repos, Runners runners) {
         Instant now = Instant.now();
         QueueRecord record = new QueueRecord(chash, now, now, priority);
         ctx.dsl().batchInsert(record).execute();
-
         ctx.dsl()
-                .update(COMMITS)
-                .set(COMMITS.SEEN, 1)
-                .where(COMMITS.CHASH.eq(chash))
+                .insertInto(QUEUE_SEEN, QUEUE_SEEN.CHASH)
+                .values(chash)
+                .onDuplicateKeyIgnore()
                 .execute();
     }
 

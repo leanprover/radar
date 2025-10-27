@@ -3,6 +3,7 @@ package org.leanlang.radar.server.busser;
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
+import static org.leanlang.radar.codegen.jooq.Tables.QUEUE_SEEN;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public record DbUpdater(Repo repo) {
         repo.db().writeTransaction(tx -> {
             insertNewCommits(tx);
             updateHistory(tx);
+            markCommitsAsSeenOnInitialRun(tx);
         });
     }
 
@@ -71,11 +73,6 @@ public record DbUpdater(Repo repo) {
                 if (parts.length > 1) body = parts[1].strip();
                 commitRecord.setMessageTitle(title);
                 commitRecord.setMessageBody(body);
-
-                if (existing.isEmpty()) {
-                    // We don't want to add thousands of commits to the queue when we first clone a repo.
-                    commitRecord.setSeen(1);
-                }
 
                 commitsToInsert.add(commitRecord);
 
@@ -117,13 +114,30 @@ public record DbUpdater(Repo repo) {
         log.info("Updated {} history commits", records.size());
     }
 
+    private void markCommitsAsSeenOnInitialRun(Configuration tx) {
+        // We don't want to add thousands of commits to the queue when we first clone a repo.
+
+        boolean atLeastOneSeen =
+                tx.dsl().selectOne().from(QUEUE_SEEN).limit(1).fetch().isNotEmpty();
+        if (atLeastOneSeen) return;
+
+        int updated = tx.dsl()
+                .insertInto(QUEUE_SEEN, QUEUE_SEEN.CHASH)
+                .select(DSL.select(COMMITS.CHASH).from(COMMITS))
+                .execute();
+
+        if (updated > 0) {
+            log.info("Marked {} commits as seen", updated);
+        }
+    }
+
     private void updateQueue(Queue queue) {
         // Find all commits that are now in the history and have never been in the queue (i.e. seen).
         List<String> toEnqueue = repo.db()
                 .read()
                 .dsl()
-                .selectFrom(HISTORY.join(COMMITS).onKey())
-                .where(COMMITS.SEEN.eq(0))
+                .selectFrom(HISTORY)
+                .whereNotExists(DSL.selectOne().from(QUEUE_SEEN).where(QUEUE_SEEN.CHASH.eq(HISTORY.CHASH)))
                 .andNotExists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
                 .orderBy(HISTORY.POSITION.asc())
                 .fetch(HISTORY.CHASH);
