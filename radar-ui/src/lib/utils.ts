@@ -22,5 +22,10 @@ export function parseMetric(metric: string): [string] | [string, string] {
 }
 
 export function metricFilterMatches(filter: string, metric: string): boolean {
-  return new RegExp(filter, "i").test(metric);
+  try {
+    return new RegExp(filter, "i").test(metric);
+  } catch {
+    // Invalid regex syntax
+    return false;
+  }
 }
