@@ -48,7 +48,15 @@ const options = computed<uPlot.Options>(() => ({
   },
 
   hooks: {
-    setCursor: [(plot) => (hoverIdx.value = plot.cursor.idx ?? undefined)],
+    setCursor: [
+      (plot) => {
+        // Make hoverIdx sticky: If it's ever defined, it should stay defined.
+        // This prevents flickering in certain weird edge cases.
+        if (plot.cursor.idx !== undefined && plot.cursor.idx !== null) {
+          hoverIdx.value = plot.cursor.idx;
+        }
+      },
+    ],
   },
 
   series,
