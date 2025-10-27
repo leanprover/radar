@@ -119,6 +119,11 @@ watch(
       return;
     }
 
+    if (newValue[0].length !== oldValue[0].length) {
+      recreate();
+      return;
+    }
+
     plot.value.setData(newValue, false);
     plot.value.redraw();
   },
