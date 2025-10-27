@@ -107,6 +107,14 @@ public final class RepoDb implements AutoCloseable {
         }
     }
 
+    public void writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(TransactionalRunnable action)
+            throws Throwable {
+
+        try (var write = write()) {
+            action.run(write.dsl().configuration());
+        }
+    }
+
     public <T> T writeTransactionResult(TransactionalCallable<T> transaction) {
         try (var write = write()) {
             return write.dsl().transactionResult(transaction);

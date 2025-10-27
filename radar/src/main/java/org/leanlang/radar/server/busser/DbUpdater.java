@@ -144,10 +144,17 @@ public record DbUpdater(Repo repo) {
         // since PRAGMA optimize is usually a no-op anyway according to the docs.
         log.info("Running pragma optimize");
         repo.db().writeTransaction(ctx -> ctx.dsl().execute("PRAGMA optimize"));
+        log.info("Ran pragma optimize");
     }
 
     public void runVacuum() {
         log.info("Running vacuum");
-        repo.db().writeTransaction(ctx -> ctx.dsl().execute("VACUUM"));
+        try {
+            repo.db().writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(ctx -> ctx.dsl()
+                    .execute("VACUUM"));
+        } catch (Throwable e) {
+            log.error("Failed to vacuum", e);
+        }
+        log.info("Ran vacuum");
     }
 }
