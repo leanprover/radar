@@ -21,7 +21,7 @@ repos:
   - name: radar-test-dummy
     description: Dummy test data
     url: https://github.com/Garmelon/radar-test-dummy
-    track: [ master ]
+    ref: master
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
@@ -36,11 +36,13 @@ repos:
         majorDeltaAmount: 10
         minorDeltaFactor: 0.1
         majorDeltaFactor: 0.2
+    significantMajorMetrics: 1
+    significantMinorMetrics: 5
 
   - name: radar
     description: Do you know how fast you were going?
     url: https://github.com/leanprover/radar
-    track: [ main ]
+    ref: main
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
@@ -51,7 +53,7 @@ repos:
   - name: lean4
     description: The Lean 4 programming language and theorem prover
     url: https://github.com/leanprover/lean4
-    track: [ master ]
+    ref: master
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
@@ -72,7 +74,7 @@ repos:
 
   - name: mathlib4
     url: https://github.com/leanprover-community/mathlib4
-    track: [ master ]
+    ref: master
     description: The math library of Lean 4
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master

@@ -21,6 +21,7 @@ public final class CommitComparer {
 
     private record Measurement(float value, Optional<String> source) {}
 
+    // TODO Check for failed runs as well?
     public static List<JsonMetricComparison> compareCommits(
             Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
         return repo.db().readTransactionResult(ctx -> {

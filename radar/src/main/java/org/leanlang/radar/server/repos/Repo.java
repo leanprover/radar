@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.FsUtil;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
@@ -36,6 +35,8 @@ public final class Repo implements AutoCloseable {
     private final List<ServerConfigRepoRun> benchRuns;
     private final List<RepoMetricMatcher> metricMatchers;
     private final @Nullable String lakeprofReportUrl;
+    private final int significantMajorMetrics;
+    private final int significantMinorMetrics;
 
     private final RepoDb db;
     private final RepoGit git;
@@ -49,18 +50,20 @@ public final class Repo implements AutoCloseable {
         this.environment = environment;
         this.dirs = dirs;
 
-        this.name = config.name();
-        this.description = config.description();
-        this.source = RepoSource.parse(config.url());
-        this.track = config.track().stream().collect(Collectors.toUnmodifiableSet()); // Just to make sure
-        this.benchSource = RepoSource.parse(config.benchUrl());
-        this.benchRef = config.benchRef();
-        this.benchRuns = config.benchRuns();
-        this.lakeprofReportUrl = config.lakeprofReportUrl();
-        this.metricMatchers = Optional.ofNullable(config.metrics()).stream()
+        this.name = config.name;
+        this.description = config.description;
+        this.source = RepoSource.parse(config.url);
+        this.track = Set.of(config.ref);
+        this.benchSource = RepoSource.parse(config.benchUrl);
+        this.benchRef = config.benchRef;
+        this.benchRuns = config.benchRuns;
+        this.lakeprofReportUrl = config.lakeprofReportUrl;
+        this.metricMatchers = Optional.ofNullable(config.metrics).stream()
                 .flatMap(Collection::stream)
                 .map(RepoMetricMatcher::new)
                 .toList();
+        this.significantMajorMetrics = config.significantMajorMetrics;
+        this.significantMinorMetrics = config.significantMinorMetrics;
 
         this.db = new RepoDb(this.name, dirs.repoDb(this.name));
         this.git = new RepoGit(dirs.repoGit(this.name), this.source.gitUrl());
@@ -114,6 +117,14 @@ public final class Repo implements AutoCloseable {
 
     public Optional<String> lakeprofReportUrl() {
         return Optional.ofNullable(lakeprofReportUrl);
+    }
+
+    public int significantMajorMetrics() {
+        return significantMajorMetrics;
+    }
+
+    public int significantMinorMetrics() {
+        return significantMinorMetrics;
     }
 
     public RepoDb db() {

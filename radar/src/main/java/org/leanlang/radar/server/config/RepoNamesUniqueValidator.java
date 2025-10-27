@@ -13,7 +13,7 @@ public final class RepoNamesUniqueValidator implements ConstraintValidator<RepoN
         if (value == null) {
             return true;
         }
-        var uniqueNames = value.stream().map(ServerConfigRepo::name).collect(Collectors.toSet());
+        var uniqueNames = value.stream().map(it -> it.name).collect(Collectors.toSet());
         return uniqueNames.size() == value.size();
     }
 }

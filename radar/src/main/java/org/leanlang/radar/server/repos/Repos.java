@@ -27,8 +27,8 @@ public final class Repos implements Managed {
         repoNames = new ArrayList<>();
         repos = new HashMap<>();
         for (ServerConfigRepo repo : repoList) {
-            repoNames.add(repo.name());
-            repos.put(repo.name(), new Repo(environment, client, dirs, repo, githubPatFiles.get(repo.name())));
+            repoNames.add(repo.name);
+            repos.put(repo.name, new Repo(environment, client, dirs, repo, githubPatFiles.get(repo.name)));
         }
     }
 

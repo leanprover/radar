@@ -97,6 +97,7 @@ public final class Busser implements Managed {
         new RepoDataUpdater(repo).update();
         if (githubBotUpdater != null) githubBotUpdater.update();
         new QueueUpdater(repo, queue).update();
+        new SignificanceUpdater(repo).update();
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {
