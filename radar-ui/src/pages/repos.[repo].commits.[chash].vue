@@ -173,7 +173,7 @@ const enqueuePriority = ref(-1);
 
   <CSection v-if="major.length > 0 || minor.length > 0">
     <CSectionTitle>Significant changes</CSectionTitle>
-    <details v-if="major.length > 0">
+    <details v-if="major.length > 0" open>
       <summary>Major ({{ major.length }})</summary>
       <CList class="mt-2">
         <CListItem v-for="(msg, i) in major" :key="i">
