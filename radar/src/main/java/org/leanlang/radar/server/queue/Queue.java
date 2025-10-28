@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jooq.Record1;
-import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
@@ -299,9 +298,8 @@ public record Queue(Repos repos, Runners runners) {
         for (JsonRunResultEntry entry : runResult.entries()) {
             MetricsRecord record = metrics.get(entry.metric());
             if (record == null) {
-                // TODO Drop direction column from metrics table
                 MetricsRecord newRecord =
-                        new MetricsRecord(entry.metric(), entry.unit().orElse(null), Constants.DEFAULT_DIRECTION);
+                        new MetricsRecord(entry.metric(), entry.unit().orElse(null));
                 metrics.put(entry.metric(), newRecord);
             } else {
                 entry.unit().ifPresent(record::setUnit);

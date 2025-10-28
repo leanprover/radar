@@ -3,7 +3,6 @@ package org.leanlang.radar.server.api;
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
-import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.ws.rs.BadRequestException;
@@ -14,9 +13,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import org.jooq.Record2;
 import org.jooq.impl.DSL;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
@@ -39,9 +35,9 @@ public record ResRepoGraph(Repos repos) {
         if (metrics.size() > 100) throw new BadRequestException("too many metrics");
         if (n > 10000) throw new BadRequestException("n too large");
 
-        return repo.db()
-                .readTransactionResult(ctx -> {
-                    List<JsonCommit> commits = ctx
+        return repo.db().readTransactionResult(ctx -> {
+            List<JsonCommit> commits =
+                    ctx
                             .dsl()
                             .selectFrom(HISTORY.join(COMMITS).onKey())
                             .orderBy(HISTORY.POSITION.desc())
@@ -52,37 +48,29 @@ public record ResRepoGraph(Repos repos) {
                             .toList()
                             .reversed();
 
-                    Map<String, Integer> directions = ctx
-                            .dsl()
-                            .select(METRICS.METRIC, METRICS.DIRECTION)
-                            .from(METRICS)
-                            .where(METRICS.METRIC.in(metrics))
-                            .stream()
-                            .collect(Collectors.toUnmodifiableMap(Record2::value1, Record2::value2));
+            List<JsonMetric> jsonMetrics = metrics.stream()
+                    .sorted()
+                    .map(it -> {
+                        List<Float> measurements = ctx.dsl()
+                                .select(HISTORY.POSITION, MEASUREMENTS.VALUE)
+                                .from(HISTORY.naturalJoin(MEASUREMENTS))
+                                .where(MEASUREMENTS.METRIC.eq(it))
+                                .union(DSL.select(HISTORY.POSITION, DSL.inline((Float) null))
+                                        .from(HISTORY)
+                                        .whereNotExists(DSL.selectOne()
+                                                .from(MEASUREMENTS)
+                                                .where(MEASUREMENTS.CHASH.eq(HISTORY.CHASH))
+                                                .and(MEASUREMENTS.METRIC.eq(it))))
+                                .orderBy(HISTORY.POSITION.desc())
+                                .limit(n)
+                                .fetch(MEASUREMENTS.VALUE)
+                                .reversed();
 
-                    List<JsonMetric> jsonMetrics = metrics.stream()
-                            .sorted()
-                            .map(it -> {
-                                List<Float> measurements = ctx.dsl()
-                                        .select(HISTORY.POSITION, MEASUREMENTS.VALUE)
-                                        .from(HISTORY.naturalJoin(MEASUREMENTS))
-                                        .where(MEASUREMENTS.METRIC.eq(it))
-                                        .union(DSL.select(HISTORY.POSITION, DSL.inline((Float) null))
-                                                .from(HISTORY)
-                                                .whereNotExists(DSL.selectOne()
-                                                        .from(MEASUREMENTS)
-                                                        .where(MEASUREMENTS.CHASH.eq(HISTORY.CHASH))
-                                                        .and(MEASUREMENTS.METRIC.eq(it))))
-                                        .orderBy(HISTORY.POSITION.desc())
-                                        .limit(n)
-                                        .fetch(MEASUREMENTS.VALUE)
-                                        .reversed();
+                        return new JsonMetric(it, repo.metricMetadata(it).direction(), measurements);
+                    })
+                    .toList();
 
-                                return new JsonMetric(it, directions.getOrDefault(it, 0), measurements);
-                            })
-                            .toList();
-
-                    return new JsonGet(commits, jsonMetrics);
-                });
+            return new JsonGet(commits, jsonMetrics);
+        });
     }
 }
