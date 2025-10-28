@@ -3,7 +3,6 @@ package org.leanlang.radar.server.busser;
 import io.dropwizard.lifecycle.Managed;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +12,6 @@ import org.leanlang.radar.Formatter;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
-import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,23 +86,13 @@ public final class Busser implements Managed {
     }
 
     private synchronized void doUpdateRepoImpl(Repo repo) throws GitAPIException {
-        if (repo.gh().isEmpty()) {
-            doFetch(repo);
-            new QueueUpdater(repo, queue).update();
-            return;
-        }
+        GhUpdater ghUpdater =
+                repo.gh().map(it -> new GhUpdater(repo, queue, it)).orElse(null);
 
-        GhUpdater ghUpdater = new GhUpdater(repo, queue, repo.gh().get());
-        Instant since = ghUpdater.since();
-        List<JsonGhComment> comments = ghUpdater.searchForComments(since);
-
-        // We must fetch before we process the bench commands to ensure we're aware of every commit involved.
+        if (ghUpdater != null) ghUpdater.fetch();
         doFetch(repo);
+        if (ghUpdater != null) ghUpdater.update();
         new QueueUpdater(repo, queue).update();
-
-        ghUpdater.addCommands(comments, since);
-        ghUpdater.executeCommands();
-        ghUpdater.updateReplies();
     }
 
     /**
@@ -121,9 +109,7 @@ public final class Busser implements Managed {
     private synchronized void doUpdateGhReplies(Repo repo) {
         if (repo.gh().isEmpty()) return;
         log.info("Updating gh replies for repo {}", repo.name());
-        GhUpdater ghUpdater = new GhUpdater(repo, queue, repo.gh().get());
-        ghUpdater.executeCommands(); // Otherwise the reply bodies won't be up-to-date.
-        ghUpdater.updateReplies();
+        new GhUpdater(repo, queue, repo.gh().get()).update();
     }
 
     private synchronized void doCleanAll() {

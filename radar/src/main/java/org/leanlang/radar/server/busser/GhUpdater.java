@@ -36,11 +36,38 @@ import org.leanlang.radar.server.repos.github.JsonGhPull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
+public final class GhUpdater {
     private static final Logger log = LoggerFactory.getLogger(GhUpdater.class);
     private static final String RADAR_URL = "https://radar.lean-lang.org/"; // TODO Configurable via config file
 
-    public Instant since() {
+    private final Repo repo;
+    private final Queue queue;
+    private final RepoGh repoGh;
+
+    private @Nullable Instant since = null;
+    private @Nullable List<JsonGhComment> comments = null;
+
+    public GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
+        this.repo = repo;
+        this.queue = queue;
+        this.repoGh = repoGh;
+    }
+
+    public void fetch() {
+        if (since != null || comments != null)
+            throw new IllegalStateException("fetch() must not be called more than once");
+
+        since = since();
+        comments = searchForComments(since);
+    }
+
+    public void update() {
+        if (since != null && comments != null) addCommands(comments, since);
+        executeCommands();
+        updateReplies();
+    }
+
+    private Instant since() {
         return Optional.ofNullable(repo.db()
                         .read()
                         .dsl()
@@ -50,7 +77,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .orElse(Instant.now());
     }
 
-    public List<JsonGhComment> searchForComments(Instant since) {
+    private List<JsonGhComment> searchForComments(Instant since) {
         log.info("Searching for comments since {}", since);
         List<JsonGhComment> comments = repoGh.getComments(since);
         log.info("Found {} comment{} since {}", comments.size(), comments.size() == 1 ? "" : "s", since);
@@ -72,7 +99,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .and(GITHUB_COMMAND_RESOLVED.COMMENT_ID_LONG.eq(id));
     }
 
-    public void addCommands(List<JsonGhComment> comments, Instant since) {
+    private void addCommands(List<JsonGhComment> comments, Instant since) {
         // Remove all commands from different GitHub repos in case we have switched repos.
         // Because of this transaction, in theory we wouldn't need to use the owner and repo in subsequent interactions,
         // but we still spell out the entire primary key every time, just to be on the safe side.
@@ -191,7 +218,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 Optional.of(new GhCommand.Resolved(pull, headChash, againstChash))));
     }
 
-    public void executeCommands() {
+    private void executeCommands() {
         var commands = repo.db()
                 .read()
                 .dsl()
@@ -267,7 +294,7 @@ public record GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
                 .toList();
     }
 
-    public void updateReplies() {
+    private void updateReplies() {
         Result<GithubCommandRecord> commands = repo.db()
                 .read()
                 .dsl()
