@@ -41,9 +41,14 @@ public final class Constants {
     public static final Duration RUNNER_CONNECTED_TIME = Duration.ofSeconds(10);
 
     /**
-     * Delay between {@link org.leanlang.radar.server.busser.Busser Busser} runs.
+     * Delay between {@link org.leanlang.radar.server.busser.Busser Busser} update runs.
      */
-    public static final Duration BUSSER_DELAY = Duration.ofMinutes(1);
+    public static final Duration BUSSER_UPDATE_DELAY = Duration.ofMinutes(1);
+
+    /**
+     * How long after midnight the {@link org.leanlang.radar.server.busser.Busser Busser} should do repo maintenance.
+     */
+    public static final Duration BUSSER_MAINTENANCE_DELAY = Duration.ZERO;
 
     /**
      * Queue priority of commits added because they newly appeared on one of the tracked branches.

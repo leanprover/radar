@@ -34,16 +34,18 @@ public final class Busser implements Managed {
     @Override
     public void start() {
         // Frequently update the repository
-        executor.scheduleWithFixedDelay(this::doUpdateAll, 1, Constants.BUSSER_DELAY.toMillis(), TimeUnit.MILLISECONDS);
+        executor.scheduleWithFixedDelay(
+                this::doUpdateAll, 1, Constants.BUSSER_UPDATE_DELAY.toMillis(), TimeUnit.MILLISECONDS);
 
         // Infrequently perform more aggressive cleanup
-        int secondsPerDay = 24 * 60 * 60;
-        int secondsAlreadyToday =
+        long secondsPerDay = 24 * 60 * 60;
+        long secondsElapsedToday =
                 Instant.now().atZone(ZoneId.systemDefault()).toLocalTime().toSecondOfDay();
-        int secondsToWait = secondsPerDay - secondsAlreadyToday;
+        long secondsToWait =
+                (secondsPerDay + Constants.BUSSER_MAINTENANCE_DELAY.toSeconds() - secondsElapsedToday) % secondsPerDay;
         log.info("Cleaning repos in {}", new Formatter().formatValueWithUnit(secondsToWait, "s"));
         executor.schedule(
-                () -> executor.scheduleAtFixedRate(this::doCleanAll, 0, secondsPerDay, TimeUnit.SECONDS),
+                () -> executor.scheduleAtFixedRate(this::doMaintainAll, 0, secondsPerDay, TimeUnit.SECONDS),
                 secondsToWait,
                 TimeUnit.SECONDS);
     }
@@ -63,9 +65,9 @@ public final class Busser implements Managed {
         executor.execute(() -> doUpdateGhReplies(repo));
     }
 
-    public void vacuumRepo(String repoName) {
+    public void cleanRepo(String repoName, boolean aggressive) {
         Repo repo = repos.repo(repoName);
-        executor.execute(() -> doVacuumRepo(repo));
+        executor.execute(() -> doMaintainRepo(repo, aggressive));
     }
 
     // The following methods all have the prefix "do" so they don't collide with the public names.
@@ -101,41 +103,13 @@ public final class Busser implements Managed {
         new GhUpdater(repo, queue, repo.gh().get()).update();
     }
 
-    private synchronized void doCleanAll() {
+    private synchronized void doMaintainAll() {
         for (Repo repo : repos.repos()) {
-            doCleanRepo(repo);
+            doMaintainRepo(repo, false);
         }
     }
 
-    private synchronized void doCleanRepo(Repo repo) {
-        log.info("Cleaning repo {}", repo.name());
-
-        // Run `pragma optimize` on the DB
-        // https://sqlite.org/lang_analyze.html#periodically_run_pragma_optimize_
-        log.info("Running pragma optimize");
-        repo.db().writeTransaction(ctx -> ctx.dsl().execute("PRAGMA optimize"));
-        log.info("Ran pragma optimize");
-
-        // Garbage collect the bare git repo
-        try {
-            repo.git().gc();
-        } catch (GitAPIException e) {
-            log.error("Failed to gc repo {}", repo.name(), e);
-        }
-
-        log.info("Cleaned repo {}", repo.name());
-    }
-
-    private synchronized void doVacuumRepo(Repo repo) {
-        log.info("Vacuuming repo {}", repo.name());
-
-        try {
-            repo.db().writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(ctx -> ctx.dsl()
-                    .execute("VACUUM"));
-        } catch (Throwable e) {
-            log.error("Failed to vacuum", e);
-        }
-
-        log.info("Vacuumed repo {}", repo.name());
+    private synchronized void doMaintainRepo(Repo repo, boolean aggressive) {
+        new RepoMaintainer(repo).maintain(aggressive);
     }
 }

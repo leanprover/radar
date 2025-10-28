@@ -9,13 +9,14 @@ import jakarta.ws.rs.core.MediaType;
 import org.leanlang.radar.server.api.auth.Admin;
 import org.leanlang.radar.server.busser.Busser;
 
-@Path("/admin/vacuum/")
-public record ResAdminVacuum(Busser busser) {
-    public record JsonPostInput(@JsonProperty(required = true) String repo) {}
+@Path("/admin/maintain/")
+public record ResAdminMaintain(Busser busser) {
+    public record JsonPostInput(
+            @JsonProperty(required = true) String repo, @JsonProperty(required = true) boolean aggressive) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void post(@Auth Admin admin, JsonPostInput input) {
-        busser.vacuumRepo(input.repo);
+        busser.cleanRepo(input.repo, input.aggressive);
     }
 }

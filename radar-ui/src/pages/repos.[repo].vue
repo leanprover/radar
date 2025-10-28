@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { postAdminVacuum } from "@/api/adminVacuum.ts";
+import { postAdminMaintain } from "@/api/adminMaintain.ts";
 import CButton from "@/components/CButton.vue";
 import CLinkCommit from "@/components/CLinkCommit.vue";
 import CList from "@/components/CList.vue";
@@ -41,12 +41,16 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
   <CSection v-if="admin.token !== undefined">
     <CSectionTitle>Admin</CSectionTitle>
     <div class="bg-background-alt flex max-w-[80ch] flex-col gap-2 p-1">
-      <div class="flex"><CButton @click="postAdminVacuum(admin.token, route.params.repo)">Vacuum</CButton></div>
+      <!-- TODO Move to admin page -->
+      <div class="flex">
+        <CButton @click="postAdminMaintain(admin.token, route.params.repo, true)">Aggressive maintenance</CButton>
+      </div>
       <details>
         <summary>Explanation</summary>
         <div class="mt-2">
-          Vacuum the SQLite database. This should not be necessary under normal circumstances. It might be useful once
-          we've amassed a few gigabytes of data and want to defragment the db for performance reasons.
+          Perform some aggressive maintenance steps, including vacuuming the DB. Most of these steps already run daily,
+          so this button should not be necessary under normal circumstances. In other words: Don't push unless you know
+          what you're doing.
         </div>
       </details>
     </div>
