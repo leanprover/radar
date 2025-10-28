@@ -21,11 +21,11 @@
     <!-- https://mvnrepository.com/artifact/io.dropwizard/dropwizard-dependencies -->
     <dropwizard.version>5.0.0</dropwizard.version>
     <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
-    <flyway.version>11.13.2</flyway.version>
+    <flyway.version>11.5.0</flyway.version>
     <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
     <hikaricp.version>7.0.2</hikaricp.version>
     <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
-    <jgit.version>7.3.0.202506031305-r</jgit.version>
+    <jgit.version>7.4.0.202509020913-r</jgit.version>
     <!-- https://mvnrepository.com/artifact/org.jooq/jooq -->
     <jooq.version>3.20.8</jooq.version>
     <!-- https://mvnrepository.com/artifact/info.picocli/picocli -->
@@ -34,7 +34,7 @@
     <sqlite-jdbc.version>3.50.3.0</sqlite-jdbc.version>
 
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-antrun-plugin -->
-    <maven-plugin-antrun.version>3.1.0</maven-plugin-antrun.version>
+    <maven-plugin-antrun.version>3.2.0</maven-plugin-antrun.version>
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
     <maven-plugin-compiler.version>3.14.1</maven-plugin-compiler.version>
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
