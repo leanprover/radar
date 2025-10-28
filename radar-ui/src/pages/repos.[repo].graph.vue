@@ -70,9 +70,17 @@ const hoverCommit = computed(() => {
 });
 
 const categories = computed<string[]>(() => {
-  if (graph.data === undefined) return [];
-  const categories = graph.data.metrics.map((it) => parseMetric(it.metric)[1]).filter((it) => it !== undefined);
+  const categories = Array.from(queryM.value)
+    .map((it) => parseMetric(it)[1])
+    .filter((it) => it !== undefined);
   return Array.from(new Set(categories)).sort();
+});
+
+// Reset queryRight if it is no longer present in any of the selected metrics
+watchEffect(() => {
+  if (!queryRight.value) return;
+  if (categories.value.includes(queryRight.value)) return;
+  queryRight.value = "";
 });
 
 function isRightCategory(metric: string): boolean {
@@ -173,6 +181,7 @@ watchEffect(() => {
           Right axis:
           <select v-model="queryRight" class="bg-background px-1">
             <option value="">none</option>
+            <hr />
             <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </label>
