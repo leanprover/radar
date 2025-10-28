@@ -52,6 +52,7 @@ public final class Busser implements Managed {
 
     @Override
     public void stop() {
+        executor.shutdownNow();
         executor.close();
     }
 
