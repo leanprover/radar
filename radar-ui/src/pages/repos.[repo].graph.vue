@@ -10,6 +10,7 @@ import {
   useQueryParamAsString,
   useQueryParamAsStringSet,
 } from "@/lib/query.ts";
+import { parseMetric } from "@/lib/utils.ts";
 import type uPlot from "uplot";
 import { computed, reactive, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -52,6 +53,7 @@ const queryN = useQueryParamAsInt("n", nDefault, { min: nMin, max: nMax });
 const queryS = useQueryParamAsString("s");
 const queryZero = useQueryParamAsBool("zero", true);
 const queryNormalize = useQueryParamAsString("normalize");
+const queryRight = useQueryParamAsString("right");
 
 const graph = reactive(
   useRepoGraph(
@@ -67,6 +69,18 @@ const hoverCommit = computed(() => {
   return graph.data?.commits[hoverIdx.value];
 });
 
+const categories = computed<string[]>(() => {
+  if (graph.data === undefined) return [];
+  const categories = graph.data.metrics.map((it) => parseMetric(it.metric)[1]).filter((it) => it !== undefined);
+  return Array.from(new Set(categories)).sort();
+});
+
+function isRightCategory(metric: string): boolean {
+  if (queryRight.value === "") return false;
+  const category = parseMetric(metric)[1];
+  return category === queryRight.value;
+}
+
 const series = computed<uPlot.Series[]>(() => {
   const commitSeries: uPlot.Series = {
     label: "n",
@@ -77,6 +91,7 @@ const series = computed<uPlot.Series[]>(() => {
     .map((it, i) => ({
       label: it,
       stroke: colors[i % colors.length] ?? "red",
+      scale: isRightCategory(it) ? "yright" : "y",
     }));
 
   return [commitSeries, ...metricSeries];
@@ -130,22 +145,35 @@ watchEffect(() => {
           n:
           <input v-model="queryN" type="number" :min="nMin" :max="nMax" :step="nStep" class="bg-background px-1" />
         </label>
+
         <label
           class="bg-background-alt w-fit p-1 align-baseline select-none"
-          title="Whether the y axis should start at 0 or at the lowest measured value"
+          title="Whether the y axis should start at 0 or at the lowest measured value."
         >
           Start at 0:
           <input v-model="queryZero" type="checkbox" />
         </label>
+
         <label
           class="bg-background-alt w-fit p-1 align-baseline select-none"
-          title="Whether the plots should be scaled so they all start or end at a value of 1"
+          title="Whether the plots should be scaled so they all start or end at a value of 1."
         >
           Normalize:
           <select v-model="queryNormalize" class="bg-background px-1">
             <option value="">no</option>
             <option value="start">start</option>
             <option value="end">end</option>
+          </select>
+        </label>
+
+        <label
+          class="bg-background-alt w-fit p-1 align-baseline select-none"
+          title="Display all metrics with this category (i.e. the part after //) on a separate axis to the right of the graph."
+        >
+          Right axis:
+          <select v-model="queryRight" class="bg-background px-1">
+            <option value="">none</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </label>
       </div>

@@ -31,11 +31,20 @@ const options = computed<uPlot.Options>(() => ({
       // TODO Format values with respect to y axis range
       values: (_, vals) => vals.map((it) => formatValue(it)),
     },
+    {
+      side: 1,
+      scale: "yright",
+      size: 70,
+      grid: { show: false },
+      // TODO Format values with respect to y axis range
+      values: (_, vals) => vals.map((it) => formatValue(it)),
+    },
   ],
 
   scales: {
     x: { time: false },
     y: { range: [startAtZero ? 0 : null, null] },
+    yright: { range: [startAtZero ? 0 : null, null] },
   },
 
   // Maybe use tooltips instead of a live legend?
