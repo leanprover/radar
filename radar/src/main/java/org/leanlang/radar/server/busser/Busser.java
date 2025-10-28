@@ -2,12 +2,14 @@ package org.leanlang.radar.server.busser;
 
 import io.dropwizard.lifecycle.Managed;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.leanlang.radar.Constants;
+import org.leanlang.radar.Formatter;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
@@ -33,7 +35,19 @@ public final class Busser implements Managed {
 
     @Override
     public void start() {
+        // Frequently update the repository
         executor.scheduleWithFixedDelay(this::doUpdateAll, 1, Constants.BUSSER_DELAY.toMillis(), TimeUnit.MILLISECONDS);
+
+        // Infrequently perform more aggressive cleanup
+        int secondsPerDay = 24 * 60 * 60;
+        int secondsAlreadyToday =
+                Instant.now().atZone(ZoneId.systemDefault()).toLocalTime().toSecondOfDay();
+        int secondsToWait = secondsPerDay - secondsAlreadyToday;
+        log.info("Cleaning repos in {}", new Formatter().formatValueWithUnit(secondsToWait, "s"));
+        executor.schedule(
+                () -> executor.scheduleAtFixedRate(this::doCleanAll, 0, secondsPerDay, TimeUnit.SECONDS),
+                secondsToWait,
+                TimeUnit.SECONDS);
     }
 
     @Override
@@ -108,6 +122,24 @@ public final class Busser implements Managed {
         GhUpdater ghUpdater = new GhUpdater(repo, queue, repo.gh().get());
         ghUpdater.executeCommands(); // Otherwise the reply bodies won't be up-to-date.
         ghUpdater.updateReplies();
+    }
+
+    private synchronized void doCleanAll() {
+        for (Repo repo : repos.repos()) {
+            doCleanRepo(repo);
+        }
+    }
+
+    private synchronized void doCleanRepo(Repo repo) {
+        log.info("Cleaning repo {}", repo.name());
+
+        new DbUpdater(repo).runPragmaOptimize();
+
+        try {
+            repo.git().gc();
+        } catch (GitAPIException e) {
+            log.error("Failed to gc repo {}", repo.name(), e);
+        }
     }
 
     private synchronized void doVacuumRepo(Repo repo) {

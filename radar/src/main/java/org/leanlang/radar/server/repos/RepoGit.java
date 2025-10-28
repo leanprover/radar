@@ -65,6 +65,16 @@ public final class RepoGit implements AutoCloseable {
         log.info("Finished fetching repo {}", path);
     }
 
+    public void gc() throws GitAPIException {
+        log.info("GCing repo {} (this may take a while)", path);
+        git.gc()
+                .setProgressMonitor(new RepoGitProgressMonitor("GCing", path))
+                .setAggressive(false)
+                .setPreserveOldPacks(false)
+                .call();
+        log.info("Finished GCing repo {}", path);
+    }
+
     public void cloneTo(Path target, String hash) throws GitAPIException {
         log.info("Cloning repo {}", path);
         try (Git git = Git.init().setDirectory(target.toFile()).call()) {
