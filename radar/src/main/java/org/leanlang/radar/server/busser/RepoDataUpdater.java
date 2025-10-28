@@ -18,15 +18,16 @@ import org.jooq.Configuration;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
-import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record DbUpdater(Repo repo) {
-    private static final Logger log = LoggerFactory.getLogger(DbUpdater.class);
+public record RepoDataUpdater(Repo repo) {
+    private static final Logger log = LoggerFactory.getLogger(RepoDataUpdater.class);
 
-    public void update(Queue queue) {
+    public void update() throws GitAPIException {
+        repo.git().fetch();
+        repo.gitBench().fetch();
         updateRepoData();
     }
 
@@ -106,23 +107,5 @@ public record DbUpdater(Repo repo) {
         tx.dsl().deleteFrom(HISTORY).execute();
         tx.dsl().batchInsert(records).execute();
         log.info("Updated {} history commits", records.size());
-    }
-
-    public void runPragmaOptimize() {
-        // https://sqlite.org/lang_analyze.html#periodically_run_pragma_optimize_
-        log.info("Running pragma optimize");
-        repo.db().writeTransaction(ctx -> ctx.dsl().execute("PRAGMA optimize"));
-        log.info("Ran pragma optimize");
-    }
-
-    public void runVacuum() {
-        log.info("Running vacuum");
-        try {
-            repo.db().writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(ctx -> ctx.dsl()
-                    .execute("VACUUM"));
-        } catch (Throwable e) {
-            log.error("Failed to vacuum", e);
-        }
-        log.info("Ran vacuum");
     }
 }

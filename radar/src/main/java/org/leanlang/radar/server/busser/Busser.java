@@ -90,20 +90,9 @@ public final class Busser implements Managed {
                 repo.gh().map(it -> new GhUpdater(repo, queue, it)).orElse(null);
 
         if (ghUpdater != null) ghUpdater.fetch();
-        doFetch(repo);
+        new RepoDataUpdater(repo).update();
         if (ghUpdater != null) ghUpdater.update();
         new QueueUpdater(repo, queue).update();
-    }
-
-    /**
-     * Fetch commits from GitHub and update the DB accordingly.
-     */
-    private synchronized void doFetch(Repo repo) throws GitAPIException {
-        repo.git().fetch();
-        repo.gitBench().fetch();
-
-        DbUpdater dbUpdater = new DbUpdater(repo);
-        dbUpdater.update(queue);
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {
@@ -121,8 +110,13 @@ public final class Busser implements Managed {
     private synchronized void doCleanRepo(Repo repo) {
         log.info("Cleaning repo {}", repo.name());
 
-        new DbUpdater(repo).runPragmaOptimize();
+        // Run `pragma optimize` on the DB
+        // https://sqlite.org/lang_analyze.html#periodically_run_pragma_optimize_
+        log.info("Running pragma optimize");
+        repo.db().writeTransaction(ctx -> ctx.dsl().execute("PRAGMA optimize"));
+        log.info("Ran pragma optimize");
 
+        // Garbage collect the bare git repo
         try {
             repo.git().gc();
         } catch (GitAPIException e) {
@@ -132,6 +126,12 @@ public final class Busser implements Managed {
 
     private synchronized void doVacuumRepo(Repo repo) {
         log.info("Vacuuming repo {}", repo.name());
-        new DbUpdater(repo).runVacuum();
+        try {
+            repo.db().writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(ctx -> ctx.dsl()
+                    .execute("VACUUM"));
+        } catch (Throwable e) {
+            log.error("Failed to vacuum", e);
+        }
+        log.info("Vacuumed repo {}", repo.name());
     }
 }
