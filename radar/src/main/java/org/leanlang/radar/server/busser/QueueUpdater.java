@@ -17,8 +17,10 @@ public record QueueUpdater(Repo repo, Queue queue) {
     private static final Logger log = LoggerFactory.getLogger(QueueUpdater.class);
 
     public void update() {
+        log.info("Updating queue for repo {}", repo.name());
         markAllCommitsSeenOnInitialRun();
         enqueueUnseenHistoricCommits();
+        log.info("Updated queue for repo {}", repo.name());
     }
 
     private void markAllCommitsSeenOnInitialRun() {
@@ -52,11 +54,9 @@ public record QueueUpdater(Repo repo, Queue queue) {
                 .fetch(HISTORY.CHASH);
 
         log.info("Adding {} commits to queue", toEnqueue.size());
-
         for (String chash : toEnqueue) {
             queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_NEW_COMMIT);
         }
-
         log.info("Added {} commits to queue", toEnqueue.size());
     }
 }

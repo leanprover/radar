@@ -26,9 +26,11 @@ public record RepoDataUpdater(Repo repo) {
     private static final Logger log = LoggerFactory.getLogger(RepoDataUpdater.class);
 
     public void update() throws GitAPIException {
+        log.info("Updating commits for repo {}", repo.name());
         repo.git().fetch();
         repo.gitBench().fetch();
         updateRepoData();
+        log.info("Updated commits for repo {}", repo.name());
     }
 
     private void updateRepoData() {

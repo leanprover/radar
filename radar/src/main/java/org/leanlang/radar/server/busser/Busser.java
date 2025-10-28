@@ -80,6 +80,7 @@ public final class Busser implements Managed {
         try {
             log.info("Updating repo {}", repo.name());
             doUpdateRepoImpl(repo);
+            log.info("Updated repo {}", repo.name());
         } catch (Exception e) {
             log.error("Failed to update repo {}", repo.name(), e);
         }
@@ -97,7 +98,6 @@ public final class Busser implements Managed {
 
     private synchronized void doUpdateGhReplies(Repo repo) {
         if (repo.gh().isEmpty()) return;
-        log.info("Updating gh replies for repo {}", repo.name());
         new GhUpdater(repo, queue, repo.gh().get()).update();
     }
 
@@ -122,16 +122,20 @@ public final class Busser implements Managed {
         } catch (GitAPIException e) {
             log.error("Failed to gc repo {}", repo.name(), e);
         }
+
+        log.info("Cleaned repo {}", repo.name());
     }
 
     private synchronized void doVacuumRepo(Repo repo) {
         log.info("Vacuuming repo {}", repo.name());
+
         try {
             repo.db().writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(ctx -> ctx.dsl()
                     .execute("VACUUM"));
         } catch (Throwable e) {
             log.error("Failed to vacuum", e);
         }
+
         log.info("Vacuumed repo {}", repo.name());
     }
 }

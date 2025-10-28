@@ -57,14 +57,18 @@ public final class GhUpdater {
         if (since != null || comments != null)
             throw new IllegalStateException("fetch() must not be called more than once");
 
+        log.info("Fetching GitHub commands for repo {}", repo.name());
         since = since();
         comments = searchForComments(since);
+        log.info("Fetched GitHub commands for repo {}", repo.name());
     }
 
     public void update() {
+        log.info("Updating GitHub commands for repo {}", repo.name());
         if (since != null && comments != null) addCommands(comments, since);
         executeCommands();
         updateReplies();
+        log.info("Updated GitHub commands for repo {}", repo.name());
     }
 
     private Instant since() {
