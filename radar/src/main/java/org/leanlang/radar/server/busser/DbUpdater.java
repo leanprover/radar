@@ -2,8 +2,6 @@ package org.leanlang.radar.server.busser;
 
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
-import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
-import static org.leanlang.radar.codegen.jooq.Tables.QUEUE_SEEN;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,8 +15,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jooq.Configuration;
-import org.jooq.impl.DSL;
-import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
@@ -32,14 +28,12 @@ public record DbUpdater(Repo repo) {
 
     public void update(Queue queue) {
         updateRepoData();
-        updateQueue(queue);
     }
 
     private void updateRepoData() {
         repo.db().writeTransaction(tx -> {
             insertNewCommits(tx);
             updateHistory(tx);
-            markCommitsAsSeenOnInitialRun(tx);
         });
     }
 
@@ -112,43 +106,6 @@ public record DbUpdater(Repo repo) {
         tx.dsl().deleteFrom(HISTORY).execute();
         tx.dsl().batchInsert(records).execute();
         log.info("Updated {} history commits", records.size());
-    }
-
-    private void markCommitsAsSeenOnInitialRun(Configuration tx) {
-        // We don't want to add thousands of commits to the queue when we first clone a repo.
-
-        boolean atLeastOneSeen =
-                tx.dsl().selectOne().from(QUEUE_SEEN).limit(1).fetch().isNotEmpty();
-        if (atLeastOneSeen) return;
-
-        int updated = tx.dsl()
-                .insertInto(QUEUE_SEEN, QUEUE_SEEN.CHASH)
-                .select(DSL.select(COMMITS.CHASH).from(COMMITS))
-                .execute();
-
-        if (updated > 0) {
-            log.info("Marked {} commits as seen", updated);
-        }
-    }
-
-    private void updateQueue(Queue queue) {
-        // Find all commits that are now in the history and have never been in the queue (i.e. seen).
-        List<String> toEnqueue = repo.db()
-                .read()
-                .dsl()
-                .selectFrom(HISTORY)
-                .whereNotExists(DSL.selectOne().from(QUEUE_SEEN).where(QUEUE_SEEN.CHASH.eq(HISTORY.CHASH)))
-                .andNotExists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
-                .orderBy(HISTORY.POSITION.asc())
-                .fetch(HISTORY.CHASH);
-
-        log.info("Adding {} commits to queue", toEnqueue.size());
-
-        for (String chash : toEnqueue) {
-            queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_NEW_COMMIT);
-        }
-
-        log.info("Added {} commits to queue", toEnqueue.size());
     }
 
     public void runPragmaOptimize() {

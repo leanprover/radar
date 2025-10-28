@@ -90,6 +90,7 @@ public final class Busser implements Managed {
     private synchronized void doUpdateRepoImpl(Repo repo) throws GitAPIException {
         if (repo.gh().isEmpty()) {
             doFetch(repo);
+            new QueueUpdater(repo, queue).update();
             return;
         }
 
@@ -99,6 +100,7 @@ public final class Busser implements Managed {
 
         // We must fetch before we process the bench commands to ensure we're aware of every commit involved.
         doFetch(repo);
+        new QueueUpdater(repo, queue).update();
 
         ghUpdater.addCommands(comments, since);
         ghUpdater.executeCommands();
