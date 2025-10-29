@@ -11,7 +11,6 @@ import java.util.stream.StreamSupport;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.AnyObjectId;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jooq.Configuration;
@@ -86,13 +85,7 @@ public record RepoDataUpdater(Repo repo) {
     }
 
     private void updateHistory(Configuration tx) throws IOException, GitAPIException {
-        LogCommand logCommand = repo.git().porcelain().log();
-
-        for (String refName : repo.track()) {
-            ObjectId id = repo.git().plumbing().resolve(refName);
-            if (id == null) continue;
-            logCommand.add(id);
-        }
+        LogCommand logCommand = repo.git().porcelain().log().add(repo.git().resolveRef(repo.ref()));
 
         // Topologically sorted with the oldest commits coming first.
         List<String> hashesInChronologicalOrder = StreamSupport.stream(

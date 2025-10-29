@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.RefSpec;
@@ -50,6 +51,12 @@ public final class RepoGit implements AutoCloseable {
 
     public Git porcelain() {
         return git;
+    }
+
+    public ObjectId resolveRef(String ref) throws IOException {
+        ObjectId id = plumbing().resolve(ref);
+        if (id == null) throw new IllegalArgumentException("Failed to resolve ref " + ref);
+        return id;
     }
 
     public void fetch() throws GitAPIException {

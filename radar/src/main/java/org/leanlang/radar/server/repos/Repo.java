@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.FsUtil;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
@@ -25,18 +24,11 @@ import org.leanlang.radar.server.repos.source.RepoSourceGithub;
 public final class Repo implements AutoCloseable {
     private final Environment environment;
     private final Dirs dirs;
+    private final ServerConfigRepo config;
 
-    private final String name;
-    private final String description;
     private final RepoSource source;
-    private final Set<String> track;
     private final RepoSource benchSource;
-    private final String benchRef;
-    private final List<ServerConfigRepoRun> benchRuns;
     private final List<RepoMetricMatcher> metricMatchers;
-    private final @Nullable String lakeprofReportUrl;
-    private final int significantMajorMetrics;
-    private final int significantMinorMetrics;
 
     private final RepoDb db;
     private final RepoGit git;
@@ -49,25 +41,18 @@ public final class Repo implements AutoCloseable {
 
         this.environment = environment;
         this.dirs = dirs;
+        this.config = config;
 
-        this.name = config.name;
-        this.description = config.description;
         this.source = RepoSource.parse(config.url);
-        this.track = Set.of(config.ref);
         this.benchSource = RepoSource.parse(config.benchUrl);
-        this.benchRef = config.benchRef;
-        this.benchRuns = config.benchRuns;
-        this.lakeprofReportUrl = config.lakeprofReportUrl;
         this.metricMatchers = Optional.ofNullable(config.metrics).stream()
                 .flatMap(Collection::stream)
                 .map(RepoMetricMatcher::new)
                 .toList();
-        this.significantMajorMetrics = config.significantMajorMetrics;
-        this.significantMinorMetrics = config.significantMinorMetrics;
 
-        this.db = new RepoDb(this.name, dirs.repoDb(this.name));
-        this.git = new RepoGit(dirs.repoGit(this.name), this.source.gitUrl());
-        this.gitBench = new RepoGit(dirs.repoGitBench(this.name), this.benchSource.gitUrl());
+        this.db = new RepoDb(name(), dirs.repoDb(name()));
+        this.git = new RepoGit(dirs.repoGit(name()), this.source.gitUrl());
+        this.gitBench = new RepoGit(dirs.repoGitBench(name()), this.benchSource.gitUrl());
         this.gh = mkGh(client, this.source, githubPatFile).orElse(null);
     }
 
@@ -88,19 +73,23 @@ public final class Repo implements AutoCloseable {
     }
 
     public String name() {
-        return name;
+        return config.name;
     }
 
     public String description() {
-        return description;
+        return config.description;
     }
 
     public RepoSource source() {
         return source;
     }
 
-    public Set<String> track() {
-        return track;
+    public String ref() {
+        return config.ref;
+    }
+
+    public Optional<String> lakeprofReportUrl() {
+        return Optional.ofNullable(config.lakeprofReportUrl);
     }
 
     public RepoSource benchSource() {
@@ -108,23 +97,11 @@ public final class Repo implements AutoCloseable {
     }
 
     public String benchRef() {
-        return benchRef;
+        return config.benchRef;
     }
 
     public List<ServerConfigRepoRun> benchRuns() {
-        return benchRuns;
-    }
-
-    public Optional<String> lakeprofReportUrl() {
-        return Optional.ofNullable(lakeprofReportUrl);
-    }
-
-    public int significantMajorMetrics() {
-        return significantMajorMetrics;
-    }
-
-    public int significantMinorMetrics() {
-        return significantMinorMetrics;
+        return config.benchRuns;
     }
 
     public RepoDb db() {
@@ -153,8 +130,16 @@ public final class Repo implements AutoCloseable {
         return result;
     }
 
+    public int significantMajorMetrics() {
+        return config.significantMajorMetrics;
+    }
+
+    public int significantMinorMetrics() {
+        return config.significantMinorMetrics;
+    }
+
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
-        Path file = dirs.repoRunLog(this.name, chash, run);
+        Path file = dirs.repoRunLog(name(), chash, run);
         Files.createDirectories(file.getParent());
         ObjectMapper mapper = environment.getObjectMapper();
         try (BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
@@ -166,7 +151,7 @@ public final class Repo implements AutoCloseable {
     }
 
     public List<JsonOutputLine> loadRunLog(String chash, String run) throws IOException {
-        Path file = dirs.repoRunLog(this.name, chash, run);
+        Path file = dirs.repoRunLog(name(), chash, run);
         ObjectMapper mapper = environment.getObjectMapper();
         List<JsonOutputLine> lines = new ArrayList<>();
         for (String line : Files.readString(file).lines().toList()) {
@@ -176,7 +161,7 @@ public final class Repo implements AutoCloseable {
     }
 
     public void deleteRunLogs(String chash) throws IOException {
-        Path dir = dirs.repoRunLogs(this.name, chash);
+        Path dir = dirs.repoRunLogs(name(), chash);
         FsUtil.removeDirRecursively(dir);
     }
 }

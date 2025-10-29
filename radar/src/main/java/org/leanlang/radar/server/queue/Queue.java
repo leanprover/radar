@@ -238,7 +238,7 @@ public record Queue(Repos repos, Runners runners) {
     private JsonJob makeJob(Task task, Run run) throws IOException {
         Repo repo = task.repo();
 
-        String benchChash = repo.gitBench().plumbing().resolve(repo.benchRef()).name();
+        String benchChash = repo.gitBench().resolveRef(repo.benchRef()).name();
 
         return new JsonJob(
                 repo.name(),

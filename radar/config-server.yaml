@@ -42,7 +42,7 @@ repos:
   - name: radar
     description: Do you know how fast you were going?
     url: https://github.com/leanprover/radar
-    ref: main
+    ref: master
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
