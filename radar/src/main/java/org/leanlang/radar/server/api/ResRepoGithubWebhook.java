@@ -8,7 +8,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
 import org.leanlang.radar.server.busser.Busser;
-import org.leanlang.radar.server.busser.GhCommand;
+import org.leanlang.radar.server.busser.GithubBotCommand;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
 import org.leanlang.radar.server.repos.github.JsonGhComment;
@@ -46,7 +46,7 @@ public record ResRepoGithubWebhook(Repos repos, Busser busser) {
             return;
         }
 
-        if (!GhCommand.isCommand(info.comment.body())) {
+        if (!GithubBotCommand.isCommand(info.comment.body())) {
             log.debug("Webhook comment body is not a command");
             return;
         }

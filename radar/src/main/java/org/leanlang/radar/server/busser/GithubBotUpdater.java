@@ -36,8 +36,8 @@ import org.leanlang.radar.server.repos.github.JsonGhPull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class GhUpdater {
-    private static final Logger log = LoggerFactory.getLogger(GhUpdater.class);
+public final class GithubBotUpdater {
+    private static final Logger log = LoggerFactory.getLogger(GithubBotUpdater.class);
     private static final String RADAR_URL = "https://radar.lean-lang.org/"; // TODO Configurable via config file
 
     private final Repo repo;
@@ -47,7 +47,7 @@ public final class GhUpdater {
     private @Nullable Instant since = null;
     private @Nullable List<JsonGhComment> comments = null;
 
-    public GhUpdater(Repo repo, Queue queue, RepoGh repoGh) {
+    public GithubBotUpdater(Repo repo, Queue queue, RepoGh repoGh) {
         this.repo = repo;
         this.queue = queue;
         this.repoGh = repoGh;
@@ -113,9 +113,9 @@ public final class GhUpdater {
                 .execute());
 
         for (JsonGhComment comment : comments) {
-            Optional<GhCommand> commandOpt = resolveCommand(comment);
+            Optional<GithubBotCommand> commandOpt = resolveCommand(comment);
             if (commandOpt.isEmpty()) continue;
-            GhCommand command = commandOpt.get();
+            GithubBotCommand command = commandOpt.get();
 
             log.info(
                     "Found command {} on #{}",
@@ -178,8 +178,8 @@ public final class GhUpdater {
         });
     }
 
-    private Optional<GhCommand> resolveCommand(JsonGhComment comment) {
-        if (!GhCommand.isCommand(comment.body())) return Optional.empty();
+    private Optional<GithubBotCommand> resolveCommand(JsonGhComment comment) {
+        if (!GithubBotCommand.isCommand(comment.body())) return Optional.empty();
 
         boolean commandAlreadyKnown = repo.db()
                 .read()
@@ -192,7 +192,8 @@ public final class GhUpdater {
         if (commandAlreadyKnown) return Optional.empty();
 
         Optional<JsonGhPull> pullOpt = repoGh.getPull(comment.issueNumber());
-        if (pullOpt.isEmpty()) return Optional.of(new GhCommand(repoGh, comment, msgNotInPr(), Optional.empty()));
+        if (pullOpt.isEmpty())
+            return Optional.of(new GithubBotCommand(repoGh, comment, msgNotInPr(), Optional.empty()));
         JsonGhPull pull = pullOpt.get();
         String headChash = pull.head().sha();
         String baseChash = pull.base().sha();
@@ -212,14 +213,14 @@ public final class GhUpdater {
             againstChash = mergeBase.name();
         } catch (Exception e) {
             log.error("Failed to find merge base between {} and {}", headChash, baseChash, e);
-            return Optional.of(new GhCommand(repoGh, comment, msgNoBase(), Optional.empty()));
+            return Optional.of(new GithubBotCommand(repoGh, comment, msgNoBase(), Optional.empty()));
         }
 
-        return Optional.of(new GhCommand(
+        return Optional.of(new GithubBotCommand(
                 repoGh,
                 comment,
                 msgInProgress(headChash, againstChash),
-                Optional.of(new GhCommand.Resolved(pull, headChash, againstChash))));
+                Optional.of(new GithubBotCommand.Resolved(pull, headChash, againstChash))));
     }
 
     private void executeCommands() {

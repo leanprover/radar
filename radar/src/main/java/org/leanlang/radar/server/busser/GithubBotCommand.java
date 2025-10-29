@@ -5,12 +5,12 @@ import org.leanlang.radar.server.repos.RepoGh;
 import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.leanlang.radar.server.repos.github.JsonGhPull;
 
-public record GhCommand(
+public record GithubBotCommand(
         String owner, String repo, JsonGhComment json, String replyContent, Optional<Resolved> resolved) {
 
     public record Resolved(JsonGhPull json, String chash, String againstChash) {}
 
-    public GhCommand(RepoGh repoGh, JsonGhComment comment, String replyContent, Optional<Resolved> resolved) {
+    public GithubBotCommand(RepoGh repoGh, JsonGhComment comment, String replyContent, Optional<Resolved> resolved) {
         this(repoGh.owner(), repoGh.repo(), comment, replyContent, resolved);
     }
 

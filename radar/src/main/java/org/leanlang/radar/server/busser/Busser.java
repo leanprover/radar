@@ -90,18 +90,18 @@ public final class Busser implements Managed {
     }
 
     private synchronized void doUpdateRepoImpl(Repo repo) throws GitAPIException {
-        GhUpdater ghUpdater =
-                repo.gh().map(it -> new GhUpdater(repo, queue, it)).orElse(null);
+        GithubBotUpdater githubBotUpdater =
+                repo.gh().map(it -> new GithubBotUpdater(repo, queue, it)).orElse(null);
 
-        if (ghUpdater != null) ghUpdater.fetch();
+        if (githubBotUpdater != null) githubBotUpdater.fetch();
         new RepoDataUpdater(repo).update();
-        if (ghUpdater != null) ghUpdater.update();
+        if (githubBotUpdater != null) githubBotUpdater.update();
         new QueueUpdater(repo, queue).update();
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {
         if (repo.gh().isEmpty()) return;
-        new GhUpdater(repo, queue, repo.gh().get()).update();
+        new GithubBotUpdater(repo, queue, repo.gh().get()).update();
     }
 
     private synchronized void doMaintainAll() {
