@@ -61,7 +61,7 @@ public record ResRepoGithubBot(Repos repos) {
                                 .else_(1)
                                 .asc(),
                         GITHUB_COMMAND.COMMENT_CREATED_TIME.desc())
-                .limit(50)
+                .limit(32)
                 .stream()
                 .map(it -> {
                     String ownerName = it.value1();
