@@ -60,13 +60,14 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
   <CSection v-else>
     <CSectionTitle>Recent commits</CSectionTitle>
     <CList>
-      <CListItem v-for="commit in history.data.commits" :key="commit.chash">
+      <CListItem v-for="entry in history.data.entries" :key="entry.commit.chash">
         <CLinkCommit
           :repo="route.params.repo"
-          :chash="commit.chash"
-          :title="commit.title"
-          :author="commit.author.name"
-          :time="commit.committer.time"
+          :chash="entry.commit.chash"
+          :title="entry.commit.title"
+          :author="entry.commit.author.name"
+          :time="entry.commit.committer.time"
+          :class="{ 'text-magenta font-bold': entry.significant === true }"
         />
       </CListItem>
     </CList>

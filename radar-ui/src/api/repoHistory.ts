@@ -2,8 +2,16 @@ import { JsonCommit } from "@/api/types.ts";
 import { enc, fetchJson } from "@/api/utils.ts";
 import * as z from "zod";
 
+const JsonEntry = z.object({
+  commit: JsonCommit,
+  significant: z
+    .boolean()
+    .nullish()
+    .transform((it) => it ?? undefined),
+});
+
 const JsonGet = z.object({
-  commits: JsonCommit.array(),
+  entries: JsonEntry.array(),
 });
 
 export async function getRepoHistory(repo: string, params?: { n?: number }) {
