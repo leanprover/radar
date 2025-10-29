@@ -9,11 +9,11 @@ public record RepoMaintainer(Repo repo) {
     private static final Logger log = LoggerFactory.getLogger(RepoMaintainer.class);
 
     public void maintain(boolean aggressive) {
-        log.info("Cleaning repo {}", repo.name());
+        log.info("Maintaining repo {}{}", repo.name(), aggressive ? " aggressively" : "");
         if (aggressive) dbVacuum();
         dbPragmaOptimize();
         gitGc();
-        log.info("Cleaned repo {}", repo.name());
+        log.info("Maintaining repo {}", repo.name());
     }
 
     private void dbVacuum() {

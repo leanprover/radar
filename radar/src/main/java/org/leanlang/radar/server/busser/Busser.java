@@ -43,7 +43,7 @@ public final class Busser implements Managed {
                 Instant.now().atZone(ZoneId.systemDefault()).toLocalTime().toSecondOfDay();
         long secondsToWait =
                 (secondsPerDay + Constants.BUSSER_MAINTENANCE_DELAY.toSeconds() - secondsElapsedToday) % secondsPerDay;
-        log.info("Cleaning repos in {}", new Formatter().formatValueWithUnit(secondsToWait, "s"));
+        log.info("Maintaining repos in {}", new Formatter().formatValueWithUnit(secondsToWait, "s"));
         executor.schedule(
                 () -> executor.scheduleAtFixedRate(this::doMaintainAll, 0, secondsPerDay, TimeUnit.SECONDS),
                 secondsToWait,
