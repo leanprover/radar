@@ -22,33 +22,13 @@ import org.leanlang.radar.server.repos.github.JsonGhReaction;
 // Thus, we need to call the relevant API ourselves.
 // While I'm already doing that, I'm also calling the other APIs directly because it's little overhead.
 
-public final class RepoGh {
+public record RepoGh(Client client, String owner, String repo, GithubCredentials credentials) {
     public static final int PER_PAGE = 100; // The maximum value
     public static final String API_URL = "https://api.github.com/";
 
-    private final Client client;
-    private final String owner;
-    private final String repo;
-    private final String pat;
-
-    public RepoGh(Client client, String owner, String repo, GithubCredentials credentials) {
-        this.client = client;
-        this.owner = owner;
-        this.repo = repo;
-        this.pat = credentials.personalAccessToken();
-    }
-
-    public String owner() {
-        return owner;
-    }
-
-    public String repo() {
-        return repo;
-    }
-
     private MultivaluedMap<String, Object> headers() {
         MultivaluedHashMap<String, Object> result = new MultivaluedHashMap<>();
-        result.add("Authorization", "Bearer " + pat);
+        result.add("Authorization", "Bearer " + credentials.personalAccessToken());
         result.add("X-GitHub-Api-Version", "2022-11-28");
         return result;
     }

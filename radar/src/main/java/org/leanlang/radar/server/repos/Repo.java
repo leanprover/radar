@@ -19,6 +19,7 @@ import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 import org.leanlang.radar.server.config.ServerConfigRepoRun;
 import org.leanlang.radar.server.config.credentials.GithubCredentials;
+import org.leanlang.radar.server.config.credentials.ZulipCredentials;
 import org.leanlang.radar.server.repos.source.RepoSource;
 import org.leanlang.radar.server.repos.source.RepoSourceGithub;
 
@@ -35,13 +36,15 @@ public final class Repo implements AutoCloseable {
     private final RepoGit git;
     private final RepoGit gitBench;
     private final @Nullable RepoGh gh;
+    private final @Nullable RepoZulip zulip;
 
     public Repo(
             Environment environment,
             Client client,
             Dirs dirs,
             ServerConfigRepo config,
-            @Nullable GithubCredentials githubCredentials)
+            @Nullable GithubCredentials githubCredentials,
+            @Nullable ZulipCredentials zulipCredentials)
             throws IOException {
 
         this.environment = environment;
@@ -59,6 +62,7 @@ public final class Repo implements AutoCloseable {
         this.git = new RepoGit(dirs.repoGit(name()), this.source.gitUrl());
         this.gitBench = new RepoGit(dirs.repoGitBench(name()), this.benchSource.gitUrl());
         this.gh = mkRepoGh(client, this.source, githubCredentials);
+        this.zulip = mkRepoZulip(client, zulipCredentials);
     }
 
     private static @Nullable RepoGh mkRepoGh(
@@ -66,6 +70,11 @@ public final class Repo implements AutoCloseable {
         if (!(source instanceof RepoSourceGithub(String owner, String repo))) return null;
         if (credentials == null) return null;
         return new RepoGh(client, owner, repo, credentials);
+    }
+
+    private static @Nullable RepoZulip mkRepoZulip(Client client, @Nullable ZulipCredentials credentials) {
+        if (credentials == null) return null;
+        return new RepoZulip(client, credentials);
     }
 
     @Override
@@ -121,6 +130,10 @@ public final class Repo implements AutoCloseable {
 
     public Optional<RepoGh> gh() {
         return Optional.ofNullable(gh);
+    }
+
+    public Optional<RepoZulip> zulip() {
+        return Optional.ofNullable(zulip);
     }
 
     public RepoMetricMetadata metricMetadata(String name) {
