@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.leanlang.radar.server.config.credentials.GithubCredentials;
 import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.leanlang.radar.server.repos.github.JsonGhPull;
 import org.leanlang.radar.server.repos.github.JsonGhReaction;
@@ -30,11 +31,11 @@ public final class RepoGh {
     private final String repo;
     private final String pat;
 
-    public RepoGh(Client client, String owner, String repo, String pat) {
+    public RepoGh(Client client, String owner, String repo, GithubCredentials credentials) {
         this.client = client;
         this.owner = owner;
         this.repo = repo;
-        this.pat = pat;
+        this.pat = credentials.personalAccessToken();
     }
 
     public String owner() {

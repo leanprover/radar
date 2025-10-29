@@ -26,9 +26,15 @@ public final class Main {
                             description = "Mapping from repo to GitHub personal access token files.",
                             paramLabel = "<repo>=<path>")
                     @Nullable
-                    Map<String, Path> githubPatFiles)
+                    Map<String, Path> githubPatFiles,
+            @Option(
+                            names = "--zuliprc-file",
+                            description = "Mapping from repo to zuliprc files.",
+                            paramLabel = "<repo>=<path>")
+                    @Nullable
+                    Map<String, Path> zuliprcFiles)
             throws Exception {
-        new ServerApplication(configFile, stateDir, cacheDir, githubPatFiles).run();
+        new ServerApplication(configFile, stateDir, cacheDir, githubPatFiles, zuliprcFiles).run();
     }
 
     @Command(name = "runner", description = "Start the runner.")

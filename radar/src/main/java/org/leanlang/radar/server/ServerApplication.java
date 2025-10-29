@@ -13,7 +13,6 @@ import jakarta.ws.rs.client.Client;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
 import org.leanlang.radar.server.api.ResAdminMaintain;
@@ -36,6 +35,7 @@ import org.leanlang.radar.server.api.auth.AdminAuthenticator;
 import org.leanlang.radar.server.busser.Busser;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfig;
+import org.leanlang.radar.server.config.credentials.CredentialsByRepo;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repos;
 import org.leanlang.radar.server.runners.Runners;
@@ -46,17 +46,20 @@ public final class ServerApplication extends Application<ServerConfig> {
     private final Path configFile;
     private final @Nullable Path stateDir;
     private final @Nullable Path cacheDir;
-    private final @NonNull Map<String, Path> githubPatFiles;
+    private final CredentialsByRepo credentials;
 
     public ServerApplication(
             Path configFile,
             @Nullable Path stateDir,
             @Nullable Path cacheDir,
-            @Nullable Map<String, Path> githubPatFiles) {
+            @Nullable Map<String, Path> githubFiles,
+            @Nullable Map<String, Path> zulipFiles)
+            throws IOException {
+
         this.configFile = configFile;
         this.stateDir = stateDir;
         this.cacheDir = cacheDir;
-        this.githubPatFiles = githubPatFiles == null ? Map.of() : githubPatFiles;
+        this.credentials = CredentialsByRepo.load(githubFiles, zulipFiles);
     }
 
     public void run() throws Exception {
@@ -81,7 +84,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         var client = configureJerseyClient(configuration, environment);
 
         var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
-        var repos = new Repos(environment, client, dirs, configuration.repos, githubPatFiles);
+        var repos = new Repos(environment, client, dirs, credentials, configuration.repos);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos, runners);
         var busser = new Busser(repos, queue);

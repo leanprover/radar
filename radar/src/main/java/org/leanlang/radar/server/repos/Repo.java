@@ -18,6 +18,7 @@ import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
 import org.leanlang.radar.server.config.ServerConfigRepoRun;
+import org.leanlang.radar.server.config.credentials.GithubCredentials;
 import org.leanlang.radar.server.repos.source.RepoSource;
 import org.leanlang.radar.server.repos.source.RepoSourceGithub;
 
@@ -36,7 +37,11 @@ public final class Repo implements AutoCloseable {
     private final @Nullable RepoGh gh;
 
     public Repo(
-            Environment environment, Client client, Dirs dirs, ServerConfigRepo config, @Nullable Path githubPatFile)
+            Environment environment,
+            Client client,
+            Dirs dirs,
+            ServerConfigRepo config,
+            @Nullable GithubCredentials githubCredentials)
             throws IOException {
 
         this.environment = environment;
@@ -53,16 +58,14 @@ public final class Repo implements AutoCloseable {
         this.db = new RepoDb(name(), dirs.repoDb(name()));
         this.git = new RepoGit(dirs.repoGit(name()), this.source.gitUrl());
         this.gitBench = new RepoGit(dirs.repoGitBench(name()), this.benchSource.gitUrl());
-        this.gh = mkGh(client, this.source, githubPatFile).orElse(null);
+        this.gh = mkRepoGh(client, this.source, githubCredentials);
     }
 
-    private static Optional<RepoGh> mkGh(Client client, RepoSource source, @Nullable Path githubPatFile)
-            throws IOException {
-
-        if (!(source instanceof RepoSourceGithub(String owner, String repo))) return Optional.empty();
-        if (githubPatFile == null) return Optional.empty();
-        String pat = Files.readString(githubPatFile).strip();
-        return Optional.of(new RepoGh(client, owner, repo, pat));
+    private static @Nullable RepoGh mkRepoGh(
+            Client client, RepoSource source, @Nullable GithubCredentials credentials) {
+        if (!(source instanceof RepoSourceGithub(String owner, String repo))) return null;
+        if (credentials == null) return null;
+        return new RepoGh(client, owner, repo, credentials);
     }
 
     @Override
