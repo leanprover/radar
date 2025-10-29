@@ -179,7 +179,11 @@ watchEffect(() => {
           title="Display all metrics with this category (i.e. the part after //) on a separate axis to the right of the graph."
         >
           Right axis:
-          <select v-model="queryRight" class="bg-background px-1">
+          <select
+            v-model="queryRight"
+            :disabled="categories.length === 0"
+            class="bg-background disabled:text-foreground-alt px-1"
+          >
             <option value="">none</option>
             <hr />
             <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
