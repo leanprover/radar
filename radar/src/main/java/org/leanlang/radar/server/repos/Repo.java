@@ -62,7 +62,7 @@ public final class Repo implements AutoCloseable {
         this.git = new RepoGit(dirs.repoGit(name()), this.source.gitUrl());
         this.gitBench = new RepoGit(dirs.repoGitBench(name()), this.benchSource.gitUrl());
         this.gh = mkRepoGh(client, this.source, githubCredentials);
-        this.zulip = mkRepoZulip(client, zulipCredentials);
+        this.zulip = mkRepoZulip(client, config, zulipCredentials);
     }
 
     private static @Nullable RepoGh mkRepoGh(
@@ -72,9 +72,10 @@ public final class Repo implements AutoCloseable {
         return new RepoGh(client, owner, repo, credentials);
     }
 
-    private static @Nullable RepoZulip mkRepoZulip(Client client, @Nullable ZulipCredentials credentials) {
+    private static @Nullable RepoZulip mkRepoZulip(
+            Client client, ServerConfigRepo config, @Nullable ZulipCredentials credentials) {
         if (credentials == null) return null;
-        return new RepoZulip(client, credentials);
+        return new RepoZulip(client, config.zulip, credentials);
     }
 
     @Override

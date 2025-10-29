@@ -54,6 +54,7 @@ repos:
     description: The Lean 4 programming language and theorem prover
     url: https://github.com/leanprover/lean4
     ref: master
+    lakeprofReportUrl: https://speed.lean-lang.org/lean4-out/
     benchUrl: https://github.com/Garmelon/radar-bench-loc
     benchRef: master
     benchRuns:
@@ -70,7 +71,9 @@ repos:
       - match: //loc$
         minorDeltaAmount: 200
         majorDeltaAmount: 500
-    lakeprofReportUrl: https://speed.lean-lang.org/lean4-out/
+    zulip:
+      feedChannel: test
+      feedTopic: Significant commits to lean4
 
   - name: mathlib4
     url: https://github.com/leanprover-community/mathlib4

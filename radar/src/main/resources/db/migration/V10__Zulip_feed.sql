@@ -1,0 +1,4 @@
+CREATE TABLE zulip_feed (
+    chash TEXT NOT NULL PRIMARY KEY
+        REFERENCES commits ON DELETE CASCADE
+) STRICT;

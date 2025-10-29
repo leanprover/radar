@@ -36,7 +36,7 @@ public final class Repos implements Managed {
                             dirs,
                             repo,
                             credentials.github().get(repo.name),
-                            credentials.zulip().get(repo.name));
+                            credentials.zulip().get(repo.name)));
         }
     }
 

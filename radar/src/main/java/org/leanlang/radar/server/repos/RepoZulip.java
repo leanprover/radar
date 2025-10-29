@@ -9,9 +9,10 @@ import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import java.util.Base64;
+import org.leanlang.radar.server.config.ServerConfigRepoZulip;
 import org.leanlang.radar.server.config.credentials.ZulipCredentials;
 
-public record RepoZulip(Client client, ZulipCredentials credentials) {
+public record RepoZulip(Client client, ServerConfigRepoZulip config, ZulipCredentials credentials) {
     private MultivaluedMap<String, Object> headers() {
         MultivaluedHashMap<String, Object> result = new MultivaluedHashMap<>();
 

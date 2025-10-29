@@ -26,4 +26,7 @@ public class ServerConfigRepo {
     public @Valid @Nullable List<ServerConfigRepoMetric> metrics;
     public int significantMajorMetrics = 1;
     public int significantMinorMetrics = Integer.MAX_VALUE;
+
+    // Zulip
+    public @Valid @JsonProperty(required = true) ServerConfigRepoZulip zulip;
 }

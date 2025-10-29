@@ -7,10 +7,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.Formatter;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.RepoGh;
+import org.leanlang.radar.server.repos.RepoZulip;
 import org.leanlang.radar.server.repos.Repos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,14 +93,31 @@ public final class Busser implements Managed {
     }
 
     private synchronized void doUpdateRepoImpl(Repo repo) throws GitAPIException {
-        GithubBotUpdater githubBotUpdater =
-                repo.gh().map(it -> new GithubBotUpdater(repo, queue, it)).orElse(null);
+        GithubBotUpdater githubBotUpdater = githubBotUpdater(repo);
+        ZulipBotUpdater zulipBotUpdater = zulipBotUpdater(repo);
 
         if (githubBotUpdater != null) githubBotUpdater.fetch();
         new RepoDataUpdater(repo).update();
         if (githubBotUpdater != null) githubBotUpdater.update();
         new QueueUpdater(repo, queue).update();
         new SignificanceUpdater(repo).update();
+        if (zulipBotUpdater != null) zulipBotUpdater.update();
+    }
+
+    private @Nullable GithubBotUpdater githubBotUpdater(Repo repo) {
+        RepoGh repoGh = repo.gh().orElse(null);
+        if (repoGh == null) return null;
+        return new GithubBotUpdater(repo, queue, repoGh);
+    }
+
+    private @Nullable ZulipBotUpdater zulipBotUpdater(Repo repo) {
+        RepoZulip repoZulip = repo.zulip().orElse(null);
+        if (repoZulip == null) return null;
+        String channel = repoZulip.config().feedChannel();
+        String topic = repoZulip.config().feedTopic();
+        if (channel == null) return null;
+        if (topic == null) return null;
+        return new ZulipBotUpdater(repo, repoZulip, channel, topic);
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {

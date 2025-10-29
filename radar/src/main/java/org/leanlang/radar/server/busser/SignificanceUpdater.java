@@ -53,8 +53,10 @@ public record SignificanceUpdater(Repo repo) {
                     .insertInto(SIGNIFICANCE_FEED, SIGNIFICANCE_FEED.CHASH)
                     .select(DSL.select(HISTORY.CHASH).from(HISTORY).where(HISTORY.POSITION.lt(firstForbiddenIndex)))
                     .execute();
-
-            log.info("Added {} run-less commits to significance feed (before index {})", added, firstForbiddenIndex);
+            if (added > 0) {
+                log.info(
+                        "Added {} run-less commits to significance feed (before index {})", added, firstForbiddenIndex);
+            }
         });
     }
 
