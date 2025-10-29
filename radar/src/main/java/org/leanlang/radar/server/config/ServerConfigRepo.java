@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.net.URI;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
+import org.leanlang.radar.server.config.validators.RepoRunNamesUnique;
 
 public class ServerConfigRepo {
     public @NotEmpty @JsonProperty(required = true) String name;

@@ -1,10 +1,11 @@
-package org.leanlang.radar.server.config;
+package org.leanlang.radar.server.config.validators;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
+import org.leanlang.radar.server.config.ServerConfigRunner;
 
 public final class RunnerNamesUniqueValidator
         implements ConstraintValidator<RunnerNamesUnique, List<ServerConfigRunner>> {

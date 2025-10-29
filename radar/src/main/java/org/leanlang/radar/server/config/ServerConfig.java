@@ -6,6 +6,8 @@ import io.dropwizard.core.Configuration;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
+import org.leanlang.radar.server.config.validators.RepoNamesUnique;
+import org.leanlang.radar.server.config.validators.RunnerNamesUnique;
 
 public final class ServerConfig extends Configuration {
 
