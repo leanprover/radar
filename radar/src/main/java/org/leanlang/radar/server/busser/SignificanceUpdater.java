@@ -1,12 +1,13 @@
 package org.leanlang.radar.server.busser;
 
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
+import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 import static org.leanlang.radar.codegen.jooq.Tables.SIGNIFICANCE_FEED;
 
 import java.util.List;
 import java.util.Optional;
-import org.jooq.Record3;
+import org.jooq.Record4;
 import org.jooq.impl.DSL;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
 import org.leanlang.radar.server.compare.CommitComparer;
@@ -72,13 +73,14 @@ public record SignificanceUpdater(Repo repo) {
         // we're going to notice at the next iteration and fill in the relevant significances then.
         // Eventually, we should reach a consistent state.
 
-        List<Record3<String, Boolean, Boolean>> commits = repo
+        List<Record4<String, Boolean, Boolean, Boolean>> commits = repo
                 .db()
                 .read()
                 .dsl()
                 .select(
                         HISTORY.CHASH,
                         DSL.exists(DSL.selectOne().from(RUNS).where(RUNS.CHASH.eq(HISTORY.CHASH))),
+                        DSL.exists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH))),
                         DSL.exists(DSL.selectOne()
                                 .from(SIGNIFICANCE_FEED)
                                 .where(SIGNIFICANCE_FEED.CHASH.eq(HISTORY.CHASH))))
@@ -88,14 +90,15 @@ public record SignificanceUpdater(Repo repo) {
                 .toList();
 
         for (int i = 0; i < commits.size(); i++) {
-            Record3<String, Boolean, Boolean> cur = commits.get(i);
+            Record4<String, Boolean, Boolean, Boolean> cur = commits.get(i);
             String curHash = cur.value1();
             Boolean curHasRuns = cur.value2();
-            Boolean curInFeed = cur.value3();
+            Boolean curInQueue = cur.value3();
+            Boolean curInFeed = cur.value4();
 
             if (curInFeed) continue; // No need to recompute
-            if (!curHasRuns) {
-                log.info("Reached runless commit {}, stopping", curHash);
+            if (!curHasRuns || curInQueue) {
+                log.info("Reached unfinished commit {}, stopping", curHash);
                 break; // Feed must be filled in sequentially, so we stop at the first gap
             }
 
