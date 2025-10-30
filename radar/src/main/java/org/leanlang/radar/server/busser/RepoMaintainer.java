@@ -13,7 +13,7 @@ public record RepoMaintainer(Repo repo) {
         if (aggressive) dbVacuum();
         dbPragmaOptimize();
         gitGc();
-        log.info("Maintaining repo {}", repo.name());
+        log.info("Maintained repo {}", repo.name());
     }
 
     private void dbVacuum() {
