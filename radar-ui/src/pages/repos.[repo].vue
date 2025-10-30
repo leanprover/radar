@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { postAdminMaintain } from "@/api/adminMaintain.ts";
-import CButton from "@/components/CButton.vue";
 import CLinkCommit from "@/components/CLinkCommit.vue";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
@@ -11,12 +9,10 @@ import CTimeAgo from "@/components/CTimeAgo.vue";
 import { useRepoGithubBot } from "@/composables/useRepoGithubBot.ts";
 import { useRepoHistory } from "@/composables/useRepoHistory.ts";
 import { useRepos } from "@/composables/useRepos.ts";
-import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { computed, reactive } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo]");
-const admin = useAdminStore();
 const repos = reactive(useRepos());
 const history = reactive(useRepoHistory(() => route.params.repo));
 const github = reactive(useRepoGithubBot(() => route.params.repo));
@@ -35,24 +31,6 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     <div v-if="info">
       Source:
       <a class="cursor-pointer hover:underline" :href="info.url" target="_blank">{{ info.url }}</a>
-    </div>
-  </CSection>
-
-  <CSection v-if="admin.token !== undefined">
-    <CSectionTitle>Admin</CSectionTitle>
-    <div class="bg-background-alt flex max-w-[80ch] flex-col gap-2 p-1">
-      <!-- TODO Move to admin page -->
-      <div class="flex">
-        <CButton @click="postAdminMaintain(admin.token, route.params.repo, true)">Aggressive maintenance</CButton>
-      </div>
-      <details>
-        <summary>Explanation</summary>
-        <div class="mt-2">
-          Perform some aggressive maintenance steps, including vacuuming the DB. Most of these steps already run daily,
-          so this button should not be necessary under normal circumstances. In other words: Don't push unless you know
-          what you're doing.
-        </div>
-      </details>
     </div>
   </CSection>
 

@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import { useAdminStore } from "@/stores/useAdminStore.ts";
-
-const admin = useAdminStore();
+import PFormAdminToken from "@/components/pages/admin/PFormAdminToken.vue";
+import PFormMaintenance from "@/components/pages/admin/PFormMaintenance.vue";
 </script>
 
 <template>
-  <CSection>
+  <CSection class="max-w-[100ch]">
     <CSectionTitle>Admin token</CSectionTitle>
-    <div class="bg-background-alt w-fit p-1">
-      Current token:
-      <input v-model="admin.token" type="text" placeholder="<none>" class="bg-background w-[70ch] px-1" />
-    </div>
+    <PFormAdminToken />
     <div>To get a token, ask your local admin.</div>
+  </CSection>
+
+  <CSection class="max-w-[100ch]">
+    <CSectionTitle>Maintenance</CSectionTitle>
+    <PFormMaintenance />
+    <div>
+      Perform some aggressive maintenance steps, including vacuuming the DB. Most of these steps already run daily, so
+      this button should not be necessary under normal circumstances. In other words: Don't push unless you know what
+      you're doing.
+    </div>
   </CSection>
 </template>
