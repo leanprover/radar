@@ -8,7 +8,13 @@ import org.leanlang.radar.server.repos.RepoMetricMetadata;
 public final class SignificanceComputer {
     private SignificanceComputer() {}
 
-    public static Optional<MetricMessage> compareMetric(
+    private static Optional<JsonSignificance> msg(boolean major, boolean minor, List<JsonMessageSegment> message) {
+        if (major) return Optional.of(new JsonSignificance(true, message));
+        if (minor) return Optional.of(new JsonSignificance(false, message));
+        return Optional.empty();
+    }
+
+    public static Optional<JsonSignificance> compareMetric(
             String metric,
             @Nullable String unit,
             RepoMetricMetadata metadata,
@@ -41,7 +47,7 @@ public final class SignificanceComputer {
         return compareMetricWithValues(metric, unit, metadata, first, second);
     }
 
-    private static Optional<MetricMessage> compareMetricWithValues(
+    private static Optional<JsonSignificance> compareMetricWithValues(
             String metric, @Nullable String unit, RepoMetricMetadata metadata, float first, float second) {
 
         // majorAnyDelta, minorAnyDelta
@@ -86,9 +92,15 @@ public final class SignificanceComputer {
         return Optional.empty();
     }
 
-    private static Optional<MetricMessage> msg(boolean major, boolean minor, List<JsonMessageSegment> message) {
-        if (major) return Optional.of(new MetricMessage(MetricSignificance.Major, message));
-        if (minor) return Optional.of(new MetricMessage(MetricSignificance.Minor, message));
-        return Optional.empty();
+    public static Optional<JsonSignificance> analyzeRun(String name, int exitCode) {
+        if (exitCode == 0) return Optional.empty();
+        return msg(
+                true,
+                false,
+                new MessageBuilder()
+                        .addRun(name)
+                        .addText(" exited with code ")
+                        .addExitCode(exitCode)
+                        .build());
     }
 }

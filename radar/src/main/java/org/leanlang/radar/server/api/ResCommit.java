@@ -12,7 +12,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
-import java.util.Optional;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.server.queue.JsonRun;
 import org.leanlang.radar.server.queue.Queue;
@@ -80,13 +79,7 @@ public record ResCommit(Repos repos, Queue queue) {
         List<JsonRun> runs = queue.getTask(repoName, chash)
                 .map(it -> it.runs().stream().map(JsonRun::new).toList())
                 .orElseGet(() -> repo.db().read().dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).stream()
-                        .map(it -> new JsonRun(
-                                it.getName(),
-                                it.getScript(),
-                                it.getRunner(),
-                                Optional.empty(),
-                                Optional.of(
-                                        new JsonRun.Finished(it.getStartTime(), it.getEndTime(), it.getExitCode()))))
+                        .map(JsonRun::new)
                         .toList());
 
         return new JsonGet(new JsonCommit(commit), parents, children, runs);

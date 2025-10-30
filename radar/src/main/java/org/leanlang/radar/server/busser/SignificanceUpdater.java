@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import org.jooq.Record3;
 import org.jooq.impl.DSL;
-import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
 import org.leanlang.radar.server.compare.CommitComparer;
-import org.leanlang.radar.server.compare.JsonMetricComparison;
-import org.leanlang.radar.server.compare.JsonMetricSignificance;
+import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.repos.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +95,8 @@ public record SignificanceUpdater(Repo repo) {
             String prevHash = null;
             if (i > 0) prevHash = commits.get(i - 1).value1();
 
-            boolean significant = computeSignificance(prevHash, curHash);
+            JsonCommitComparison comparison = CommitComparer.compareCommits(repo, prevHash, curHash);
+            boolean significant = comparison.significant();
             log.info("Adding commit {} to feed as {}", curHash, significant ? "significant" : "insignificant");
             repo.db().writeTransaction(ctx -> ctx.dsl()
                     .insertInto(SIGNIFICANCE_FEED, SIGNIFICANCE_FEED.CHASH, SIGNIFICANCE_FEED.SIGNIFICANT)
@@ -105,22 +104,5 @@ public record SignificanceUpdater(Repo repo) {
                     .onDuplicateKeyIgnore()
                     .execute());
         }
-    }
-
-    private boolean computeSignificance(@Nullable String prevHash, String curHash) {
-        List<JsonMetricComparison> comparisons = CommitComparer.compareCommits(repo, prevHash, curHash);
-
-        long major = comparisons.stream()
-                .flatMap(it -> it.significance().stream())
-                .filter(JsonMetricSignificance::major)
-                .count();
-        long minor = comparisons.stream()
-                .flatMap(it -> it.significance().stream())
-                .filter(it -> !it.major())
-                .count();
-
-        boolean majorSignificant = major >= repo.significantMajorMetrics();
-        boolean minorSignificant = minor >= repo.significantMinorMetrics();
-        return majorSignificant || minorSignificant;
     }
 }

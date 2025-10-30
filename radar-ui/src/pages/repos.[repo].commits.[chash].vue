@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
+import type { JsonMessageSegment } from "@/api/types.ts";
 import CButton from "@/components/CButton.vue";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import CList from "@/components/CList.vue";
@@ -13,8 +14,8 @@ import CTimeInstant from "@/components/CTimeInstant.vue";
 import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
+import PComparisonSection from "@/components/pages/commit/PComparisonSection.vue";
 import PMeasurementsTable, { type Measurement } from "@/components/pages/commit/PMeasurementsTable.vue";
-import PMessage from "@/components/pages/commit/PMessage.vue";
 import { invalidateCommit, useCommit } from "@/composables/useCommit.ts";
 import { invalidateCompare, useCompare } from "@/composables/useCompare.ts";
 import { useRepo } from "@/composables/useRepo.ts";
@@ -49,20 +50,27 @@ const compare = reactive(
 );
 const measurements = computed<Measurement[]>(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.comparisons.filter((it) => it.second !== undefined);
+  return compare.data.comparison.metrics.filter((it) => it.second !== undefined);
 });
 
-const major = computed(() => {
+const significantRuns = computed<JsonMessageSegment[][]>(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.comparisons
+  return compare.data.comparison.runs
+    .map((it) => it.significance)
+    .filter((it) => it !== undefined)
+    .map((it) => it.message);
+});
+const significantMajorMetrics = computed<JsonMessageSegment[][]>(() => {
+  if (!compare.isSuccess) return [];
+  return compare.data.comparison.metrics
     .map((it) => it.significance)
     .filter((it) => it !== undefined)
     .filter((it) => it.major)
     .map((it) => it.message);
 });
-const minor = computed(() => {
+const significantMinorMetrics = computed<JsonMessageSegment[][]>(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.comparisons
+  return compare.data.comparison.metrics
     .map((it) => it.significance)
     .filter((it) => it !== undefined)
     .filter((it) => !it.major)
@@ -171,24 +179,13 @@ const enqueuePriority = ref(-1);
     </CList>
   </CSection>
 
-  <CSection v-if="major.length > 0 || minor.length > 0">
-    <CSectionTitle>Significant changes</CSectionTitle>
-    <details v-if="major.length > 0" open>
-      <summary>Major ({{ major.length }})</summary>
-      <CList class="mt-2">
-        <CListItem v-for="(msg, i) in major" :key="i">
-          <PMessage :segments="msg" />
-        </CListItem>
-      </CList>
-    </details>
-    <details v-if="minor.length > 0">
-      <summary>Minor ({{ minor.length }})</summary>
-      <CList class="mt-2">
-        <CListItem v-for="(msg, i) in minor" :key="i">
-          <PMessage :segments="msg" />
-        </CListItem>
-      </CList>
-    </details>
+  <CSection
+    v-if="significantRuns.length > 0 || significantMajorMetrics.length > 0 || significantMinorMetrics.length > 0"
+  >
+    <CSectionTitle>Significant details</CSectionTitle>
+    <PComparisonSection title="Runs" :messages="significantRuns" open />
+    <PComparisonSection title="Major changes" :messages="significantMajorMetrics" open />
+    <PComparisonSection title="Minor changes" :messages="significantMinorMetrics" />
   </CSection>
 
   <CSection v-show="measurements.length > 0">

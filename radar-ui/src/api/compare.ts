@@ -1,4 +1,4 @@
-import { JsonMetricComparison } from "@/api/types.ts";
+import { JsonCommitComparison } from "@/api/types.ts";
 import { enc, fetchJson } from "@/api/utils.ts";
 import * as z from "zod";
 
@@ -11,7 +11,7 @@ const JsonGet = z.object({
     .string()
     .nullish()
     .transform((x) => x ?? undefined),
-  comparisons: JsonMetricComparison.array(),
+  comparison: JsonCommitComparison,
 });
 
 export async function getCompare(repo: string, first: string, second: string) {

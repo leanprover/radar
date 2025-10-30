@@ -8,12 +8,11 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import java.util.List;
 import java.util.Optional;
 import org.jooq.Configuration;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
-import org.leanlang.radar.server.compare.JsonMetricComparison;
+import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
 
@@ -23,7 +22,7 @@ public record ResCompare(Repos repos) {
     public record JsonGet(
             Optional<String> chashFirst,
             Optional<String> chashSecond,
-            @JsonProperty(required = true) List<JsonMetricComparison> comparisons) {}
+            @JsonProperty(required = true) JsonCommitComparison comparison) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -38,7 +37,7 @@ public record ResCompare(Repos repos) {
             Optional<String> chashFirst = resolveRelativeTo(ctx, paramFirst, paramSecond);
             Optional<String> chashSecond = resolveRelativeTo(ctx, paramSecond, paramFirst);
 
-            List<JsonMetricComparison> comparisons =
+            JsonCommitComparison comparisons =
                     CommitComparer.compareCommits(repo, chashFirst.orElse(null), chashSecond.orElse(null));
 
             return new JsonGet(chashFirst, chashSecond, comparisons);

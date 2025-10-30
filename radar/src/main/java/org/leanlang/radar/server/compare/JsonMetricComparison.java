@@ -11,4 +11,4 @@ public record JsonMetricComparison(
         Optional<String> secondSource,
         Optional<String> unit,
         @JsonProperty(required = true) int direction,
-        Optional<JsonMetricSignificance> significance) {}
+        Optional<JsonSignificance> significance) {}

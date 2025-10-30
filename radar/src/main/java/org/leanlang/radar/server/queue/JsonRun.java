@@ -3,6 +3,7 @@ package org.leanlang.radar.server.queue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.Optional;
+import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 
 public record JsonRun(
         @JsonProperty(required = true) String name,
@@ -25,5 +26,14 @@ public record JsonRun(
                 run.runner(),
                 run.active().map(it -> new Active(it.startTime())),
                 run.finished().map(it -> new Finished(it.startTime(), it.endTime(), it.exitCode())));
+    }
+
+    public JsonRun(RunsRecord record) {
+        this(
+                record.getName(),
+                record.getScript(),
+                record.getRunner(),
+                Optional.empty(),
+                Optional.of(new Finished(record.getStartTime(), record.getEndTime(), record.getExitCode())));
     }
 }

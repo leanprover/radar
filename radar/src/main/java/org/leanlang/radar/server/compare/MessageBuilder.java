@@ -21,8 +21,16 @@ public final class MessageBuilder {
         return add(new JsonMessageSegment.DeltaPercent(factor, direction));
     }
 
+    public MessageBuilder addExitCode(int exitCode) {
+        return add(new JsonMessageSegment.ExitCode(exitCode));
+    }
+
     public MessageBuilder addMetric(String metric) {
         return add(new JsonMessageSegment.Metric(metric));
+    }
+
+    public MessageBuilder addRun(String name) {
+        return add(new JsonMessageSegment.Run(name));
     }
 
     public MessageBuilder addText(String text) {

@@ -45,7 +45,9 @@ export const JsonCommit = z.object({
 export type JsonMessageSegment =
   | { type: "delta"; amount: number; unit?: string; direction: Direction }
   | { type: "deltaPercent"; factor: number; direction: Direction }
+  | { type: "exitCode"; exitCode: number }
   | { type: "metric"; metric: string }
+  | { type: "run"; run: string }
   | { type: "text"; text: string };
 export const JsonMessageSegment = z.discriminatedUnion("type", [
   z.object({
@@ -58,13 +60,23 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
     direction: Direction,
   }),
   z.object({ type: z.literal("deltaPercent"), factor: z.number(), direction: Direction }),
+  z.object({ type: z.literal("exitCode"), exitCode: z.int() }),
   z.object({ type: z.literal("metric"), metric: z.string() }),
+  z.object({ type: z.literal("run"), run: z.string() }),
   z.object({ type: z.literal("text"), text: z.string() }),
 ]);
 
-export const JsonMetricSignificance = z.object({
+export const JsonSignificance = z.object({
   major: z.boolean(),
   message: JsonMessageSegment.array(),
+});
+
+export const JsonRunAnalysis = z.object({
+  name: z.string(),
+  script: z.string(),
+  runner: z.string(),
+  exitCode: z.int(),
+  significance: JsonSignificance.nullish().transform((it) => it ?? undefined),
 });
 
 export const JsonMetricComparison = z.object({
@@ -90,5 +102,11 @@ export const JsonMetricComparison = z.object({
     .nullish()
     .transform((it) => it ?? undefined),
   direction: Direction,
-  significance: JsonMetricSignificance.nullish().transform((it) => it ?? undefined),
+  significance: JsonSignificance.nullish().transform((it) => it ?? undefined),
+});
+
+export const JsonCommitComparison = z.object({
+  significant: z.boolean(),
+  runs: JsonRunAnalysis.array(),
+  metrics: JsonMetricComparison.array(),
 });

@@ -25,9 +25,9 @@ import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandResolvedRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubLastCheckedRecord;
 import org.leanlang.radar.server.compare.CommitComparer;
+import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.compare.JsonMessageSegment;
-import org.leanlang.radar.server.compare.JsonMetricComparison;
-import org.leanlang.radar.server.compare.JsonMetricSignificance;
+import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoGh;
@@ -418,22 +418,24 @@ public final class GithubBotUpdater {
                 .sorted()
                 .forEach(it -> sb.append(" @").append(it));
 
-        List<JsonMetricComparison> comparisons = CommitComparer.compareCommits(repo, baseChash, headChash);
-        List<List<JsonMessageSegment>> major = comparisons.stream()
-                .flatMap(it -> it.significance().stream())
-                .filter(JsonMetricSignificance::major)
-                .map(JsonMetricSignificance::message)
+        JsonCommitComparison comparison = CommitComparer.compareCommits(repo, baseChash, headChash);
+
+        List<List<JsonMessageSegment>> significantRuns =
+                comparison.runSignificances().map(JsonSignificance::message).toList();
+        List<List<JsonMessageSegment>> significantMajorMetrics = comparison
+                .metricSignificances()
+                .filter(JsonSignificance::major)
+                .map(JsonSignificance::message)
                 .toList();
-        List<List<JsonMessageSegment>> minor = comparisons.stream()
-                .flatMap(it -> it.significance().stream())
+        List<List<JsonMessageSegment>> significantMinorMetrics = comparison
+                .metricSignificances()
                 .filter(it -> !it.major())
-                .map(JsonMetricSignificance::message)
+                .map(JsonSignificance::message)
                 .toList();
 
-        sb.append("\n");
-        formatSignificanceSection(sb, "Major changes", true, major);
-        sb.append("\n");
-        formatSignificanceSection(sb, "Minor changes", false, minor);
+        formatSignificanceSection(sb, "Runs", true, significantRuns);
+        formatSignificanceSection(sb, "Major changes", true, significantMajorMetrics);
+        formatSignificanceSection(sb, "Minor changes", false, significantMinorMetrics);
 
         return sb.toString();
     }
@@ -442,6 +444,7 @@ public final class GithubBotUpdater {
             StringBuilder sb, String name, boolean open, List<List<JsonMessageSegment>> messages) {
 
         if (messages.isEmpty()) return;
+        sb.append("\n");
 
         if (open) sb.append("<details open>\n");
         else sb.append("<details>\n");
@@ -471,7 +474,7 @@ public final class GithubBotUpdater {
         }
     }
 
-    private void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
+    public static void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
         Formatter fmt = new Formatter().withSign(true);
         switch (segment) {
             case JsonMessageSegment.Delta it:
@@ -486,8 +489,16 @@ public final class GithubBotUpdater {
                 if (it.factor() * it.direction() > 0) sb.append(" (✅)");
                 else if (it.factor() * it.direction() < 0) sb.append(" (\uD83D\uDFE5)");
                 break;
+            case JsonMessageSegment.ExitCode it:
+                sb.append("**").append(it.exitCode()).append("**");
+                if (it.exitCode() == 0) sb.append(" (✅)");
+                else sb.append(" (\uD83D\uDFE5)");
+                break;
             case JsonMessageSegment.Metric it:
                 sb.append("`").append(it.metric()).append("`");
+                break;
+            case JsonMessageSegment.Run it:
+                sb.append("`").append(it.run()).append("`");
                 break;
             case JsonMessageSegment.Text it:
                 sb.append(it.text());

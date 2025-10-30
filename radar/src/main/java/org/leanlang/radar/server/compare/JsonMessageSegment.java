@@ -12,8 +12,14 @@ public sealed interface JsonMessageSegment {
     @JsonTypeName("deltaPercent")
     record DeltaPercent(float factor, int direction) implements JsonMessageSegment {}
 
+    @JsonTypeName("exitCode")
+    record ExitCode(int exitCode) implements JsonMessageSegment {}
+
     @JsonTypeName("metric")
     record Metric(String metric) implements JsonMessageSegment {}
+
+    @JsonTypeName("run")
+    record Run(String run) implements JsonMessageSegment {}
 
     @JsonTypeName("text")
     record Text(String text) implements JsonMessageSegment {}

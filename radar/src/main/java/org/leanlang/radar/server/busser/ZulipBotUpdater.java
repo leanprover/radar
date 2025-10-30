@@ -10,12 +10,11 @@ import org.jooq.Record3;
 import org.jooq.Result;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.Formatter;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
+import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.compare.JsonMessageSegment;
-import org.leanlang.radar.server.compare.JsonMetricComparison;
-import org.leanlang.radar.server.compare.JsonMetricSignificance;
+import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoZulip;
 import org.slf4j.Logger;
@@ -75,12 +74,10 @@ public record ZulipBotUpdater(Repo repo, RepoZulip repoZulip, String channel, St
     }
 
     private void sendMessageForCommit(@Nullable String parentChash, String childChash, String childTitle) {
-        List<JsonMetricComparison> comparisons = CommitComparer.compareCommits(repo, parentChash, childChash);
-        boolean significant =
-                comparisons.stream().anyMatch(it -> it.significance().isPresent());
+        JsonCommitComparison comparison = CommitComparer.compareCommits(repo, parentChash, childChash);
 
-        if (significant) {
-            String content = messageContent(parentChash, childChash, childTitle, comparisons);
+        if (comparison.significant()) {
+            String content = messageContent(childChash, childTitle, comparison);
             repoZulip.sendMessage(channel, topic, content);
             log.info("Sent message for significant commit {}", childChash);
         } else {
@@ -102,11 +99,7 @@ public record ZulipBotUpdater(Repo repo, RepoZulip repoZulip, String channel, St
         return RADAR_URL + "repos/" + repo.name() + "/commits/" + chash;
     }
 
-    private String messageContent(
-            @Nullable String parentChash,
-            String childChash,
-            String childTitle,
-            List<JsonMetricComparison> comparisons) {
+    private String messageContent(String childChash, String childTitle, JsonCommitComparison comparison) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("**[")
@@ -115,27 +108,29 @@ public record ZulipBotUpdater(Repo repo, RepoZulip repoZulip, String channel, St
                 .append(radarLinkToCommit(childChash))
                 .append(")**\n");
 
-        List<List<JsonMessageSegment>> major = comparisons.stream()
-                .flatMap(it -> it.significance().stream())
-                .filter(JsonMetricSignificance::major)
-                .map(JsonMetricSignificance::message)
+        List<List<JsonMessageSegment>> significantRuns =
+                comparison.runSignificances().map(JsonSignificance::message).toList();
+        List<List<JsonMessageSegment>> significantMajorMetrics = comparison
+                .metricSignificances()
+                .filter(JsonSignificance::major)
+                .map(JsonSignificance::message)
                 .toList();
-        List<List<JsonMessageSegment>> minor = comparisons.stream()
-                .flatMap(it -> it.significance().stream())
+        List<List<JsonMessageSegment>> significantMinorMetrics = comparison
+                .metricSignificances()
                 .filter(it -> !it.major())
-                .map(JsonMetricSignificance::message)
+                .map(JsonSignificance::message)
                 .toList();
 
-        sb.append("\n");
-        formatSignificanceSection(sb, "Major changes", major);
-        sb.append("\n");
-        formatSignificanceSection(sb, "Minor changes", minor);
+        formatSignificanceSection(sb, "Runs", significantRuns);
+        formatSignificanceSection(sb, "Major changes", significantMajorMetrics);
+        formatSignificanceSection(sb, "Minor changes", significantMinorMetrics);
 
         return sb.toString();
     }
 
     private void formatSignificanceSection(StringBuilder sb, String name, List<List<JsonMessageSegment>> messages) {
         if (messages.isEmpty()) return;
+        sb.append("\n");
 
         sb.append("**").append(name).append("** (").append(messages.size()).append(")\n\n");
 
@@ -148,31 +143,7 @@ public record ZulipBotUpdater(Repo repo, RepoZulip repoZulip, String channel, St
 
     private void formatMessage(StringBuilder sb, List<JsonMessageSegment> message) {
         for (JsonMessageSegment segment : message) {
-            formatMessageSegment(sb, segment);
-        }
-    }
-
-    private void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
-        Formatter fmt = new Formatter().withSign(true);
-        switch (segment) {
-            case JsonMessageSegment.Delta it:
-                sb.append("**")
-                        .append(fmt.formatValueWithUnit(it.amount(), it.unit().orElse(null)))
-                        .append("**");
-                if (it.amount() * it.direction() > 0) sb.append(" (✅)");
-                else if (it.amount() * it.direction() < 0) sb.append(" (\uD83D\uDFE5)");
-                break;
-            case JsonMessageSegment.DeltaPercent it:
-                sb.append("**").append(fmt.formatValue(it.factor(), "100%")).append("**");
-                if (it.factor() * it.direction() > 0) sb.append(" (✅)");
-                else if (it.factor() * it.direction() < 0) sb.append(" (\uD83D\uDFE5)");
-                break;
-            case JsonMessageSegment.Metric it:
-                sb.append("`").append(it.metric()).append("`");
-                break;
-            case JsonMessageSegment.Text it:
-                sb.append(it.text());
-                break;
+            GithubBotUpdater.formatMessageSegment(sb, segment);
         }
     }
 }
