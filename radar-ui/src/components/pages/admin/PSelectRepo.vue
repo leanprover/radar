@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRepos } from "@/composables/useRepos.ts";
-import { reactive, watchEffect } from "vue";
+import { reactive } from "vue";
 
 const repos = reactive(useRepos());
 const repo = defineModel<string | undefined>();

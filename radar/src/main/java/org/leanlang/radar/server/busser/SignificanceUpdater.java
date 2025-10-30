@@ -18,6 +18,13 @@ import org.slf4j.LoggerFactory;
 public record SignificanceUpdater(Repo repo) {
     private static final Logger log = LoggerFactory.getLogger(SignificanceUpdater.class);
 
+    public void clearAll() {
+        log.info("Removing all significances for repo {}", repo.name());
+        repo.db()
+                .writeTransaction(ctx -> ctx.dsl().deleteFrom(SIGNIFICANCE_FEED).execute());
+        log.info("Removed all significances for repo {}", repo.name());
+    }
+
     public void update() {
         log.info("Updating significances for repo {}", repo.name());
         addRunlessCommitsToFeedOnInitialRun();

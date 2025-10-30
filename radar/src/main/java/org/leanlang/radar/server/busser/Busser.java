@@ -69,9 +69,14 @@ public final class Busser implements Managed {
         executor.execute(() -> doUpdateGhReplies(repo));
     }
 
-    public void cleanRepo(String repoName, boolean aggressive) {
+    public void maintainRepo(String repoName, boolean aggressive) {
         Repo repo = repos.repo(repoName);
         executor.execute(() -> doMaintainRepo(repo, aggressive));
+    }
+
+    public void recomputeSignificance(String repoName) {
+        Repo repo = repos.repo(repoName);
+        executor.execute(() -> doRecomputeSignificance(repo));
     }
 
     // The following methods all have the prefix "do" so they don't collide with the public names.
@@ -133,5 +138,11 @@ public final class Busser implements Managed {
 
     private synchronized void doMaintainRepo(Repo repo, boolean aggressive) {
         new RepoMaintainer(repo).maintain(aggressive);
+    }
+
+    private synchronized void doRecomputeSignificance(Repo repo) {
+        SignificanceUpdater significanceUpdater = new SignificanceUpdater(repo);
+        significanceUpdater.clearAll();
+        significanceUpdater.update();
     }
 }

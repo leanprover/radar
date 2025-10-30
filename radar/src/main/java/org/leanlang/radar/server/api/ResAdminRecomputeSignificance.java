@@ -9,14 +9,13 @@ import jakarta.ws.rs.core.MediaType;
 import org.leanlang.radar.server.api.auth.Admin;
 import org.leanlang.radar.server.busser.Busser;
 
-@Path("/admin/maintain/")
-public record ResAdminMaintain(Busser busser) {
-    public record JsonPostInput(
-            @JsonProperty(required = true) String repo, @JsonProperty(required = true) boolean aggressive) {}
+@Path("/admin/recompute-significance/")
+public record ResAdminRecomputeSignificance(Busser busser) {
+    public record JsonPostInput(@JsonProperty(required = true) String repo) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void post(@Auth Admin admin, JsonPostInput input) {
-        busser.maintainRepo(input.repo, input.aggressive);
+        busser.recomputeSignificance(input.repo);
     }
 }
