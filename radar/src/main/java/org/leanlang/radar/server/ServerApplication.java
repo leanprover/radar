@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
+import org.leanlang.radar.Linker;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
 import org.leanlang.radar.server.api.ResAdminMaintain;
 import org.leanlang.radar.server.api.ResAdminRecomputeSignificance;
@@ -84,11 +85,12 @@ public final class ServerApplication extends Application<ServerConfig> {
         configureAdminAuth(environment, configuration.adminToken);
         var client = configureJerseyClient(configuration, environment);
 
+        var linker = new Linker(configuration.url);
         var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
         var repos = new Repos(environment, client, dirs, credentials, configuration.repos);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos, runners);
-        var busser = new Busser(repos, queue);
+        var busser = new Busser(linker, repos, queue);
 
         environment.lifecycle().manage(repos);
         environment.lifecycle().manage(busser);

@@ -17,6 +17,8 @@ server:
     - type: http
       port: 8081
 
+url: https://example.com/
+
 repos:
   - name: radar-test-dummy
     description: Dummy test data

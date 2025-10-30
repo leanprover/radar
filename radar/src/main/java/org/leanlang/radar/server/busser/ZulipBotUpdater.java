@@ -10,6 +10,7 @@ import org.jooq.Record3;
 import org.jooq.Result;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
+import org.leanlang.radar.Linker;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
@@ -20,9 +21,8 @@ import org.leanlang.radar.server.repos.RepoZulip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record ZulipBotUpdater(Repo repo, RepoZulip repoZulip, String channel, String topic) {
+public record ZulipBotUpdater(Linker linker, Repo repo, RepoZulip repoZulip, String channel, String topic) {
     private static final Logger log = LoggerFactory.getLogger(ZulipBotUpdater.class);
-    private static final String RADAR_URL = "https://radar.lean-lang.org/"; // TODO Configurable via config file
 
     public void update() {
         log.info("Updating Zulip bot for repo {}", repo.name());
@@ -95,17 +95,13 @@ public record ZulipBotUpdater(Repo repo, RepoZulip repoZulip, String channel, St
      * Messages
      */
 
-    private String radarLinkToCommit(String chash) {
-        return RADAR_URL + "repos/" + repo.name() + "/commits/" + chash;
-    }
-
     private String messageContent(String childChash, String childTitle, JsonCommitComparison comparison) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("**[")
                 .append(childTitle)
                 .append("](")
-                .append(radarLinkToCommit(childChash))
+                .append(linker.linkToCommit(repo.name(), childChash))
                 .append(")**\n");
 
         List<List<JsonMessageSegment>> significantRuns =

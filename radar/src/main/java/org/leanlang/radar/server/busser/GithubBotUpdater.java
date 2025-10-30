@@ -20,6 +20,7 @@ import org.jooq.Result;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.Formatter;
+import org.leanlang.radar.Linker;
 import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandResolvedRecord;
@@ -38,8 +39,8 @@ import org.slf4j.LoggerFactory;
 
 public final class GithubBotUpdater {
     private static final Logger log = LoggerFactory.getLogger(GithubBotUpdater.class);
-    private static final String RADAR_URL = "https://radar.lean-lang.org/"; // TODO Configurable via config file
 
+    private final Linker linker;
     private final Repo repo;
     private final Queue queue;
     private final RepoGh repoGh;
@@ -47,7 +48,8 @@ public final class GithubBotUpdater {
     private @Nullable Instant since = null;
     private @Nullable List<JsonGhComment> comments = null;
 
-    public GithubBotUpdater(Repo repo, Queue queue, RepoGh repoGh) {
+    public GithubBotUpdater(Linker linker, Repo repo, Queue queue, RepoGh repoGh) {
+        this.linker = linker;
         this.repo = repo;
         this.queue = queue;
         this.repoGh = repoGh;
@@ -382,21 +384,13 @@ public final class GithubBotUpdater {
         return "Failed to find a commit to compare against.";
     }
 
-    private String radarLinkToCommit(String chash) {
-        return RADAR_URL + "repos/" + repo.name() + "/commits/" + chash;
-    }
-
     private String msgInProgress(String headChash, String baseChash) {
-        return "Benchmarking " + (headChash + " ([status](" + radarLinkToCommit(headChash) + "))")
+        return "Benchmarking " + (headChash + " ([status](" + linker.linkToCommit(repo.name(), headChash) + "))")
                 + " against "
-                + (baseChash + " ([status](" + radarLinkToCommit(baseChash) + "))")
+                + (baseChash + " ([status](" + linker.linkToCommit(repo.name(), baseChash) + "))")
                 + ".\n\n"
                 + "<sub>React with :eyes: to be notified when the results are in."
                 + " The command author is always notified.</sub>";
-    }
-
-    private String radarLinkToComparison(String first, String second) {
-        return RADAR_URL + "repos/" + repo.name() + "/commits/" + second + "?parent=" + first;
     }
 
     private String msgFinished(
@@ -405,7 +399,7 @@ public final class GithubBotUpdater {
         StringBuilder sb = new StringBuilder();
 
         sb.append("[Benchmark results](")
-                .append(radarLinkToComparison(baseChash, headChash))
+                .append(linker.linkToComparison(repo.name(), baseChash, headChash))
                 .append(") for ")
                 .append(headChash)
                 .append(" against ")
