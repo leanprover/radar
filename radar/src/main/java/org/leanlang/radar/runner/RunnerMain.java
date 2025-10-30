@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.client.ClientProperties;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
+import org.leanlang.radar.ExecutorUtil;
 import org.leanlang.radar.runner.config.Dirs;
 import org.leanlang.radar.runner.config.RunnerConfig;
 import org.leanlang.radar.runner.statusupdater.StatusUpdater;
@@ -88,6 +89,10 @@ public final class RunnerMain {
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
             executor.scheduleWithFixedDelay(
                     statusUpdater::run, 0, Constants.RUNNER_STATUS_UPDATE_DELAY.toMillis(), TimeUnit.MILLISECONDS);
+
+            // Infrequently perform more aggressive cleanup
+            ExecutorUtil.scheduleAtMidnight(
+                    executor, "Maintaining repos", supervisor::maintain, Constants.RUNNER_MAINTENANCE_DELAY);
 
             while (true) {
                 try {

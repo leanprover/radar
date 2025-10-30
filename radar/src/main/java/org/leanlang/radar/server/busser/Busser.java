@@ -1,15 +1,13 @@
 package org.leanlang.radar.server.busser;
 
 import io.dropwizard.lifecycle.Managed;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
-import org.leanlang.radar.Formatter;
+import org.leanlang.radar.ExecutorUtil;
 import org.leanlang.radar.Linker;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
@@ -44,16 +42,8 @@ public final class Busser implements Managed {
                 this::doUpdateAll, 1, Constants.BUSSER_UPDATE_DELAY.toMillis(), TimeUnit.MILLISECONDS);
 
         // Infrequently perform more aggressive cleanup
-        long secondsPerDay = 24 * 60 * 60;
-        long secondsElapsedToday =
-                Instant.now().atZone(ZoneId.systemDefault()).toLocalTime().toSecondOfDay();
-        long secondsToWait =
-                (secondsPerDay + Constants.BUSSER_MAINTENANCE_DELAY.toSeconds() - secondsElapsedToday) % secondsPerDay;
-        log.info("Maintaining repos in {}", new Formatter().formatValueWithUnit(secondsToWait, "s"));
-        executor.schedule(
-                () -> executor.scheduleAtFixedRate(this::doMaintainAll, 0, secondsPerDay, TimeUnit.SECONDS),
-                secondsToWait,
-                TimeUnit.SECONDS);
+        ExecutorUtil.scheduleAtMidnight(
+                executor, "Maintaining repos", this::doMaintainAll, Constants.RUNNER_MAINTENANCE_DELAY);
     }
 
     @Override

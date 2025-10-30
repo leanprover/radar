@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -11,6 +12,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.TagOpt;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,11 +20,11 @@ public final class RepoGit implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(RepoGit.class);
 
     private final Path path;
-    private final URI url;
+    private final @Nullable URI url;
     private final Repository repo;
     private final Git git;
 
-    public RepoGit(Path path, URI url) throws IOException {
+    public RepoGit(Path path, @Nullable URI url) throws IOException {
         log.info("Opening repo {}", path);
         this.path = path;
         this.url = url;
@@ -60,6 +62,7 @@ public final class RepoGit implements AutoCloseable {
     }
 
     public void fetch() throws GitAPIException {
+        Objects.requireNonNull(url);
         log.info("Fetching repo {} (this may take a while)", path);
         git.fetch()
                 .setRemote(url.toString())

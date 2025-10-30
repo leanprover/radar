@@ -6,8 +6,10 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -50,10 +52,32 @@ public final class Supervisor {
         this.status = status;
     }
 
+    public synchronized void maintain() {
+        List<Path> paths;
+        try {
+            paths = dirs.listAllBareRepos();
+        } catch (IOException e) {
+            log.error("Error while trying to find repo paths", e);
+            return;
+        }
+
+        for (Path path : paths) {
+            try {
+                log.info("GCing repo {}", path);
+                try (RepoGit repo = new RepoGit(path, null)) {
+                    repo.gc();
+                }
+                log.info("GCed repo {}", path);
+            } catch (Exception e) {
+                log.error("Error while trying to gc repo {}", path, e);
+            }
+        }
+    }
+
     /**
      * @return true if a run was performed, which indicates that this method should immediately be called again.
      */
-    public boolean run() throws InterruptedException {
+    public synchronized boolean run() throws InterruptedException {
         log.info("Acquiring job");
         Optional<JsonJob> jobOpt = acquireRun();
         if (jobOpt.isEmpty()) return false;

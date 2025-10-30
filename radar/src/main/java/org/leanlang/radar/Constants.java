@@ -41,6 +41,11 @@ public final class Constants {
     public static final Duration RUNNER_CONNECTED_TIME = Duration.ofSeconds(10);
 
     /**
+     * How long after midnight the runner should do repo maintenance.
+     */
+    public static final Duration RUNNER_MAINTENANCE_DELAY = Duration.ZERO;
+
+    /**
      * Delay between {@link org.leanlang.radar.server.busser.Busser Busser} update runs.
      */
     public static final Duration BUSSER_UPDATE_DELAY = Duration.ofMinutes(1);

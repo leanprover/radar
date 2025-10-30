@@ -1,6 +1,10 @@
 package org.leanlang.radar.runner.config;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 
 public final class Dirs {
@@ -19,6 +23,14 @@ public final class Dirs {
 
     public Path bareBenchRepo(String repo) {
         return cache.resolve("repos").resolve(repo).resolve("bench.git");
+    }
+
+    public List<Path> listAllBareRepos() throws IOException {
+        try (Stream<Path> repos = Files.list(cache.resolve("repos"))) {
+            return repos.map(it -> it.getFileName().toString())
+                    .flatMap(it -> Stream.of(bareRepo(it), bareBenchRepo(it)))
+                    .toList();
+        }
     }
 
     public Path tmp() {
