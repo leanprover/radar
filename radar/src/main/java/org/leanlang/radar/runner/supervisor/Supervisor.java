@@ -35,6 +35,7 @@ public final class Supervisor {
     private final Client client;
     private final ObjectMapper mapper;
 
+    private final Object statusLock = new Object();
     private @Nullable SupervisorStatus status;
 
     public Supervisor(RunnerConfig config, Dirs dirs, Client client, ObjectMapper mapper) {
@@ -44,12 +45,16 @@ public final class Supervisor {
         this.mapper = mapper;
     }
 
-    public synchronized Optional<SupervisorStatus> status() {
-        return Optional.ofNullable(status);
+    public Optional<SupervisorStatus> status() {
+        synchronized (statusLock) {
+            return Optional.ofNullable(status);
+        }
     }
 
-    private synchronized void setStatus(@Nullable SupervisorStatus status) {
-        this.status = status;
+    private void setStatus(@Nullable SupervisorStatus status) {
+        synchronized (statusLock) {
+            this.status = status;
+        }
     }
 
     public synchronized void maintain() {
