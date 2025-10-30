@@ -106,8 +106,8 @@ const series = computed<uPlot.Series[]>(() => {
 });
 
 function normalizeAtStart(values: (number | null)[]): (number | null)[] {
-  const firstValue = values.find((it) => it !== null);
-  if (firstValue === undefined || firstValue === 0) return values;
+  const firstValue = values.filter((it) => it !== null).find((it) => it !== 0);
+  if (firstValue === undefined) return values;
   return values.map((it) => it && it / firstValue);
 }
 
