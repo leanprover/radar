@@ -39,14 +39,27 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     <CSectionTitle>Recent commits</CSectionTitle>
     <CList>
       <CListItem v-for="entry in history.data.entries" :key="entry.commit.chash">
-        <CLinkCommit
-          :repo="route.params.repo"
-          :chash="entry.commit.chash"
-          :title="entry.commit.title"
-          :author="entry.commit.author.name"
-          :time="entry.commit.committer.time"
-          :class="{ 'text-magenta font-bold': entry.significant === true }"
-        />
+        <span
+          :title="
+            !entry.hasRuns
+              ? 'This commit hasn\'t been benchmarked yet.'
+              : entry.significant === true
+                ? 'This commit is significant.'
+                : undefined
+          "
+        >
+          <CLinkCommit
+            :repo="route.params.repo"
+            :chash="entry.commit.chash"
+            :title="entry.commit.title"
+            :author="entry.commit.author.name"
+            :time="entry.commit.committer.time"
+            :class="{
+              'text-foreground-alt italic': !entry.hasRuns,
+              'text-magenta font-bold': entry.hasRuns && entry.significant === true,
+            }"
+          />
+        </span>
       </CListItem>
     </CList>
   </CSection>

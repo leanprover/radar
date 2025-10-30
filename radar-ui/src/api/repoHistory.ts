@@ -4,6 +4,7 @@ import * as z from "zod";
 
 const JsonEntry = z.object({
   commit: JsonCommit,
+  hasRuns: z.boolean(),
   significant: z
     .boolean()
     .nullish()
