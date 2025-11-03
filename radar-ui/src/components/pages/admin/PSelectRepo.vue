@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRepos } from "@/composables/useRepos.ts";
+import { useRepos } from "@/api/repos.ts";
 import { reactive } from "vue";
 
 const repos = reactive(useRepos());

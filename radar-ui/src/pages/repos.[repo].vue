@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useRepoGithubBot } from "@/api/repoGithubBot.ts";
+import { useRepoHistory } from "@/api/repoHistory.ts";
+import { useRepos } from "@/api/repos.ts";
 import CLinkCommit from "@/components/CLinkCommit.vue";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
@@ -6,9 +9,6 @@ import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeAgo from "@/components/CTimeAgo.vue";
-import { useRepoGithubBot } from "@/composables/useRepoGithubBot.ts";
-import { useRepoHistory } from "@/composables/useRepoHistory.ts";
-import { useRepos } from "@/composables/useRepos.ts";
 import { computed, reactive } from "vue";
 import { useRoute } from "vue-router";
 

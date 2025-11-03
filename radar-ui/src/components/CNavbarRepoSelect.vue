@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRepos } from "@/composables/useRepos.ts";
+import { useRepos } from "@/api/repos.ts";
 import { SelectContent, SelectIcon, SelectItem, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "reka-ui";
 import { reactive, watchEffect } from "vue";
 

@@ -1,5 +1,8 @@
 import { JsonOutputLine, Timestamp } from "@/api/types.ts";
 import { enc, fetchJson, NotFoundError } from "@/api/utils.ts";
+import { useQuery } from "@tanstack/vue-query";
+import type { MaybeRefOrGetter } from "@vueuse/core";
+import { toValue } from "vue";
 import * as z from "zod";
 
 const JsonOutputLineBatch = z.object({
@@ -26,4 +29,16 @@ export async function getQueueRun(repo: string, chash: string, run: string) {
     if (e instanceof NotFoundError) return "not found";
     throw e;
   }
+}
+
+export function useQueueRun(
+  repo: MaybeRefOrGetter<string>,
+  chash: MaybeRefOrGetter<string>,
+  run: MaybeRefOrGetter<string>,
+) {
+  return useQuery({
+    queryKey: ["queueRun", { repo, chash, run }],
+    queryFn: () => getQueueRun(toValue(repo), toValue(chash), toValue(run)),
+    refetchInterval: 1000,
+  });
 }

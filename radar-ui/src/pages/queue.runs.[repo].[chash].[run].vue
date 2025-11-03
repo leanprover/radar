@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useQueueRun } from "@/api/queueRun.ts";
+import { useRepo } from "@/api/repos.ts";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
 import CLinkRepo from "@/components/CLinkRepo.vue";
 import CLoading from "@/components/CLoading.vue";
@@ -6,8 +8,6 @@ import CSection from "@/components/CSection.vue";
 import CSectionLog from "@/components/CSectionLog.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeDurationSince from "@/components/CTimeDurationSince.vue";
-import { useQueueRun } from "@/composables/useQueueRun.ts";
-import { useRepo } from "@/composables/useRepo.ts";
 import { reactive, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 

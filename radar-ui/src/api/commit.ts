@@ -1,5 +1,8 @@
 import { JsonCommit, JsonRun } from "@/api/types.ts";
 import { enc, fetchJson } from "@/api/utils.ts";
+import { QueryClient, useQuery } from "@tanstack/vue-query";
+import type { MaybeRefOrGetter } from "@vueuse/core";
+import { toValue } from "vue";
 import * as z from "zod";
 
 const JsonLinkedCommit = z.object({
@@ -17,4 +20,15 @@ const JsonGet = z.object({
 
 export async function getCommit(repo: string, chash: string) {
   return await fetchJson(JsonGet, `/commits/${enc(repo)}/${enc(chash)}/`);
+}
+
+export function useCommit(repo: MaybeRefOrGetter<string>, chash: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: ["commit", { repo, chash }],
+    queryFn: () => getCommit(toValue(repo), toValue(chash)),
+  });
+}
+
+export async function invalidateCommit(queryClient: QueryClient, repo: string, chash: string) {
+  await queryClient.invalidateQueries({ queryKey: ["commit", { repo, chash }] });
 }

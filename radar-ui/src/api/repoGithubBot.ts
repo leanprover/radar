@@ -1,5 +1,8 @@
 import { Timestamp } from "@/api/types.ts";
 import { enc, fetchJson } from "@/api/utils.ts";
+import { useQuery } from "@tanstack/vue-query";
+import type { MaybeRefOrGetter } from "@vueuse/core";
+import { toValue } from "vue";
 import * as z from "zod";
 
 const JsonCommand = z.object({
@@ -22,4 +25,12 @@ const JsonGet = z.object({
 export async function getRepoGithubBot(repo: string) {
   const queryParams = new URLSearchParams();
   return await fetchJson(JsonGet, `/repos/${enc(repo)}/github-bot/`, queryParams);
+}
+
+export function useRepoGithubBot(repo: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: ["repoGithubBot", { repo }],
+    queryFn: () => getRepoGithubBot(toValue(repo)),
+    refetchInterval: 30 * 1000,
+  });
 }

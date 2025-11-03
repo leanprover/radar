@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
+import { invalidateCommit, useCommit } from "@/api/commit.ts";
+import { invalidateCompare, useCompare } from "@/api/compare.ts";
+import { useRepo } from "@/api/repos.ts";
 import type { JsonMessageSegment } from "@/api/types.ts";
 import CButton from "@/components/CButton.vue";
 import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
@@ -16,9 +19,6 @@ import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
 import PComparisonSection from "@/components/pages/commit/PComparisonSection.vue";
 import PMeasurementsTable, { type Measurement } from "@/components/pages/commit/PMeasurementsTable.vue";
-import { invalidateCommit, useCommit } from "@/composables/useCommit.ts";
-import { invalidateCompare, useCompare } from "@/composables/useCompare.ts";
-import { useRepo } from "@/composables/useRepo.ts";
 import { useQueryParamAsString } from "@/lib/query.ts";
 import { setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";

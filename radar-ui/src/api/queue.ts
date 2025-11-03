@@ -1,5 +1,6 @@
 import { JsonCommit, JsonRun, Timestamp } from "@/api/types.ts";
 import { fetchJson } from "@/api/utils.ts";
+import { useQuery } from "@tanstack/vue-query";
 import * as z from "zod";
 
 export type JsonActiveRun = z.infer<typeof JsonActiveRun>;
@@ -32,4 +33,12 @@ const JsonGet = z.object({
 
 export async function getQueue(): Promise<JsonGet> {
   return await fetchJson(JsonGet, "/queue/");
+}
+
+export function useQueue() {
+  return useQuery({
+    queryKey: ["queue"],
+    queryFn: getQueue,
+    refetchInterval: 5000,
+  });
 }

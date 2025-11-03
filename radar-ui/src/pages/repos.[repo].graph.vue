@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useRepoGraph } from "@/api/repoGraph.ts";
+import { useRepo } from "@/api/repos.ts";
 import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
 import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
 import PUplot from "@/components/pages/graph/PUplot.vue";
-import { useRepo } from "@/composables/useRepo.ts";
-import { useRepoGraph } from "@/composables/useRepoGraph.ts";
 import {
   useQueryParamAsBool,
   useQueryParamAsInt,

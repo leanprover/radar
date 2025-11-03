@@ -1,5 +1,8 @@
 import { JsonCommit } from "@/api/types.ts";
 import { enc, fetchJson } from "@/api/utils.ts";
+import { useQuery } from "@tanstack/vue-query";
+import type { MaybeRefOrGetter } from "@vueuse/core";
+import { toValue } from "vue";
 import * as z from "zod";
 
 export type JsonMetric = z.infer<typeof JsonMetric>;
@@ -22,4 +25,15 @@ export async function getRepoGraph(repo: string, m: string[], n: number) {
   for (const metric of m) queryParams.append("m", metric);
 
   return await fetchJson(JsonGet, `/repos/${enc(repo)}/graph/`, queryParams);
+}
+
+export function useRepoGraph(
+  repo: MaybeRefOrGetter<string>,
+  m: MaybeRefOrGetter<string[]>,
+  n: MaybeRefOrGetter<number>,
+) {
+  return useQuery({
+    queryKey: ["repoGraph", { repo, m, n }],
+    queryFn: () => getRepoGraph(toValue(repo), toValue(m), toValue(n)),
+  });
 }
