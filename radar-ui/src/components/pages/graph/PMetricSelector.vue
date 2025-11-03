@@ -2,10 +2,11 @@
 import { useRepoMetrics } from "@/api/repoMetrics.ts";
 import CButton from "@/components/CButton.vue";
 import CControl from "@/components/CControl.vue";
+import CControlPages from "@/components/CControlPages.vue";
 import CControlRow from "@/components/CControlRow.vue";
 import CPlural from "@/components/format/CPlural.vue";
 import { metricFilterMatches, parseMetric } from "@/lib/utils.ts";
-import { computed, reactive, ref, watchEffect } from "vue";
+import { computed, reactive, ref } from "vue";
 
 const { repo, limit } = defineProps<{ repo: string; limit: number }>();
 const filter = defineModel<string>("filter", { required: true });
@@ -34,15 +35,8 @@ function toggle(metric: string) {
   selected.value = result;
 }
 
-const pageSize = ref(100);
-const pageSizes = [100, 500, 1000, 5000];
 const page = ref(0);
-const pages = computed(() => Math.ceil(visibleMetrics.value.length / pageSize.value));
-
-watchEffect(() => {
-  if (page.value >= pages.value) page.value = pages.value - 1;
-  if (page.value < 0) page.value = 0;
-});
+const pageSize = ref(0);
 
 const pageMetrics = computed(() => {
   const start = pageSize.value * page.value;
@@ -69,21 +63,7 @@ const pageMetrics = computed(() => {
       </CControlRow>
     </CControl>
 
-    <CControl>
-      <CControlRow>
-        <CButton @click="page = 0">First</CButton>
-        <CButton @click="page -= 1">Prev</CButton>
-        <div>Page {{ page + 1 }} / {{ pages }}</div>
-        <CButton @click="page += 1">Next</CButton>
-        <CButton @click="page = pages - 1">Last</CButton>
-        <label class="ml-auto">
-          Rows:
-          <select v-model="pageSize" class="bg-background px-1">
-            <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
-          </select>
-        </label>
-      </CControlRow>
-    </CControl>
+    <CControlPages v-model:page="page" v-model:page-size="pageSize" :total="visibleMetrics.length" />
 
     <div class="grid grid-cols-[auto_auto_auto_1fr] overflow-y-scroll">
       <div v-for="metric in pageMetrics" :key="metric" class="group contents cursor-default" @click="toggle(metric)">
