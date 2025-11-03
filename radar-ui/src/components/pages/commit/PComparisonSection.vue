@@ -4,19 +4,14 @@ import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
 import PMessage from "@/components/pages/commit/PMessage.vue";
 
-const {
-  title,
-  messages,
-  open = false,
-} = defineProps<{
+const { title, messages } = defineProps<{
   title: string;
   messages: JsonMessageSegment[][];
-  open?: boolean;
 }>();
 </script>
 
 <template>
-  <details v-if="messages.length > 0" :open>
+  <details v-if="messages.length > 0" open>
     <summary>{{ title }} ({{ messages.length }})</summary>
     <CList class="mt-2">
       <CListItem v-for="(msg, i) in messages" :key="i">

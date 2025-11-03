@@ -427,21 +427,17 @@ public final class GithubBotUpdater {
                 .map(JsonSignificance::message)
                 .toList();
 
-        formatSignificanceSection(sb, "Runs", true, significantRuns);
-        formatSignificanceSection(sb, "Major changes", true, significantMajorMetrics);
-        formatSignificanceSection(sb, "Minor changes", false, significantMinorMetrics);
+        formatSignificanceSection(sb, "Runs", significantRuns);
+        formatSignificanceSection(sb, "Major changes", significantMajorMetrics);
+        formatSignificanceSection(sb, "Minor changes", significantMinorMetrics);
 
         return sb.toString();
     }
 
-    private void formatSignificanceSection(
-            StringBuilder sb, String name, boolean open, List<List<JsonMessageSegment>> messages) {
-
+    private void formatSignificanceSection(StringBuilder sb, String name, List<List<JsonMessageSegment>> messages) {
         if (messages.isEmpty()) return;
-        sb.append("\n");
 
-        if (open) sb.append("<details open>\n");
-        else sb.append("<details>\n");
+        sb.append("\n<details open>\n");
 
         sb.append("<summary>")
                 .append(name)
