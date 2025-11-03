@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { postAdminRecomputeSignificance } from "@/api/adminRecomputeSignificance.ts";
 import CButton from "@/components/CButton.vue";
+import CControl from "@/components/CControl.vue";
+import CControlCol from "@/components/CControlCol.vue";
 import PSelectRepo from "@/components/pages/admin/PSelectRepo.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { ref } from "vue";
@@ -16,10 +18,13 @@ async function onClick() {
 </script>
 
 <template>
-  <div class="bg-background-alt flex flex-col items-start gap-2 p-1">
-    <PSelectRepo v-model="repo" />
-    <CButton :disabled="admin.token === undefined || repo === undefined" @click="onClick()">
-      Recompute significance of all commits
-    </CButton>
-  </div>
+  <CControl>
+    <CControlCol>
+      <PSelectRepo v-model="repo" />
+
+      <CButton class="w-fit" :disabled="admin.token === undefined || repo === undefined" @click="onClick()">
+        Recompute significance of all commits
+      </CButton>
+    </CControlCol>
+  </CControl>
 </template>

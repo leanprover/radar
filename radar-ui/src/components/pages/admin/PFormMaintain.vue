@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { postAdminMaintain } from "@/api/adminMaintain.ts";
 import CButton from "@/components/CButton.vue";
+import CControl from "@/components/CControl.vue";
+import CControlCol from "@/components/CControlCol.vue";
 import PSelectRepo from "@/components/pages/admin/PSelectRepo.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { ref } from "vue";
@@ -17,14 +19,18 @@ async function onClick() {
 </script>
 
 <template>
-  <div class="bg-background-alt flex flex-col items-start gap-2 p-1">
-    <PSelectRepo v-model="repo" />
-    <label class="select-none">
-      <input v-model="aggressive" type="checkbox" />
-      Aggressive
-    </label>
-    <CButton :disabled="admin.token === undefined || repo === undefined" @click="onClick()">
-      Perform {{ aggressive ? "aggressive" : null }} maintenance
-    </CButton>
-  </div>
+  <CControl>
+    <CControlCol>
+      <PSelectRepo v-model="repo" />
+
+      <label class="select-none">
+        <input v-model="aggressive" type="checkbox" />
+        Aggressive
+      </label>
+
+      <CButton class="w-fit" :disabled="admin.token === undefined || repo === undefined" @click="onClick()">
+        Perform {{ aggressive ? "aggressive" : null }} maintenance
+      </CButton>
+    </CControlCol>
+  </CControl>
 </template>

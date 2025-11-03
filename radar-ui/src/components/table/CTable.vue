@@ -1,5 +1,7 @@
 <script setup lang="ts" generic="T">
 import CButton from "@/components/CButton.vue";
+import CControl from "@/components/CControl.vue";
+import CControlRow from "@/components/CControlRow.vue";
 import {
   type ColumnDef,
   type ColumnSort,
@@ -82,25 +84,29 @@ function goToLastPage() {
 
 <template>
   <div class="flex w-fit flex-col gap-1">
-    <div class="bg-background-alt col-span-full flex gap-2 p-1 align-baseline">
-      <div>Filter:</div>
-      <input v-model="filter" type="text" placeholder="Enter a regex..." class="bg-background grow px-1" />
-      <CButton @click="filter = undefined">Clear</CButton>
-    </div>
+    <CControl>
+      <CControlRow>
+        <div>Filter:</div>
+        <input v-model="filter" type="text" placeholder="Enter a regex..." class="bg-background grow px-1" />
+        <CButton @click="filter = undefined">Clear</CButton>
+      </CControlRow>
+    </CControl>
 
-    <div class="bg-background-alt col-span-full flex gap-2 p-1 align-baseline">
-      <CButton @click="goToFirstPage()">first</CButton>
-      <CButton @click="goToPreviousPage()">prev</CButton>
-      <div>Page {{ tableData.getState().pagination.pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>
-      <CButton @click="goToNextPage()">next</CButton>
-      <CButton @click="goToLastPage()">last</CButton>
-      <label class="ml-auto">
-        Rows:
-        <select v-model="pageSize" class="bg-background h-5 px-1">
-          <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
-        </select>
-      </label>
-    </div>
+    <CControl>
+      <CControlRow>
+        <CButton @click="goToFirstPage()">first</CButton>
+        <CButton @click="goToPreviousPage()">prev</CButton>
+        <div>Page {{ tableData.getState().pagination.pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>
+        <CButton @click="goToNextPage()">next</CButton>
+        <CButton @click="goToLastPage()">last</CButton>
+        <label class="ml-auto">
+          Rows:
+          <select v-model="pageSize" class="bg-background h-5 px-1">
+            <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
+          </select>
+        </label>
+      </CControlRow>
+    </CControl>
 
     <div>Use shift+click to sort by multiple columns simultaneously.</div>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRepoGraph } from "@/api/repoGraph.ts";
 import { useRepo } from "@/api/repos.ts";
+import CControl from "@/components/CControl.vue";
 import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
 import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
 import PUplot from "@/components/pages/graph/PUplot.vue";
@@ -149,46 +150,51 @@ watchEffect(() => {
   <div class="flex min-h-0 max-w-[2000px] gap-4">
     <div class="flex min-w-[500px] flex-2 flex-col gap-2">
       <div class="flex flex-wrap gap-1">
-        <label class="bg-background-alt w-fit p-1 align-baseline select-none" title="Number of recent commits to fetch">
-          n:
-          <input v-model="queryN" type="number" :min="nMin" :max="nMax" :step="nStep" class="bg-background px-1" />
-        </label>
+        <CControl>
+          <label class="select-none" title="Number of recent commits to fetch">
+            n:
+            <input v-model="queryN" type="number" :min="nMin" :max="nMax" :step="nStep" class="bg-background px-1" />
+          </label>
+        </CControl>
 
-        <label
-          class="bg-background-alt w-fit p-1 align-baseline select-none"
-          title="Whether the y axis should start at 0 or at the lowest measured value."
-        >
-          Start at 0:
-          <input v-model="queryZero" type="checkbox" />
-        </label>
+        <CControl>
+          <label class="select-none" title="Whether the y axis should start at 0 or at the lowest measured value.">
+            Start at 0:
+            <input v-model="queryZero" type="checkbox" />
+          </label>
+        </CControl>
 
-        <label
-          class="bg-background-alt w-fit p-1 align-baseline select-none"
-          title="Whether the plots should be scaled so they all start or end at a value of 1."
-        >
-          Normalize:
-          <select v-model="queryNormalize" class="bg-background px-1">
-            <option value="">no</option>
-            <option value="start">start</option>
-            <option value="end">end</option>
-          </select>
-        </label>
-
-        <label
-          class="bg-background-alt w-fit p-1 align-baseline select-none"
-          title="Display all metrics with this category (i.e. the part after //) on a separate axis to the right of the graph."
-        >
-          Right axis:
-          <select
-            v-model="queryRight"
-            :disabled="categories.length === 0"
-            class="bg-background disabled:text-foreground-alt px-1"
+        <CControl>
+          <label
+            class="select-none"
+            title="Whether the plots should be scaled so they all start or end at a value of 1."
           >
-            <option value="">none</option>
-            <hr />
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
-        </label>
+            Normalize:
+            <select v-model="queryNormalize" class="bg-background px-1">
+              <option value="">no</option>
+              <option value="start">start</option>
+              <option value="end">end</option>
+            </select>
+          </label>
+        </CControl>
+
+        <CControl>
+          <label
+            class="select-none"
+            title="Display all metrics with this category (i.e. the part after //) on a separate axis to the right of the graph."
+          >
+            Right axis:
+            <select
+              v-model="queryRight"
+              :disabled="categories.length === 0"
+              class="bg-background disabled:text-foreground-alt px-1"
+            >
+              <option value="">none</option>
+              <hr />
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+          </label>
+        </CControl>
       </div>
 
       <div class="flex min-h-0 flex-col bg-white text-black" @click.middle="openCurrentCommitInNewTab()">

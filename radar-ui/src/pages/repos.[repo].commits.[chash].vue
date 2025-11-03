@@ -5,6 +5,8 @@ import { invalidateCompare, useCompare } from "@/api/compare.ts";
 import { useRepo } from "@/api/repos.ts";
 import type { JsonMessageSegment } from "@/api/types.ts";
 import CButton from "@/components/CButton.vue";
+import CControl from "@/components/CControl.vue";
+import CControlCol from "@/components/CControlCol.vue";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
@@ -150,23 +152,25 @@ onBeforeRouteUpdate(() => {
 
   <CSection v-if="admin.token !== undefined">
     <CSectionTitle>Admin</CSectionTitle>
-    <div class="bg-background-alt flex max-w-[80ch] flex-col gap-2 p-1">
-      <div class="flex gap-2">
-        <CButton @click="onEnqueue()"> Enqueue </CButton>
-        with priority <input v-model="enqueuePriority" type="number" class="bg-background w-[8ch] px-1" />
-      </div>
-      <details>
-        <summary>Explanation</summary>
-        <div class="mt-2">
-          Add this commit to the queue (again). Any existing measurement and run data will be deleted. Commits with
-          higher priority value appear earlier in the queue. Within a priority, the queue is FIFO.
+    <CControl class="max-w-[80ch]">
+      <CControlCol>
+        <div>
+          <CButton @click="onEnqueue()"> Enqueue </CButton>
+          with priority <input v-model="enqueuePriority" type="number" class="bg-background w-[8ch] px-1" />
         </div>
-        <div class="mt-2">
-          Priority of new commits: 0 <br />
-          Priority of commits added by !bench: 1
-        </div>
-      </details>
-    </div>
+        <details>
+          <summary>Explanation</summary>
+          <div class="mt-2">
+            Add this commit to the queue (again). Any existing measurement and run data will be deleted. Commits with
+            higher priority value appear earlier in the queue. Within a priority, the queue is FIFO.
+          </div>
+          <div class="mt-2">
+            Priority of new commits: 0 <br />
+            Priority of commits added by !bench: 1
+          </div>
+        </details>
+      </CControlCol>
+    </CControl>
   </CSection>
 
   <CSection v-if="commit.isSuccess && commit.data.runs.length > 0">
