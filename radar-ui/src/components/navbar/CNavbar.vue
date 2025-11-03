@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import CNavbarButton from "@/components/CNavbarButton.vue";
-import CNavbarColorMode from "@/components/CNavbarColorMode.vue";
-import CNavbarRepoSelect from "@/components/CNavbarRepoSelect.vue";
+import CNavbarButton from "@/components/navbar/CNavbarButton.vue";
+import CNavbarColorMode from "@/components/navbar/CNavbarColorMode.vue";
+import CNavbarRepoSelect from "@/components/navbar/CNavbarRepoSelect.vue";
 import { useRepoStore } from "@/stores/useRepoStore.ts";
 import { watch } from "vue";
 import { useRoute, useRouter } from "vue-router";

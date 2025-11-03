@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
-import CTimeAgo from "@/components/CTimeAgo.vue";
-import CTimeInstant from "@/components/CTimeInstant.vue";
+import CTimeAgo from "@/components/format/CTimeAgo.vue";
+import CTimeInstant from "@/components/format/CTimeInstant.vue";
+import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
 import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import { Temporal } from "temporal-polyfill";
 

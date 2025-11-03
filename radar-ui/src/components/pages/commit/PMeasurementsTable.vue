@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Direction } from "@/api/types.ts";
-import CTable from "@/components/CTable.vue";
-import CTableCellDelta from "@/components/CTableCellDelta.vue";
-import CTableCellValue from "@/components/CTableCellValue.vue";
-import CTableHeader from "@/components/CTableHeader.vue";
+import CTable from "@/components/table/CTable.vue";
+import CTableCellDelta from "@/components/table/CTableCellDelta.vue";
+import CTableCellValue from "@/components/table/CTableCellValue.vue";
+import CTableHeader from "@/components/table/CTableHeader.vue";
 import { metricFilterMatches } from "@/lib/utils.ts";
 import { type ColumnDef, type Row } from "@tanstack/vue-table";
 import { h } from "vue";

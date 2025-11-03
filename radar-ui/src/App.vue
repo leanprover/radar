@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CNavbar from "@/components/CNavbar.vue";
+import CNavbar from "@/components/navbar/CNavbar.vue";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 

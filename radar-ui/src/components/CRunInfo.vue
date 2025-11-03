@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
-import CTimeDurationSince from "@/components/CTimeDurationSince.vue";
+import CTimeDurationBetween from "@/components/format/CTimeDurationBetween.vue";
+import CTimeDurationSince from "@/components/format/CTimeDurationSince.vue";
 import { Temporal } from "temporal-polyfill";
 
 export interface Run {

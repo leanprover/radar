@@ -5,7 +5,7 @@ import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import CTimeAgo from "@/components/CTimeAgo.vue";
+import CTimeAgo from "@/components/format/CTimeAgo.vue";
 import PQueue from "@/components/pages/queue/PQueue.vue";
 import { reactive } from "vue";
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { JsonMessageSegment } from "@/api/types.ts";
-import CDeltaAmount from "@/components/CDeltaAmount.vue";
-import CDeltaPercent from "@/components/CDeltaPercent.vue";
+import CDeltaAmount from "@/components/format/CDeltaAmount.vue";
+import CDeltaPercent from "@/components/format/CDeltaPercent.vue";
 
 const { segment } = defineProps<{ segment: JsonMessageSegment }>();
 </script>

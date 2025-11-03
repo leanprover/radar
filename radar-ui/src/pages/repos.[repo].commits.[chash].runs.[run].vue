@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { useCommitRun } from "@/api/commitRun.ts";
 import { useRepo } from "@/api/repos.ts";
-import CLinkCommitHash from "@/components/CLinkCommitHash.vue";
-import CLinkRepo from "@/components/CLinkRepo.vue";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionLog from "@/components/CSectionLog.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import CTimeDurationBetween from "@/components/CTimeDurationBetween.vue";
-import CTimeRange from "@/components/CTimeRange.vue";
+import CTimeDurationBetween from "@/components/format/CTimeDurationBetween.vue";
+import CTimeRange from "@/components/format/CTimeRange.vue";
+import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
+import CLinkRepo from "@/components/link/CLinkRepo.vue";
 import { reactive } from "vue";
 import { useRoute } from "vue-router";
 

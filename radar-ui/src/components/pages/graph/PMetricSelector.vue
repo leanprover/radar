@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRepoMetrics } from "@/api/repoMetrics.ts";
 import CButton from "@/components/CButton.vue";
-import CPlural from "@/components/CPlural.vue";
+import CPlural from "@/components/format/CPlural.vue";
 import { metricFilterMatches, parseMetric } from "@/lib/utils.ts";
 import { computed, reactive, ref, watchEffect } from "vue";
 
