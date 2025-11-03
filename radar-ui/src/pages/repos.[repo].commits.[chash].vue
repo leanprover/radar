@@ -77,6 +77,15 @@ const significantMinorMetrics = computed<JsonMessageSegment[][]>(() => {
     .map((it) => it.message);
 });
 
+const enqueuePriority = ref(-1);
+
+async function onEnqueue() {
+  if (admin.token === undefined) return;
+  await postAdminEnqueue(admin.token, route.params.repo, route.params.chash, enqueuePriority.value);
+  void invalidateCommit(queryClient, route.params.repo, route.params.chash);
+  void invalidateCompare(queryClient, route.params.repo, queryParent.value, route.params.chash);
+}
+
 const tick = useIntervalFn(onTick, 5000);
 function onTick() {
   if (!commit.isSuccess) return;
@@ -107,8 +116,6 @@ watch(completedRuns, (newValue, oldValue) => {
 onBeforeRouteUpdate(() => {
   tick.resume();
 });
-
-const enqueuePriority = ref(-1);
 </script>
 
 <template>
@@ -145,15 +152,7 @@ const enqueuePriority = ref(-1);
     <CSectionTitle>Admin</CSectionTitle>
     <div class="bg-background-alt flex max-w-[80ch] flex-col gap-2 p-1">
       <div class="flex gap-2">
-        <CButton
-          @click="
-            postAdminEnqueue(admin.token, route.params.repo, route.params.chash, enqueuePriority);
-            invalidateCommit(queryClient, route.params.repo, route.params.chash);
-            invalidateCompare(queryClient, route.params.repo, queryParent, route.params.chash);
-          "
-        >
-          Enqueue
-        </CButton>
+        <CButton @click="onEnqueue()"> Enqueue </CButton>
         with priority <input v-model="enqueuePriority" type="number" class="bg-background w-[8ch] px-1" />
       </div>
       <details>
