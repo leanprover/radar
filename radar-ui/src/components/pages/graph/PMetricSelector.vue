@@ -36,7 +36,8 @@ function toggle(metric: string) {
 }
 
 const page = ref(0);
-const pageSize = ref(0);
+const pageSize = ref(100);
+const pageSizes = [100, 500, 1000, 5000];
 
 const pageMetrics = computed(() => {
   const start = pageSize.value * page.value;
@@ -63,7 +64,12 @@ const pageMetrics = computed(() => {
       </CControlRow>
     </CControl>
 
-    <CControlPages v-model:page="page" v-model:page-size="pageSize" :total="visibleMetrics.length" />
+    <CControlPages
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      :page-sizes="pageSizes"
+      :total="visibleMetrics.length"
+    />
 
     <div class="grid grid-cols-[auto_auto_auto_1fr] overflow-y-scroll">
       <div v-for="metric in pageMetrics" :key="metric" class="group contents cursor-default" @click="toggle(metric)">

@@ -4,10 +4,10 @@ import CControl from "@/components/CControl.vue";
 import CControlRow from "@/components/CControlRow.vue";
 import { computed, watchEffect } from "vue";
 
-const { total, pageSizes = [100, 500, 1000, 5000] } = defineProps<{ total: number; pageSizes?: number[] }>();
+const { pageSizes, total } = defineProps<{ pageSizes: number[]; total: number }>();
 
 const page = defineModel<number>("page", { required: true });
-const pageSize = defineModel<number>("pageSize", { default: 1 });
+const pageSize = defineModel<number>("pageSize", { required: true });
 
 const pages = computed(() => {
   if (pageSize.value < 1) return 1;

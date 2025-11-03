@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useRepoGithubBot } from "@/api/repoGithubBot.ts";
-import { useRepoHistory } from "@/api/repoHistory.ts";
 import { useRepos } from "@/api/repos.ts";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
@@ -8,13 +7,12 @@ import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeAgo from "@/components/format/CTimeAgo.vue";
-import CLinkCommit from "@/components/link/CLinkCommit.vue";
+import PHistory from "@/components/pages/repo/PHistory.vue";
 import { computed, reactive } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo]");
 const repos = reactive(useRepos());
-const history = reactive(useRepoHistory(() => route.params.repo));
 const github = reactive(useRepoGithubBot(() => route.params.repo));
 
 const info = computed(() => repos.data?.repos.find((it) => it.name === route.params.repo));
@@ -34,34 +32,9 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
     </div>
   </CSection>
 
-  <CLoading v-if="!history.isSuccess" :error="history.error" />
-  <CSection v-else>
+  <CSection>
     <CSectionTitle>Recent commits</CSectionTitle>
-    <CList>
-      <CListItem v-for="entry in history.data.entries" :key="entry.commit.chash">
-        <span
-          :title="
-            !entry.hasRuns
-              ? 'This commit hasn\'t been benchmarked yet.'
-              : entry.significant === true
-                ? 'This commit is significant.'
-                : undefined
-          "
-        >
-          <CLinkCommit
-            :repo="route.params.repo"
-            :chash="entry.commit.chash"
-            :title="entry.commit.title"
-            :author="entry.commit.author.name"
-            :time="entry.commit.committer.time"
-            :class="{
-              'text-foreground-alt italic': !entry.hasRuns,
-              'text-magenta font-bold': entry.hasRuns && entry.significant === true,
-            }"
-          />
-        </span>
-      </CListItem>
-    </CList>
+    <PHistory :repo="route.params.repo" />
   </CSection>
 
   <CSection v-if="github.isSuccess && github.data.commands.length > 0">
