@@ -11,7 +11,7 @@ const pageSize = defineModel<number>("pageSize", { required: true });
 
 const pages = computed(() => {
   if (pageSize.value < 1) return 1;
-  return Math.ceil(total / pageSize.value);
+  return Math.max(1, Math.ceil(total / pageSize.value));
 });
 
 watchEffect(() => {
