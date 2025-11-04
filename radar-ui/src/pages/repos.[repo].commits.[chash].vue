@@ -5,6 +5,7 @@ import { invalidateCompare, useCompare } from "@/api/compare.ts";
 import { useRepo } from "@/api/repos.ts";
 import type { JsonMessageSegment } from "@/api/types.ts";
 import CButton from "@/components/CButton.vue";
+import CCommitDetails from "@/components/CCommitDetails.vue";
 import CControl from "@/components/CControl.vue";
 import CControlCol from "@/components/CControlCol.vue";
 import CList from "@/components/CList.vue";
@@ -13,10 +14,6 @@ import CLoading from "@/components/CLoading.vue";
 import CRunInfo from "@/components/CRunInfo.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionTitle from "@/components/CSectionTitle.vue";
-import CTimeAgo from "@/components/format/CTimeAgo.vue";
-import CTimeInstant from "@/components/format/CTimeInstant.vue";
-import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
-import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
 import PComparisonSection from "@/components/pages/commit/PComparisonSection.vue";
@@ -124,27 +121,18 @@ onBeforeRouteUpdate(() => {
   <CLoading v-if="!commit.isSuccess" :error="commit.error" />
   <CSection v-else>
     <CSectionTitle>Commit</CSectionTitle>
+    <CCommitDetails :repo-url="repo?.url" :commit="commit.data.commit" />
 
     <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
-      <div class="text-yellow col-span-full">
-        commit <CLinkCommitHash :url="repo?.url" :chash="route.params.chash" />
-      </div>
+      <a
+        v-if="repo?.lakeprofReportUrl"
+        :href="repo.lakeprofReportUrl + route.params.chash"
+        target="_blank"
+        class="col-span-full hover:underline"
+      >
+        Lakeprof report
+      </a>
 
-      <div>Author:</div>
-      <div>{{ commit.data.commit.author.name }} &lt;{{ commit.data.commit.author.email }}&gt;</div>
-
-      <div>Date:</div>
-      <div>
-        <CTimeInstant :when="commit.data.commit.author.time" />
-        <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.data.commit.author.time" />)</span>
-      </div>
-
-      <template v-if="repo?.lakeprofReportUrl">
-        <div>Lakeprof:</div>
-        <a :href="repo.lakeprofReportUrl + route.params.chash" target="_blank" class="hover:underline">Report</a>
-      </template>
-
-      <PCommitMessage :title="commit.data.commit.title" :body="commit.data.commit.body" class="my-3" />
       <PCommitNavParents :repo="route.params.repo" :search="queryFilter" :commits="commit.data.parents" />
       <PCommitNavChildren :repo="route.params.repo" :search="queryFilter" :commits="commit.data.children" />
     </div>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useRepoGraph } from "@/api/repoGraph.ts";
 import { useRepo } from "@/api/repos.ts";
+import CCommitDetails from "@/components/CCommitDetails.vue";
 import CControl from "@/components/CControl.vue";
-import PCommitInfo from "@/components/pages/graph/PCommitInfo.vue";
 import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
 import PUplot from "@/components/pages/graph/PUplot.vue";
 import {
@@ -202,14 +202,11 @@ watchEffect(() => {
         <div class="hidden pt-[0.1em] text-center text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
       </div>
 
-      <PCommitInfo
+      <CCommitDetails
         v-if="hoverCommit"
         :repo="route.params.repo"
         :url="repo?.url"
-        :chash="hoverCommit.chash"
-        :author="hoverCommit.author"
-        :title="hoverCommit.title"
-        :body="hoverCommit.body"
+        :commit="hoverCommit"
         class="border-t pt-1 dark:border-none"
       />
     </div>

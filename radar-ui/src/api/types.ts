@@ -24,6 +24,12 @@ export const JsonOutputLine = z
   .tuple([Timestamp, z.int(), z.string()])
   .transform(([time, source, line]) => ({ time, source, line }));
 
+export interface JsonCommitIdent {
+  name: string;
+  email: string;
+  time: Temporal.Instant;
+  offset: number;
+}
 export const JsonCommitIdent = z.object({
   name: z.string(),
   email: z.string(),
@@ -31,6 +37,13 @@ export const JsonCommitIdent = z.object({
   offset: z.int(),
 });
 
+export interface JsonCommit {
+  chash: string;
+  author: JsonCommitIdent;
+  committer: JsonCommitIdent;
+  title: string;
+  body?: string;
+}
 export const JsonCommit = z.object({
   chash: z.string(),
   author: JsonCommitIdent,
