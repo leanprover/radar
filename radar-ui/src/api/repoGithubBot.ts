@@ -2,9 +2,19 @@ import { Timestamp } from "@/api/types.ts";
 import { enc, fetchJson } from "@/api/utils.ts";
 import { useQuery } from "@tanstack/vue-query";
 import type { MaybeRefOrGetter } from "@vueuse/core";
+import { Temporal } from "temporal-polyfill";
 import { toValue } from "vue";
 import * as z from "zod";
 
+export interface JsonCommand {
+  pr: number;
+  chash: string;
+  againstChash: string;
+  url: string;
+  replyUrl?: string;
+  created: Temporal.Instant;
+  completed?: Temporal.Instant;
+}
 const JsonCommand = z.object({
   pr: z.int(),
   chash: z.string(),
