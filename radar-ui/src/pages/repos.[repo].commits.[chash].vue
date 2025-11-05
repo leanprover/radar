@@ -124,7 +124,7 @@ onBeforeRouteUpdate(() => {
     </div>
   </CSection>
 
-  <CSection v-if="admin.token !== undefined" title="Admin">
+  <CSection v-if="admin.token !== undefined" title="Admin" collapsible>
     <PFormEnqueue :repo="route.params.repo" :chash="route.params.chash" :reference />
   </CSection>
 
