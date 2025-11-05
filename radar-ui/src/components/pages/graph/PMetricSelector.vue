@@ -72,6 +72,8 @@ const pageMetrics = computed(() => {
     />
 
     <div class="grid grid-cols-[auto_auto_auto_1fr] overflow-y-scroll">
+      <div v-if="allMetrics.length === 0">No metrics.</div>
+      <div v-else-if="visibleMetrics.length === 0">No metrics match the filter.</div>
       <div v-for="metric in pageMetrics" :key="metric" class="group contents cursor-default" @click="toggle(metric)">
         <div class="group-hover:bg-background-alt pr-2 pl-1">
           <input

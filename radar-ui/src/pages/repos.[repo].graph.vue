@@ -3,6 +3,7 @@ import { useRepoGraph } from "@/api/repoGraph.ts";
 import { useRepo } from "@/api/repos.ts";
 import CCommitDetails from "@/components/CCommitDetails.vue";
 import CControl from "@/components/CControl.vue";
+import CLoading from "@/components/CLoading.vue";
 import PMetricSelector from "@/components/pages/graph/PMetricSelector.vue";
 import PUplot from "@/components/pages/graph/PUplot.vue";
 import {
@@ -197,7 +198,12 @@ watchEffect(() => {
         </CControl>
       </div>
 
-      <div class="flex min-h-0 flex-col bg-white text-black" @click.middle="openCurrentCommitInNewTab()">
+      <CLoading v-if="!graph.isSuccess" :error="graph.error" />
+      <div
+        v-show="graph.isSuccess"
+        class="flex min-h-0 flex-col bg-white text-black"
+        @click.middle="openCurrentCommitInNewTab()"
+      >
         <PUplot v-model:hover-idx="hoverIdx" :series :data :start-at-zero="queryZero" class="overflow-y-scroll" />
         <div class="hidden pt-[0.1em] text-center text-[0.6em] dark:block">Sorry for brutzeling your eye balls.</div>
       </div>
