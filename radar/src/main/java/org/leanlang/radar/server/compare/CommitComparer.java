@@ -21,31 +21,28 @@ public final class CommitComparer {
     private CommitComparer() {}
 
     public static JsonCommitComparison compareCommits(
-            Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
-        return repo.db().readTransactionResult(ctx -> {
-            List<MetricsRecord> metrics = fetchMetrics(ctx);
-            Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
-            Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
-            List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
+            Repo repo, Configuration ctx, @Nullable String chashFirst, @Nullable String chashSecond) {
 
-            List<JsonMetricComparison> measurementComparisons =
-                    compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond);
-            List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond);
+        List<MetricsRecord> metrics = fetchMetrics(ctx);
+        Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
+        Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
+        List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
 
-            JsonCommitComparison comparison = new JsonCommitComparison(false, runAnalyses, measurementComparisons);
-            long significantRuns = comparison.runSignificances().count();
-            long significantMajorMetrics = comparison
-                    .metricSignificances()
-                    .filter(JsonSignificance::major)
-                    .count();
-            long significantMinorMetrics =
-                    comparison.metricSignificances().filter(it -> !it.major()).count();
-            boolean significant = (significantRuns > 0)
-                    || (significantMajorMetrics >= repo.significantMajorMetrics())
-                    || (significantMinorMetrics >= repo.significantMinorMetrics());
+        List<JsonMetricComparison> measurementComparisons =
+                compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond);
+        List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond);
 
-            return new JsonCommitComparison(significant, comparison.runs(), comparison.metrics());
-        });
+        JsonCommitComparison comparison = new JsonCommitComparison(false, runAnalyses, measurementComparisons);
+        long significantRuns = comparison.runSignificances().count();
+        long significantMajorMetrics =
+                comparison.metricSignificances().filter(JsonSignificance::major).count();
+        long significantMinorMetrics =
+                comparison.metricSignificances().filter(it -> !it.major()).count();
+        boolean significant = (significantRuns > 0)
+                || (significantMajorMetrics >= repo.significantMajorMetrics())
+                || (significantMinorMetrics >= repo.significantMinorMetrics());
+
+        return new JsonCommitComparison(significant, comparison.runs(), comparison.metrics());
     }
 
     private static List<MetricsRecord> fetchMetrics(Configuration ctx) {
