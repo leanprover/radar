@@ -8,8 +8,7 @@ import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
 import CRunInfo from "@/components/CRunInfo.vue";
 import CSection from "@/components/CSection.vue";
-import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
-import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
+import PCommitNav from "@/components/pages/commit/PCommitNav.vue";
 import PDetailsSection from "@/components/pages/commit/PDetailsSection.vue";
 import PFormEnqueue from "@/components/pages/commit/PFormEnqueue.vue";
 import PMeasurementsTable, { type Measurement } from "@/components/pages/commit/PMeasurementsTable.vue";
@@ -86,20 +85,14 @@ onBeforeRouteUpdate(() => {
   <CLoading v-if="!commit.isSuccess" :error="commit.error" />
   <CSection v-else title="Commit">
     <CCommitDetails :repo-url="repo?.url" :commit="commit.data.commit" />
-
-    <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
-      <a
-        v-if="repo?.lakeprofReportUrl"
-        :href="repo.lakeprofReportUrl + route.params.chash"
-        target="_blank"
-        class="col-span-full hover:underline"
-      >
-        Lakeprof report
-      </a>
-
-      <PCommitNavParents :repo="route.params.repo" :search="queryFilter" :commits="commit.data.parents" />
-      <PCommitNavChildren :repo="route.params.repo" :search="queryFilter" :commits="commit.data.children" />
-    </div>
+    <PCommitNav
+      :repo="route.params.repo"
+      :chash="route.params.chash"
+      :search="queryFilter"
+      :lakeprof-report-url="repo?.lakeprofReportUrl"
+      :parents="commit.data.parents"
+      :children="commit.data.children"
+    />
   </CSection>
 
   <CSection v-if="admin.token !== undefined" title="Admin" collapsible>

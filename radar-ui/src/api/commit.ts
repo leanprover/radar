@@ -5,6 +5,11 @@ import type { MaybeRefOrGetter } from "@vueuse/core";
 import { toValue } from "vue";
 import * as z from "zod";
 
+export interface JsonLinkedCommit {
+  chash: string;
+  title: string;
+  tracked: boolean;
+}
 const JsonLinkedCommit = z.object({
   chash: z.string(),
   title: z.string(),
