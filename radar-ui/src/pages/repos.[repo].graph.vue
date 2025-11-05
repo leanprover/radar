@@ -136,6 +136,7 @@ function openCurrentCommitInNewTab() {
   const resolved = router.resolve({
     name: "/repos.[repo].commits.[chash]",
     params: { repo: route.params.repo, chash: hoverCommit.value.chash },
+    query: { s: queryS.value || undefined },
   });
   window.open(resolved.href, "_blank");
 }
@@ -213,6 +214,7 @@ watchEffect(() => {
         :repo="route.params.repo"
         :url="repo?.url"
         :commit="hoverCommit"
+        :query-s="queryS"
         class="border-t pt-1 dark:border-none"
       />
     </div>

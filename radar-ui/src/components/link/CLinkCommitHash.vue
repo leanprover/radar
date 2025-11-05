@@ -3,10 +3,12 @@ const {
   repo = undefined,
   url = undefined,
   chash,
+  queryS = undefined,
 } = defineProps<{
   repo?: string;
   url?: string;
   chash: string;
+  queryS?: string;
 }>();
 
 // Assumes a Github-like URL schema
@@ -20,7 +22,7 @@ function href(url: string, chash: string): string {
   <span>
     <RouterLink
       v-if="repo !== undefined"
-      :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash } }"
+      :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash }, query: { s: queryS } }"
       class="hover:underline"
     >
       {{ chash }}

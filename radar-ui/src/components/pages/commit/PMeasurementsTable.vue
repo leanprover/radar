@@ -143,7 +143,11 @@ function filterFn(row: Row<Measurement>, col: string, data: string): boolean {
 }
 
 function onClickRow(row: Row<Measurement>): void {
-  void router.push({ name: "/repos.[repo].graph", params: { repo }, query: { m: row.original.metric } });
+  void router.push({
+    name: "/repos.[repo].graph",
+    params: { repo },
+    query: { m: row.original.metric, s: filter.value === "" ? undefined : filter.value },
+  });
 }
 </script>
 
