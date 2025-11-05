@@ -2,7 +2,6 @@
 import CSectionTitle from "@/components/CSectionTitle.vue";
 import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from "reka-ui";
 import { ref } from "vue";
-import { onBeforeRouteUpdate } from "vue-router";
 
 const {
   title,
@@ -17,10 +16,6 @@ const {
 }>();
 
 const open = ref(startOpen);
-
-onBeforeRouteUpdate(() => {
-  open.value = startOpen;
-});
 </script>
 
 <template>
