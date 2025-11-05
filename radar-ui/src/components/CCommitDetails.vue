@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { type JsonCommit } from "@/api/types.ts";
+import CCommitDetailsMessage from "@/components/CCommitDetailsMessage.vue";
 import CTimeAgo from "@/components/format/CTimeAgo.vue";
 import CTimeInstant from "@/components/format/CTimeInstant.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
-import PCommitMessage from "@/components/pages/commit/PCommitMessage.vue";
 
 const {
   repo = undefined,
@@ -29,6 +29,6 @@ const {
       <span class="text-foreground-alt text-xs"> (<CTimeAgo :when="commit.author.time" />)</span>
     </div>
 
-    <PCommitMessage :title="commit.title" :body="commit.body" class="mt-3" />
+    <CCommitDetailsMessage :title="commit.title" :body="commit.body" class="mt-3" />
   </div>
 </template>

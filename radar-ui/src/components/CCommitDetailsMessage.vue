@@ -18,19 +18,25 @@ onBeforeRouteUpdate(() => {
       <span>{{ body ? (open ? "v" : "^") : "-" }}{{ " " }}</span>
       <span class="font-bold">{{ title }}</span>
     </CollapsibleTrigger>
-    <CollapsibleContent
-      :class="[
-        'overflow-hidden',
-        'data-[state=closed]:animate-[slideUp_200ms_ease-out]',
-        'data-[state=open]:animate-[slideDown_200ms_ease-out]',
-      ]"
-    >
+    <CollapsibleContent class="CollapsibleContent">
       <pre class="max-w-[80ch] pt-3 whitespace-pre-wrap">{{ body }}</pre>
     </CollapsibleContent>
   </CollapsibleRoot>
 </template>
 
 <style>
+.CollapsibleContent {
+  overflow: hidden;
+}
+
+.CollapsibleContent[data-state="open"] {
+  animation: slideDown 200ms ease-out;
+}
+
+.CollapsibleContent[data-state="closed"] {
+  animation: slideUp 200ms ease-out;
+}
+
 @keyframes slideDown {
   from {
     height: 0;
