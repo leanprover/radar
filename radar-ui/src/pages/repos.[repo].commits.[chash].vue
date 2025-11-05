@@ -123,9 +123,27 @@ watchEffect(() => {
     <CLoading v-if="!compare.isSuccess" :error="compare.error" />
     <div v-else-if="details.major === 0 && details.minor === 0">No significant results.</div>
     <template v-else>
-      <PDetailsSection title="Runs" :messages="details.runs" open />
-      <PDetailsSection title="Major changes" :messages="details.metricsMajor" open />
-      <PDetailsSection title="Minor changes" :messages="details.metricsMinor" open />
+      <PDetailsSection
+        :repo="route.params.repo"
+        :chash="route.params.chash"
+        title="Runs"
+        :messages="details.runs"
+        open
+      />
+      <PDetailsSection
+        :repo="route.params.repo"
+        :chash="route.params.chash"
+        title="Major changes"
+        :messages="details.metricsMajor"
+        open
+      />
+      <PDetailsSection
+        :repo="route.params.repo"
+        :chash="route.params.chash"
+        title="Minor changes"
+        :messages="details.metricsMinor"
+        open
+      />
     </template>
   </CSection>
 

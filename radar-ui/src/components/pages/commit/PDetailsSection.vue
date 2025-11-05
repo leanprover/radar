@@ -4,7 +4,9 @@ import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
 import PDetailsMessage from "@/components/pages/commit/PDetailsMessage.vue";
 
-const { title, messages } = defineProps<{
+const { repo, chash, title, messages } = defineProps<{
+  repo: string;
+  chash: string;
   title: string;
   messages: JsonMessageSegment[][];
 }>();
@@ -15,7 +17,7 @@ const { title, messages } = defineProps<{
     <div>{{ title }} ({{ messages.length }})</div>
     <CList>
       <CListItem v-for="(msg, i) in messages" :key="i">
-        <PDetailsMessage :segments="msg" />
+        <PDetailsMessage :repo :chash :segments="msg" />
       </CListItem>
     </CList>
   </template>

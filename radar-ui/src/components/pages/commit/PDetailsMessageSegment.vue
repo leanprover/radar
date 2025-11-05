@@ -2,8 +2,9 @@
 import type { JsonMessageSegment } from "@/api/types.ts";
 import CDeltaAmount from "@/components/format/CDeltaAmount.vue";
 import CDeltaPercent from "@/components/format/CDeltaPercent.vue";
+import { escapeRegex } from "@/lib/utils.ts";
 
-const { segment } = defineProps<{ segment: JsonMessageSegment }>();
+const { repo, chash, segment } = defineProps<{ repo: string; chash: string; segment: JsonMessageSegment }>();
 </script>
 
 <template>
@@ -19,7 +20,19 @@ const { segment } = defineProps<{ segment: JsonMessageSegment }>();
     :class="{ 'font-bold': true, 'text-green': segment.exitCode === 0, 'text-red': segment.exitCode !== 0 }"
     >{{ segment.exitCode }}</span
   >
-  <span v-else-if="segment.type === 'metric'" class="italic">{{ segment.metric }}</span>
-  <span v-else-if="segment.type === 'run'" class="italic">{{ segment.run }}</span>
+  <RouterLink
+    v-else-if="segment.type === 'metric'"
+    :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash }, query: { s: escapeRegex(segment.metric) } }"
+    class="italic hover:underline"
+  >
+    {{ segment.metric }}
+  </RouterLink>
+  <RouterLink
+    v-else-if="segment.type === 'run'"
+    :to="{ name: '/repos.[repo].commits.[chash].runs.[run]', params: { repo, chash, run: segment.run } }"
+    class="italic hover:underline"
+  >
+    {{ segment.run }}
+  </RouterLink>
   <span v-else>{{ segment.text }}</span>
 </template>
