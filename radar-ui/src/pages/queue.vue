@@ -4,7 +4,6 @@ import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeAgo from "@/components/format/CTimeAgo.vue";
 import PQueue from "@/components/pages/queue/PQueue.vue";
 import { reactive } from "vue";
@@ -14,8 +13,7 @@ const queue = reactive(useQueue());
 
 <template>
   <CLoading v-if="!queue.isSuccess" :error="queue.error" />
-  <CSection v-else>
-    <CSectionTitle>Runners</CSectionTitle>
+  <CSection v-else title="Runners">
     <CList>
       <CListItem v-for="runner in queue.data.runners" :key="runner.name" class="items-baseline">
         <div>{{ runner.name }}</div>

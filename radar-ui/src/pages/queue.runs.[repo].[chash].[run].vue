@@ -4,7 +4,6 @@ import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionLog from "@/components/CSectionLog.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeDurationSince from "@/components/format/CTimeDurationSince.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
 import CLinkRepo from "@/components/link/CLinkRepo.vue";
@@ -34,9 +33,7 @@ watch(run, (newValue) => {
 <template>
   <CLoading v-if="!run.isSuccess" :error="run.error" />
   <div v-else-if="run.data === 'not found'" class="text-foreground-alt">Redirecting...</div>
-  <CSection v-else>
-    <CSectionTitle class="col-span-full">Run {{ route.params.run }}</CSectionTitle>
-
+  <CSection v-else :title="`Run ${route.params.run}`">
     <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
       <div>Repo:</div>
       <CLinkRepo :repo="route.params.repo" />

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import CSection from "@/components/CSection.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import { formatZonedTime, instantToZoned } from "@/lib/format.ts";
 import { Temporal } from "temporal-polyfill";
 
@@ -14,8 +13,7 @@ const { lines = undefined, start = 0 } = defineProps<{ lines?: Line[]; start?: n
 </script>
 
 <template>
-  <CSection>
-    <CSectionTitle>Logs</CSectionTitle>
+  <CSection title="Logs">
     <div v-if="lines === undefined">No logs available.</div>
     <template v-else>
       <div>Lines: {{ start + lines.length }}</div>

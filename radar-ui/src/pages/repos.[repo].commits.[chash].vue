@@ -13,7 +13,6 @@ import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
 import CRunInfo from "@/components/CRunInfo.vue";
 import CSection from "@/components/CSection.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
 import PComparisonSection from "@/components/pages/commit/PComparisonSection.vue";
@@ -119,8 +118,7 @@ onBeforeRouteUpdate(() => {
 
 <template>
   <CLoading v-if="!commit.isSuccess" :error="commit.error" />
-  <CSection v-else>
-    <CSectionTitle>Commit</CSectionTitle>
+  <CSection v-else title="Commit">
     <CCommitDetails :repo-url="repo?.url" :commit="commit.data.commit" />
 
     <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
@@ -138,8 +136,7 @@ onBeforeRouteUpdate(() => {
     </div>
   </CSection>
 
-  <CSection v-if="admin.token !== undefined">
-    <CSectionTitle>Admin</CSectionTitle>
+  <CSection v-if="admin.token !== undefined" title="Admin">
     <CControl class="max-w-[80ch]">
       <CControlCol>
         <div>
@@ -161,8 +158,7 @@ onBeforeRouteUpdate(() => {
     </CControl>
   </CSection>
 
-  <CSection v-if="commit.isSuccess && commit.data.runs.length > 0">
-    <CSectionTitle>Runs</CSectionTitle>
+  <CSection v-if="commit.isSuccess && commit.data.runs.length > 0" title="Runs">
     <CList>
       <CListItem v-for="run in commit.data.runs" :key="run.name">
         <CRunInfo :repo="route.params.repo" :chash="route.params.chash" :run />
@@ -172,15 +168,14 @@ onBeforeRouteUpdate(() => {
 
   <CSection
     v-if="significantRuns.length > 0 || significantMajorMetrics.length > 0 || significantMinorMetrics.length > 0"
+    title="Significant details"
   >
-    <CSectionTitle>Significant details</CSectionTitle>
     <PComparisonSection title="Runs" :messages="significantRuns" open />
     <PComparisonSection title="Major changes" :messages="significantMajorMetrics" open />
     <PComparisonSection title="Minor changes" :messages="significantMinorMetrics" />
   </CSection>
 
-  <CSection v-show="measurements.length > 0">
-    <CSectionTitle>Measurements</CSectionTitle>
+  <CSection v-show="measurements.length > 0" title="Measurements">
     <PMeasurementsTable v-model:filter="queryFilter" :repo="route.params.repo" :measurements="measurements" />
   </CSection>
 </template>

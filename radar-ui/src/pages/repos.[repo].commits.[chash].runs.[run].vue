@@ -4,7 +4,6 @@ import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CSectionLog from "@/components/CSectionLog.vue";
-import CSectionTitle from "@/components/CSectionTitle.vue";
 import CTimeDurationBetween from "@/components/format/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/format/CTimeRange.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
@@ -26,9 +25,7 @@ const run = reactive(
 
 <template>
   <CLoading v-if="!run.isSuccess" :error="run.error" />
-  <CSection v-else>
-    <CSectionTitle>Run {{ route.params.run }}</CSectionTitle>
-
+  <CSection v-else :title="`Run ${route.params.run}`">
     <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
       <div>Repo:</div>
       <CLinkRepo :repo="route.params.repo" />
