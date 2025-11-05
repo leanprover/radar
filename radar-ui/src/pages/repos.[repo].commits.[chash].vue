@@ -12,6 +12,7 @@ import PCommitNav from "@/components/pages/commit/PCommitNav.vue";
 import PDetailsSection from "@/components/pages/commit/PDetailsSection.vue";
 import PFormEnqueue from "@/components/pages/commit/PFormEnqueue.vue";
 import PMeasurementsTable, { type Measurement } from "@/components/pages/commit/PMeasurementsTable.vue";
+import PReference from "@/components/pages/commit/PReference.vue";
 import { comparisonSignificance } from "@/components/pages/commit/significance.ts";
 import { useQueryParamAsString } from "@/lib/query.ts";
 import { setsEqual } from "@/lib/utils.ts";
@@ -107,6 +108,11 @@ watchEffect(() => {
 
   <CSection v-if="admin.token !== undefined" title="Admin" collapsible>
     <PFormEnqueue :repo="route.params.repo" :chash="route.params.chash" :reference />
+  </CSection>
+
+  <CSection title="Reference commit" collapsible>
+    <div class="max-w-[80ch]">Deltas are computed from the reference commit to the main commit.</div>
+    <PReference v-model="queryReference" :repo="route.params.repo" :chash="compare.data?.chashFirst" />
   </CSection>
 
   <CSection title="Runs">

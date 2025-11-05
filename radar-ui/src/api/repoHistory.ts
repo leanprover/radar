@@ -30,9 +30,9 @@ export async function getRepoHistory(repo: string, params?: { n?: number; skip?:
 export function useRepoHistory(
   repo: MaybeRefOrGetter<string>,
   params?: {
-    n: MaybeRefOrGetter<number | undefined>;
-    skip: MaybeRefOrGetter<number | undefined>;
-    s: MaybeRefOrGetter<string | undefined>;
+    n?: MaybeRefOrGetter<number> | MaybeRefOrGetter<number | undefined>;
+    skip?: MaybeRefOrGetter<number> | MaybeRefOrGetter<number | undefined>;
+    s?: MaybeRefOrGetter<string> | MaybeRefOrGetter<string | undefined>;
   },
 ) {
   return useQuery({
