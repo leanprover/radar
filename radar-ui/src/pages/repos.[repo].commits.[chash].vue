@@ -17,16 +17,16 @@ import { useQueryParamAsString } from "@/lib/query.ts";
 import { setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { useIntervalFn } from "@vueuse/core";
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, watch, watchEffect } from "vue";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
 const admin = useAdminStore();
 
-const queryParent = useQueryParamAsString("parent");
+const queryReference = useQueryParamAsString("reference");
 const queryFilter = useQueryParamAsString("s");
 
-const reference = computed(() => queryParent.value || "parent");
+const reference = computed(() => queryReference.value || "parent");
 
 const repo = useRepo(route.params.repo);
 const commit = reactive(
@@ -78,6 +78,14 @@ const completedRuns = computed(() => {
 watch(completedRuns, (newValue, oldValue) => {
   if (setsEqual(newValue, oldValue)) return; // No new runs
   void compare.refetch();
+});
+
+// For backwards compatibility, translate old links that use ?parent=... into new ones that use ?reference=...
+const queryParent = useQueryParamAsString("parent");
+watchEffect(() => {
+  if (!queryParent.value) return;
+  if (!queryReference.value) queryReference.value = queryParent.value;
+  queryParent.value = "";
 });
 </script>
 

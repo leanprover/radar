@@ -8,6 +8,6 @@ public record Linker(URI url) {
     }
 
     public URI linkToComparison(String repo, String first, String second) {
-        return url.resolve("/repos/" + repo + "/commits/" + second + "?parent=" + first);
+        return url.resolve("/repos/" + repo + "/commits/" + second + "?reference=" + first);
     }
 }
