@@ -77,10 +77,11 @@ public record ResCommit(Repos repos, Queue queue) {
                 .toList();
 
         List<JsonRun> runs = queue.getTask(repoName, chash)
-                .map(it -> it.runs().stream().map(JsonRun::new).toList())
+                .map(it -> it.runs().stream().map(JsonRun::new))
                 .orElseGet(() -> repo.db().read().dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).stream()
-                        .map(JsonRun::new)
-                        .toList());
+                        .map(JsonRun::new))
+                .sorted()
+                .toList();
 
         return new JsonGet(new JsonCommit(commit), parents, children, runs);
     }

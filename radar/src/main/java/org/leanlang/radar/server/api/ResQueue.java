@@ -64,7 +64,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
                     return new JsonTask(
                             task.repo().name(),
                             new JsonCommit(commit),
-                            task.runs().stream().map(JsonRun::new).toList());
+                            task.runs().stream().map(JsonRun::new).sorted().toList());
                 })
                 .toList();
 

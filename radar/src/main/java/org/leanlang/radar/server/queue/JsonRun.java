@@ -2,6 +2,7 @@ package org.leanlang.radar.server.queue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Optional;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 
@@ -10,7 +11,16 @@ public record JsonRun(
         @JsonProperty(required = true) String script,
         @JsonProperty(required = true) String runner,
         Optional<Active> active,
-        Optional<Finished> finished) {
+        Optional<Finished> finished)
+        implements Comparable<JsonRun> {
+
+    private static final Comparator<JsonRun> comparator =
+            Comparator.comparing(JsonRun::name).thenComparing(JsonRun::script).thenComparing(JsonRun::runner);
+
+    @Override
+    public int compareTo(JsonRun o) {
+        return comparator.compare(this, o);
+    }
 
     public record Active(@JsonProperty(required = true) Instant startTime) {}
 
