@@ -12,9 +12,10 @@ const queue = reactive(useQueue());
 </script>
 
 <template>
-  <CLoading v-if="!queue.isSuccess" :error="queue.error" />
-  <CSection v-else title="Runners">
-    <CList>
+  <CSection title="Runners">
+    <CLoading v-if="!queue.isSuccess" :error="queue.error" />
+    <CList v-else>
+      <div v-if="queue.data.runners.length === 0">No runners.</div>
       <CListItem v-for="runner in queue.data.runners" :key="runner.name" class="items-baseline">
         <div>{{ runner.name }}</div>
         <div class="text-foreground-alt text-xs">
@@ -28,6 +29,8 @@ const queue = reactive(useQueue());
     </CList>
   </CSection>
 
-  <CLoading v-if="!queue.isSuccess" :error="queue.error" />
-  <PQueue v-else :tasks="queue.data.tasks" />
+  <CSection title="Queue">
+    <CLoading v-if="!queue.isSuccess" :error="queue.error" />
+    <PQueue v-else :tasks="queue.data.tasks" />
+  </CSection>
 </template>
