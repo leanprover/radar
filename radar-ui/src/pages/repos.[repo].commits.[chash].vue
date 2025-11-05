@@ -42,6 +42,7 @@ const compare = reactive(
     () => route.params.chash,
   ),
 );
+
 const measurements = computed<Measurement[]>(() => {
   if (!compare.isSuccess) return [];
   return compare.data.comparison.metrics.filter((it) => it.second !== undefined);
@@ -49,8 +50,8 @@ const measurements = computed<Measurement[]>(() => {
 
 const details = computed(() => comparisonSignificance(compare.data?.comparison));
 
-const tick = useIntervalFn(onTick, 5000);
-function onTick() {
+// Regularly refetch the commit info (which includes the finished and unfinished runs) until all runs are finished.
+const tick = useIntervalFn(() => {
   if (!commit.isSuccess) return;
 
   if (commit.data.runs.every((it) => it.finished)) {
@@ -63,7 +64,10 @@ function onTick() {
   }
 
   void commit.refetch();
-}
+}, 5000);
+onBeforeRouteUpdate(() => {
+  tick.resume();
+});
 
 // Re-fetch the measurement data every time a new run is completed.
 const completedRuns = computed(() => {
@@ -74,10 +78,6 @@ const completedRuns = computed(() => {
 watch(completedRuns, (newValue, oldValue) => {
   if (setsEqual(newValue, oldValue)) return; // No new runs
   void compare.refetch();
-});
-
-onBeforeRouteUpdate(() => {
-  tick.resume();
 });
 </script>
 
