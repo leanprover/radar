@@ -21,7 +21,7 @@
     <!-- https://mvnrepository.com/artifact/io.dropwizard/dropwizard-dependencies -->
     <dropwizard.version>5.0.0</dropwizard.version>
     <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
-    <flyway.version>11.5.0</flyway.version>
+    <flyway.version>11.15.0</flyway.version>
     <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
     <hikaricp.version>7.0.2</hikaricp.version>
     <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
