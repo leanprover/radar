@@ -57,6 +57,6 @@ const {
     v-else
     :to="{ name: '/queue.runs.[repo].[chash].[run]', params: { repo, chash, run: run.name } }"
     :class="{ 'text-foreground-alt hover:underline': true, 'text-xs': small }"
-    >{{ run.name }} on {{ run.runner }}: ready</RouterLink
+    >{{ run.name }} on {{ run.runner }}: awaiting runner</RouterLink
   >
 </template>
