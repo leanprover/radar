@@ -2,6 +2,7 @@
 import { useRepoMetrics } from "@/api/repoMetrics.ts";
 import CButton from "@/components/CButton.vue";
 import CControl from "@/components/CControl.vue";
+import CControlFilter from "@/components/CControlFilter.vue";
 import CControlPages from "@/components/CControlPages.vue";
 import CControlRow from "@/components/CControlRow.vue";
 import CPlural from "@/components/format/CPlural.vue";
@@ -48,19 +49,26 @@ const pageMetrics = computed(() => {
 
 <template>
   <div class="flex flex-col gap-1">
+    <CControlFilter v-model="filter" placeholder="Enter a regex..." />
+
     <CControl>
       <CControlRow>
-        <div class="shrink-0">Filter:</div>
-        <input v-model="filter" type="text" placeholder="Enter a regex..." class="bg-background shrink-0 grow px-1" />
+        <div v-if="filter" class="grow">
+          {{ visibleMetrics.length }} filtered <CPlural :n="visibleMetrics.length">metric</CPlural>,
+          {{ selected.size }} selected.
+        </div>
+        <div v-else class="grow">
+          {{ allMetrics.length }} <CPlural :n="allMetrics.length">metric</CPlural>, {{ selected.size }} selected.
+        </div>
         <CButton
           :disabled="visibleMetrics.length > limit"
           class="shrink-0"
           :title="visibleMetrics.length > limit ? `Too many metrics, can select at most ${limit}` : undefined"
           @click="selected = new Set(visibleMetrics)"
         >
-          Select {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
+          Select visible
         </CButton>
-        <CButton class="shrink-0" @click="selected = new Set()">Unselect all</CButton>
+        <CButton class="shrink-0" @click="selected = new Set()">Reset</CButton>
       </CControlRow>
     </CControl>
 
