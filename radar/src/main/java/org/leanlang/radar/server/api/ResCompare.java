@@ -37,10 +37,10 @@ public record ResCompare(Repos repos) {
             Optional<String> chashFirst = resolveRelativeTo(ctx, paramFirst, paramSecond);
             Optional<String> chashSecond = resolveRelativeTo(ctx, paramSecond, paramFirst);
 
-            JsonCommitComparison comparisons =
+            JsonCommitComparison comparison =
                     CommitComparer.compareCommits(repo, chashFirst.orElse(null), chashSecond.orElse(null));
 
-            return new JsonGet(chashFirst, chashSecond, comparisons);
+            return new JsonGet(chashFirst, chashSecond, comparison);
         });
     }
 
