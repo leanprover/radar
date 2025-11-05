@@ -79,11 +79,22 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
 ]);
 
+export interface JsonSignificance {
+  major: boolean;
+  message: JsonMessageSegment[];
+}
 export const JsonSignificance = z.object({
   major: z.boolean(),
   message: JsonMessageSegment.array(),
 });
 
+export interface JsonRunAnalysis {
+  name: string;
+  script: string;
+  runner: string;
+  exitCode: number;
+  significance?: JsonSignificance;
+}
 export const JsonRunAnalysis = z.object({
   name: z.string(),
   script: z.string(),
@@ -92,6 +103,16 @@ export const JsonRunAnalysis = z.object({
   significance: JsonSignificance.nullish().transform((it) => it ?? undefined),
 });
 
+export interface JsonMetricComparison {
+  metric: string;
+  first?: number;
+  second?: number;
+  firstSource?: string;
+  secondSource?: string;
+  unit?: string;
+  direction: Direction;
+  significance?: JsonSignificance;
+}
 export const JsonMetricComparison = z.object({
   metric: z.string(),
   first: z
@@ -118,6 +139,11 @@ export const JsonMetricComparison = z.object({
   significance: JsonSignificance.nullish().transform((it) => it ?? undefined),
 });
 
+export interface JsonCommitComparison {
+  significant: boolean;
+  runs: JsonRunAnalysis[];
+  metrics: JsonMetricComparison[];
+}
 export const JsonCommitComparison = z.object({
   significant: z.boolean(),
   runs: JsonRunAnalysis.array(),

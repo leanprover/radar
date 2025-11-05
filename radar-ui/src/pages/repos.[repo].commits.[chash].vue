@@ -2,7 +2,6 @@
 import { useCommit } from "@/api/commit.ts";
 import { useCompare } from "@/api/compare.ts";
 import { useRepo } from "@/api/repos.ts";
-import type { JsonMessageSegment } from "@/api/types.ts";
 import CCommitDetails from "@/components/CCommitDetails.vue";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
@@ -11,9 +10,10 @@ import CRunInfo from "@/components/CRunInfo.vue";
 import CSection from "@/components/CSection.vue";
 import PCommitNavChildren from "@/components/pages/commit/PCommitNavChildren.vue";
 import PCommitNavParents from "@/components/pages/commit/PCommitNavParents.vue";
-import PComparisonSection from "@/components/pages/commit/PComparisonSection.vue";
+import PDetailsSection from "@/components/pages/commit/PDetailsSection.vue";
 import PFormEnqueue from "@/components/pages/commit/PFormEnqueue.vue";
 import PMeasurementsTable, { type Measurement } from "@/components/pages/commit/PMeasurementsTable.vue";
+import { comparisonSignificance } from "@/components/pages/commit/significance.ts";
 import { useQueryParamAsString } from "@/lib/query.ts";
 import { setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
@@ -48,29 +48,7 @@ const measurements = computed<Measurement[]>(() => {
   return compare.data.comparison.metrics.filter((it) => it.second !== undefined);
 });
 
-const significantRuns = computed<JsonMessageSegment[][]>(() => {
-  if (!compare.isSuccess) return [];
-  return compare.data.comparison.runs
-    .map((it) => it.significance)
-    .filter((it) => it !== undefined)
-    .map((it) => it.message);
-});
-const significantMajorMetrics = computed<JsonMessageSegment[][]>(() => {
-  if (!compare.isSuccess) return [];
-  return compare.data.comparison.metrics
-    .map((it) => it.significance)
-    .filter((it) => it !== undefined)
-    .filter((it) => it.major)
-    .map((it) => it.message);
-});
-const significantMinorMetrics = computed<JsonMessageSegment[][]>(() => {
-  if (!compare.isSuccess) return [];
-  return compare.data.comparison.metrics
-    .map((it) => it.significance)
-    .filter((it) => it !== undefined)
-    .filter((it) => !it.major)
-    .map((it) => it.message);
-});
+const details = computed(() => comparisonSignificance(compare.data?.comparison));
 
 const tick = useIntervalFn(onTick, 5000);
 function onTick() {
@@ -136,13 +114,10 @@ onBeforeRouteUpdate(() => {
     </CList>
   </CSection>
 
-  <CSection
-    v-if="significantRuns.length > 0 || significantMajorMetrics.length > 0 || significantMinorMetrics.length > 0"
-    title="Significant details"
-  >
-    <PComparisonSection title="Runs" :messages="significantRuns" open />
-    <PComparisonSection title="Major changes" :messages="significantMajorMetrics" open />
-    <PComparisonSection title="Minor changes" :messages="significantMinorMetrics" />
+  <CSection v-if="details.major > 0 || details.minor > 0" title="Significant details" collapsible start-open>
+    <PDetailsSection title="Runs" :messages="details.runs" open />
+    <PDetailsSection title="Major changes" :messages="details.metricsMajor" open />
+    <PDetailsSection title="Minor changes" :messages="details.metricsMinor" open />
   </CSection>
 
   <CSection v-show="measurements.length > 0" title="Measurements">

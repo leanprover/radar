@@ -2,7 +2,7 @@
 import type { JsonMessageSegment } from "@/api/types.ts";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
-import PMessage from "@/components/pages/commit/PMessage.vue";
+import PDetailsMessage from "@/components/pages/commit/PDetailsMessage.vue";
 
 const { title, messages } = defineProps<{
   title: string;
@@ -11,12 +11,12 @@ const { title, messages } = defineProps<{
 </script>
 
 <template>
-  <details v-if="messages.length > 0" open>
-    <summary>{{ title }} ({{ messages.length }})</summary>
-    <CList class="mt-2">
+  <template v-if="messages.length > 0">
+    <div>{{ title }} ({{ messages.length }})</div>
+    <CList>
       <CListItem v-for="(msg, i) in messages" :key="i">
-        <PMessage :segments="msg" />
+        <PDetailsMessage :segments="msg" />
       </CListItem>
     </CList>
-  </details>
+  </template>
 </template>
