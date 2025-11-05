@@ -1,6 +1,7 @@
 package org.leanlang.radar.server.compare;
 
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
+import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
 import java.util.ArrayList;
@@ -21,15 +22,22 @@ public final class CommitComparer {
     private CommitComparer() {}
 
     public static JsonCommitComparison compareCommits(
+            Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
+        return repo.db().readTransactionResult(ctx -> compareCommits(repo, ctx, chashFirst, chashSecond));
+    }
+
+    public static JsonCommitComparison compareCommits(
             Repo repo, Configuration ctx, @Nullable String chashFirst, @Nullable String chashSecond) {
 
         List<MetricsRecord> metrics = fetchMetrics(ctx);
         Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
         Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
         List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
+        boolean firstInQueue = fetchInQueue(ctx, chashFirst);
+        boolean secondInQueue = fetchInQueue(ctx, chashSecond);
 
         List<JsonMetricComparison> measurementComparisons =
-                compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond);
+                compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond, firstInQueue, secondInQueue);
         List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond);
 
         JsonCommitComparison comparison = new JsonCommitComparison(false, runAnalyses, measurementComparisons);
@@ -63,11 +71,18 @@ public final class CommitComparer {
         return ctx.dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).fetch();
     }
 
+    private static boolean fetchInQueue(Configuration ctx, @Nullable String chash) {
+        if (chash == null) return false;
+        return ctx.dsl().fetchExists(QUEUE, QUEUE.CHASH.eq(chash));
+    }
+
     private static List<JsonMetricComparison> compareMeasurements(
             Repo repo,
             List<MetricsRecord> metrics,
             Map<String, MeasurementsRecord> measurementsFirst,
-            Map<String, MeasurementsRecord> measurementsSecond) {
+            Map<String, MeasurementsRecord> measurementsSecond,
+            boolean ignoreAppearances,
+            boolean ignoreDisappearances) {
 
         List<JsonMetricComparison> result = new ArrayList<>();
         for (MetricsRecord metric : metrics) {
@@ -85,7 +100,13 @@ public final class CommitComparer {
             Optional<String> secondSrc = second.flatMap(it -> Optional.ofNullable(it.getSource()));
 
             Optional<JsonSignificance> significance = SignificanceComputer.compareMetric(
-                    metricName, metricUnit.orElse(null), metricMetadata, firstVal.orElse(null), secondVal.orElse(null));
+                    metricName,
+                    metricUnit.orElse(null),
+                    metricMetadata,
+                    firstVal.orElse(null),
+                    secondVal.orElse(null),
+                    ignoreAppearances,
+                    ignoreDisappearances);
 
             result.add(new JsonMetricComparison(
                     metricName,

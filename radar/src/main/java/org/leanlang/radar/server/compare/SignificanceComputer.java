@@ -19,13 +19,16 @@ public final class SignificanceComputer {
             @Nullable String unit,
             RepoMetricMetadata metadata,
             @Nullable Float first,
-            @Nullable Float second) {
+            @Nullable Float second,
+            boolean ignoreAppearances,
+            boolean ignoreDisappearances) {
 
         if (first == null && second == null)
             throw new IllegalArgumentException("first and second must not both be null");
 
         // majorAppear, minorAppear
-        if (first == null)
+        if (first == null) {
+            if (ignoreAppearances) return Optional.empty();
             return msg(
                     metadata.majorAppear(),
                     metadata.minorAppear(),
@@ -33,9 +36,11 @@ public final class SignificanceComputer {
                             .addMetric(metric)
                             .addText(" has appeared.")
                             .build());
+        }
 
         // majorDisappear, minorDisappear
-        if (second == null)
+        if (second == null) {
+            if (ignoreDisappearances) return Optional.empty();
             return msg(
                     metadata.majorDisappear(),
                     metadata.minorDisappear(),
@@ -43,6 +48,7 @@ public final class SignificanceComputer {
                             .addMetric(metric)
                             .addText(" has disappeared.")
                             .build());
+        }
 
         return compareMetricWithValues(metric, unit, metadata, first, second);
     }
