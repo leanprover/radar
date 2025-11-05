@@ -82,38 +82,48 @@ onBeforeRouteUpdate(() => {
 </script>
 
 <template>
-  <CLoading v-if="!commit.isSuccess" :error="commit.error" />
-  <CSection v-else title="Commit">
-    <CCommitDetails :repo-url="repo?.url" :commit="commit.data.commit" />
-    <PCommitNav
-      :repo="route.params.repo"
-      :chash="route.params.chash"
-      :search="queryFilter"
-      :lakeprof-report-url="repo?.lakeprofReportUrl"
-      :parents="commit.data.parents"
-      :children="commit.data.children"
-    />
+  <CSection title="Commit">
+    <CLoading v-if="!commit.isSuccess" :error="commit.error" />
+    <template v-else>
+      <CCommitDetails :repo-url="repo?.url" :commit="commit.data.commit" />
+      <PCommitNav
+        :repo="route.params.repo"
+        :chash="route.params.chash"
+        :search="queryFilter"
+        :lakeprof-report-url="repo?.lakeprofReportUrl"
+        :parents="commit.data.parents"
+        :children="commit.data.children"
+      />
+    </template>
   </CSection>
 
   <CSection v-if="admin.token !== undefined" title="Admin" collapsible>
     <PFormEnqueue :repo="route.params.repo" :chash="route.params.chash" :reference />
   </CSection>
 
-  <CSection v-if="commit.isSuccess && commit.data.runs.length > 0" title="Runs">
-    <CList>
+  <CSection title="Runs">
+    <CLoading v-if="!commit.isSuccess" :error="commit.error" />
+    <CList v-else>
+      <div v-if="commit.data.runs.length === 0">No runs.</div>
       <CListItem v-for="run in commit.data.runs" :key="run.name">
         <CRunInfo :repo="route.params.repo" :chash="route.params.chash" :run />
       </CListItem>
     </CList>
   </CSection>
 
-  <CSection v-if="details.major > 0 || details.minor > 0" title="Significant details" collapsible start-open>
-    <PDetailsSection title="Runs" :messages="details.runs" open />
-    <PDetailsSection title="Major changes" :messages="details.metricsMajor" open />
-    <PDetailsSection title="Minor changes" :messages="details.metricsMinor" open />
+  <CSection title="Significant results" collapsible start-open>
+    <CLoading v-if="!compare.isSuccess" :error="compare.error" />
+    <div v-else-if="details.major === 0 && details.minor === 0">No significant results.</div>
+    <template v-else>
+      <PDetailsSection title="Runs" :messages="details.runs" open />
+      <PDetailsSection title="Major changes" :messages="details.metricsMajor" open />
+      <PDetailsSection title="Minor changes" :messages="details.metricsMinor" open />
+    </template>
   </CSection>
 
-  <CSection v-show="measurements.length > 0" title="Measurements">
+  <CSection title="Measurements">
     <PMeasurementsTable v-model:filter="queryFilter" :repo="route.params.repo" :measurements="measurements" />
+    <CLoading v-if="!compare.isSuccess" :error="compare.error" />
+    <div v-else-if="measurements.length === 0">No measurements.</div>
   </CSection>
 </template>
