@@ -19,7 +19,7 @@ export interface Measurement {
 }
 
 const { repo, measurements } = defineProps<{ repo: string; measurements: Measurement[] }>();
-const filter = defineModel<string>("filter");
+const filter = defineModel<string>("filter", { required: true });
 const router = useRouter();
 
 const columns: ColumnDef<Measurement>[] = [

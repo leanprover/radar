@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { useRepoHistory } from "@/api/repoHistory.ts";
-import CButton from "@/components/CButton.vue";
-import CControl from "@/components/CControl.vue";
+import CControlFilter from "@/components/CControlFilter.vue";
 import CControlPages from "@/components/CControlPages.vue";
-import CControlRow from "@/components/CControlRow.vue";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
 import CLoading from "@/components/CLoading.vue";
@@ -18,11 +16,11 @@ const pageSize = ref(30);
 const pageSizes = [30, 50, 100, 500, 1000];
 const skip = computed(() => page.value * pageSize.value);
 
-const query = ref("");
-const queryDebounced = refDebounced(query, 300);
-const queryOrUndefined = computed(() => queryDebounced.value || undefined);
+const filter = ref("");
+const filterDebounced = refDebounced(filter, 300);
+const filterOrUndefined = computed(() => filterDebounced.value || undefined);
 
-const history = reactive(useRepoHistory(() => repo, { n: pageSize, skip, s: queryOrUndefined }));
+const history = reactive(useRepoHistory(() => repo, { n: pageSize, skip, s: filterOrUndefined }));
 
 const total = ref(0);
 watchEffect(() => {
@@ -34,14 +32,7 @@ watchEffect(() => {
 <template>
   <div class="flex flex-col gap-2">
     <div class="flex max-w-[80ch] flex-col gap-1">
-      <CControl>
-        <CControlRow>
-          <label for="query">Filter:</label>
-          <input id="query" v-model="query" type="text" placeholder="<chronological>" class="bg-background grow px-1" />
-          <CButton @click="query = ''">Clear</CButton>
-        </CControlRow>
-      </CControl>
-
+      <CControlFilter v-model="filter" placeholder="<chronological>" />
       <CControlPages v-model:page="page" v-model:page-size="pageSize" :page-sizes="pageSizes" :total />
     </div>
 

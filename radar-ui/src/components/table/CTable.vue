@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="T">
 import CButton from "@/components/CButton.vue";
 import CControl from "@/components/CControl.vue";
+import CControlFilter from "@/components/CControlFilter.vue";
 import CControlRow from "@/components/CControlRow.vue";
 import {
   type ColumnDef,
@@ -29,7 +30,7 @@ const {
   initialSort?: ColumnSort;
 }>();
 
-const filter = defineModel<string>("filter");
+const filter = defineModel<string>("filter", { required: true });
 
 const nColums = computed(() => columns.length);
 
@@ -84,21 +85,15 @@ function goToLastPage() {
 
 <template>
   <div class="flex w-fit flex-col gap-1">
-    <CControl>
-      <CControlRow>
-        <div>Filter:</div>
-        <input v-model="filter" type="text" placeholder="Enter a regex..." class="bg-background grow px-1" />
-        <CButton @click="filter = undefined">Clear</CButton>
-      </CControlRow>
-    </CControl>
+    <CControlFilter v-model="filter" placeholder="Enter a regex..." />
 
     <CControl>
       <CControlRow>
-        <CButton @click="goToFirstPage()">first</CButton>
-        <CButton @click="goToPreviousPage()">prev</CButton>
+        <CButton @click="goToFirstPage()">First</CButton>
+        <CButton @click="goToPreviousPage()">Prev</CButton>
         <div>Page {{ tableData.getState().pagination.pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>
-        <CButton @click="goToNextPage()">next</CButton>
-        <CButton @click="goToLastPage()">last</CButton>
+        <CButton @click="goToNextPage()">Next</CButton>
+        <CButton @click="goToLastPage()">Last</CButton>
         <label class="ml-auto">
           Rows:
           <select v-model="pageSize" class="bg-background h-5 px-1">
