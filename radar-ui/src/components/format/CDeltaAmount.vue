@@ -22,7 +22,7 @@ const color = computed(() => {
 </script>
 
 <template>
-  <span :class="['font-bold', color]"
+  <span :class="['font-bold', color]" :title="amount.toString()"
     >{{ formatValue(amount, unit, { sign: true })
     }}<template v-if="unit !== undefined && unit !== 's'"> {{ unit }}</template></span
   >

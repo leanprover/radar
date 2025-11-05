@@ -17,5 +17,7 @@ const color = computed(() => {
 </script>
 
 <template>
-  <span :class="['font-bold', color]">{{ formatValue(factor, "100%", { sign: true }) }}</span>
+  <span :class="['font-bold', color]" :title="factor.toString()">{{
+    formatValue(factor, "100%", { sign: true })
+  }}</span>
 </template>
