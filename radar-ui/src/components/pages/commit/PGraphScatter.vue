@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { JsonMetricComparison } from "@/api/types.ts";
+import CBrutzelBox from "@/components/CBrutzelBox.vue";
 import CControl from "@/components/CControl.vue";
 import CControlRow from "@/components/CControlRow.vue";
 import { formatValue } from "@/lib/format.ts";
@@ -206,10 +207,14 @@ const options = computed<ChartOptions<"scatter">>(() => {
 </script>
 
 <template>
-  <CControlRow>
-    <CControl>
-      <label>Logarithmic: <input v-model="log" type="checkbox" /></label>
-    </CControl>
-  </CControlRow>
-  <Scatter id="scatter" :options :data />
+  <div class="flex flex-col gap-2">
+    <CControlRow>
+      <CControl>
+        <label>Logarithmic: <input v-model="log" type="checkbox" /></label>
+      </CControl>
+    </CControlRow>
+    <CBrutzelBox>
+      <Scatter id="scatter" :options :data />
+    </CBrutzelBox>
+  </div>
 </template>
