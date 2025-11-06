@@ -8,7 +8,6 @@ import {
   type ColumnSort,
   FlexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   type Row,
@@ -19,13 +18,11 @@ import { computed, ref, watch } from "vue";
 const {
   columns,
   data,
-  filterFn = () => true,
   onClickRow = undefined,
   initialSort = undefined,
 } = defineProps<{
   columns: ColumnDef<T>[];
   data: T[];
-  filterFn?: (row: Row<T>, col: string, data: string) => boolean;
   onClickRow?: (row: Row<T>) => void;
   initialSort?: ColumnSort;
 }>();
@@ -47,10 +44,8 @@ const tableData = useVueTable({
   initialState: {
     sorting: initialSort ? [initialSort] : [],
   },
-  globalFilterFn: filterFn,
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
-  getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
 });
 

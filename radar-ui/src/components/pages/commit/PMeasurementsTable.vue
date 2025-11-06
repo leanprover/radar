@@ -4,7 +4,6 @@ import CTable from "@/components/table/CTable.vue";
 import CTableCellDelta from "@/components/table/CTableCellDelta.vue";
 import CTableCellValue from "@/components/table/CTableCellValue.vue";
 import CTableHeader from "@/components/table/CTableHeader.vue";
-import { metricFilterMatches } from "@/lib/utils.ts";
 import { type ColumnDef, type Row } from "@tanstack/vue-table";
 import { h } from "vue";
 import { useRouter } from "vue-router";
@@ -128,11 +127,6 @@ const columns: ColumnDef<JsonMetricComparison>[] = [
   },
 ];
 
-function filterFn(row: Row<JsonMetricComparison>, col: string, data: string): boolean {
-  if (col !== "metric") return false;
-  return metricFilterMatches(data, row.original.metric);
-}
-
 function onClickRow(row: Row<JsonMetricComparison>): void {
   void router.push({
     name: "/repos.[repo].graph",
@@ -143,11 +137,5 @@ function onClickRow(row: Row<JsonMetricComparison>): void {
 </script>
 
 <template>
-  <CTable
-    v-model:filter="filter"
-    :columns="columns"
-    :data="measurements"
-    :filter-fn="filterFn"
-    :on-click-row="onClickRow"
-  />
+  <CTable v-model:filter="filter" :columns="columns" :data="measurements" :on-click-row="onClickRow" />
 </template>

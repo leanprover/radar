@@ -16,7 +16,7 @@ import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue
 import PReference from "@/components/pages/commit/PReference.vue";
 import { comparisonSignificance } from "@/components/pages/commit/significance.ts";
 import { useQueryParamAsString } from "@/lib/query.ts";
-import { setsEqual } from "@/lib/utils.ts";
+import { metricFilterMatches, setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { useIntervalFn } from "@vueuse/core";
 import { computed, reactive, watch, watchEffect } from "vue";
@@ -47,7 +47,9 @@ const compare = reactive(
 
 const measurements = computed<JsonMetricComparison[]>(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.comparison.metrics.filter((it) => it.second !== undefined);
+  return compare.data.comparison.metrics
+    .filter((it) => it.second !== undefined)
+    .filter((it) => metricFilterMatches(queryFilter.value, it.metric));
 });
 
 const details = computed(() => comparisonSignificance(compare.data?.comparison));
@@ -155,7 +157,7 @@ watchEffect(() => {
   </CSection>
 
   <CSection title="Measurements">
-    <PMeasurementsTable v-model:filter="queryFilter" :repo="route.params.repo" :measurements="measurements" />
+    <PMeasurementsTable v-model:filter="queryFilter" :repo="route.params.repo" :measurements />
     <CLoading v-if="!compare.isSuccess" :error="compare.error" />
     <div v-else-if="measurements.length === 0">No measurements.</div>
   </CSection>
