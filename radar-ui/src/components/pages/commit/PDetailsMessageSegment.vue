@@ -2,7 +2,7 @@
 import type { JsonMessageSegment } from "@/api/types.ts";
 import CDeltaAmount from "@/components/format/CDeltaAmount.vue";
 import CDeltaPercent from "@/components/format/CDeltaPercent.vue";
-import { escapeRegex } from "@/lib/utils.ts";
+import { escapeMetrics } from "@/lib/utils.ts";
 
 const { repo, chash, segment } = defineProps<{ repo: string; chash: string; segment: JsonMessageSegment }>();
 </script>
@@ -22,7 +22,11 @@ const { repo, chash, segment } = defineProps<{ repo: string; chash: string; segm
   >
   <RouterLink
     v-else-if="segment.type === 'metric'"
-    :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash }, query: { s: escapeRegex(segment.metric) } }"
+    :to="{
+      name: '/repos.[repo].commits.[chash]',
+      params: { repo, chash },
+      query: { s: escapeMetrics([segment.metric]) },
+    }"
     class="italic hover:underline"
   >
     {{ segment.metric }}

@@ -15,9 +15,16 @@ export function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
 }
 
 // TODO Replace with RegExp.escape once ES2025 or ES2026 or something is in TS
-export function escapeRegex(regex: string) {
+export function escapeRegex(regex: string): string {
   // https://github.com/colinhacks/zod/blob/644a08203ebb00e23484b3f9a986ae783ce26a9a/packages/zod/src/v4/core/util.ts#L470C3-L470C53
   return regex.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function escapeMetrics(metrics: string[]): string {
+  if (metrics.length === 0) return "";
+  const inner = metrics.map((it) => escapeRegex(it)).join("|");
+  if (metrics.length === 1) return `^${inner}$`;
+  return `^(${inner})$`;
 }
 
 // Split a metric `<topic>//<category>` into its topic and category.

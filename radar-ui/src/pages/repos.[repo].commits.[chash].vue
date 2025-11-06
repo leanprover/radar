@@ -17,7 +17,7 @@ import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue
 import PReference from "@/components/pages/commit/PReference.vue";
 import { comparisonSignificance } from "@/components/pages/commit/significance.ts";
 import { useQueryParamAsString } from "@/lib/query.ts";
-import { escapeRegex, metricFilterMatches, setsEqual } from "@/lib/utils.ts";
+import { escapeMetrics, metricFilterMatches, setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 import { useIntervalFn } from "@vueuse/core";
 import { computed, reactive, watch, watchEffect } from "vue";
@@ -158,14 +158,7 @@ watchEffect(() => {
   </CSection>
 
   <CSection title="Scatter plot" collapsible>
-    <PGraphScatter
-      :measurements
-      @filter="
-        (metrics) => {
-          queryFilter = metrics.map((it) => escapeRegex(it)).join('|');
-        }
-      "
-    />
+    <PGraphScatter :measurements @filter="(metrics) => (queryFilter = escapeMetrics(metrics))" />
   </CSection>
 
   <CSection title="Measurements">
