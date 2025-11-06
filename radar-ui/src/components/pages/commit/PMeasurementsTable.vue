@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Direction } from "@/api/types.ts";
+import { JsonMetricComparison } from "@/api/types.ts";
 import CTable from "@/components/table/CTable.vue";
 import CTableCellDelta from "@/components/table/CTableCellDelta.vue";
 import CTableCellValue from "@/components/table/CTableCellValue.vue";
@@ -9,27 +9,18 @@ import { type ColumnDef, type Row } from "@tanstack/vue-table";
 import { h } from "vue";
 import { useRouter } from "vue-router";
 
-export interface Measurement {
-  metric: string;
-  first?: number;
-  second?: number;
-  secondSource?: string;
-  unit?: string;
-  direction: Direction;
-}
-
-const { repo, measurements } = defineProps<{ repo: string; measurements: Measurement[] }>();
+const { repo, measurements } = defineProps<{ repo: string; measurements: JsonMetricComparison[] }>();
 const filter = defineModel<string>("filter", { required: true });
 const router = useRouter();
 
-const columns: ColumnDef<Measurement>[] = [
+const columns: ColumnDef<JsonMetricComparison>[] = [
   {
     id: "metric",
     accessorFn: (it) => it.metric.split("//")[0] ?? it.metric,
     sortingFn: "textCaseSensitive",
     sortDescFirst: true,
     header: ({ table, column }) =>
-      h(CTableHeader<Measurement>, {
+      h(CTableHeader<JsonMetricComparison>, {
         table,
         column,
         title: "Metric",
@@ -47,7 +38,7 @@ const columns: ColumnDef<Measurement>[] = [
     sortingFn: "textCaseSensitive",
     sortDescFirst: true,
     header: ({ table, column }) =>
-      h(CTableHeader<Measurement>, {
+      h(CTableHeader<JsonMetricComparison>, {
         table,
         column,
         title: "Submetric",
@@ -58,7 +49,7 @@ const columns: ColumnDef<Measurement>[] = [
     id: "value",
     accessorFn: (it) => it.second,
     header: ({ table, column }) =>
-      h(CTableHeader<Measurement>, {
+      h(CTableHeader<JsonMetricComparison>, {
         table,
         column,
         title: "Value",
@@ -78,7 +69,7 @@ const columns: ColumnDef<Measurement>[] = [
       return it.second - it.first;
     },
     header: ({ table, column }) =>
-      h(CTableHeader<Measurement>, {
+      h(CTableHeader<JsonMetricComparison>, {
         table,
         column,
         title: "Delta",
@@ -101,7 +92,7 @@ const columns: ColumnDef<Measurement>[] = [
       return (it.second - it.first) / it.first;
     },
     header: ({ table, column }) =>
-      h(CTableHeader<Measurement>, {
+      h(CTableHeader<JsonMetricComparison>, {
         table,
         column,
         title: "Delta%",
@@ -118,7 +109,7 @@ const columns: ColumnDef<Measurement>[] = [
   {
     accessorKey: "unit",
     header: ({ table, column }) =>
-      h(CTableHeader<Measurement>, {
+      h(CTableHeader<JsonMetricComparison>, {
         table,
         column,
         title: "Unit",
@@ -128,7 +119,7 @@ const columns: ColumnDef<Measurement>[] = [
   {
     accessorKey: "secondSource",
     header: ({ table, column }) =>
-      h(CTableHeader<Measurement>, {
+      h(CTableHeader<JsonMetricComparison>, {
         table,
         column,
         title: "Source",
@@ -137,12 +128,12 @@ const columns: ColumnDef<Measurement>[] = [
   },
 ];
 
-function filterFn(row: Row<Measurement>, col: string, data: string): boolean {
+function filterFn(row: Row<JsonMetricComparison>, col: string, data: string): boolean {
   if (col !== "metric") return false;
   return metricFilterMatches(data, row.original.metric);
 }
 
-function onClickRow(row: Row<Measurement>): void {
+function onClickRow(row: Row<JsonMetricComparison>): void {
   void router.push({
     name: "/repos.[repo].graph",
     params: { repo },

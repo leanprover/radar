@@ -2,6 +2,7 @@
 import { useCommit } from "@/api/commit.ts";
 import { useCompare } from "@/api/compare.ts";
 import { useRepo } from "@/api/repos.ts";
+import { JsonMetricComparison } from "@/api/types.ts";
 import CCommitDetails from "@/components/CCommitDetails.vue";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
@@ -11,7 +12,7 @@ import CSection from "@/components/CSection.vue";
 import PCommitNav from "@/components/pages/commit/PCommitNav.vue";
 import PDetailsSection from "@/components/pages/commit/PDetailsSection.vue";
 import PFormEnqueue from "@/components/pages/commit/PFormEnqueue.vue";
-import PMeasurementsTable, { type Measurement } from "@/components/pages/commit/PMeasurementsTable.vue";
+import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
 import PReference from "@/components/pages/commit/PReference.vue";
 import { comparisonSignificance } from "@/components/pages/commit/significance.ts";
 import { useQueryParamAsString } from "@/lib/query.ts";
@@ -44,7 +45,7 @@ const compare = reactive(
   ),
 );
 
-const measurements = computed<Measurement[]>(() => {
+const measurements = computed<JsonMetricComparison[]>(() => {
   if (!compare.isSuccess) return [];
   return compare.data.comparison.metrics.filter((it) => it.second !== undefined);
 });
