@@ -13,6 +13,7 @@ import {
   ScatterController,
   Tooltip,
 } from "chart.js";
+import Annotation from "chartjs-plugin-annotation";
 import { computed } from "vue";
 import { Scatter } from "vue-chartjs";
 
@@ -21,7 +22,7 @@ const { measurements } = defineProps<{ measurements: JsonMetricComparison[] }>()
 
 // Modules we don't register here may get minimized out later.
 // https://www.chartjs.org/docs/latest/getting-started/integration.html#bundle-optimization
-ChartJS.register(Legend, LinearScale, LogarithmicScale, PointElement, ScatterController, Tooltip);
+ChartJS.register(Annotation, Legend, LinearScale, LogarithmicScale, PointElement, ScatterController, Tooltip);
 
 interface Evaluated {
   metric: string;
@@ -148,6 +149,16 @@ const options = computed<ChartOptions<"scatter">>(() => ({
           const secondStr = formatValue(value.second, value.unit);
           const deltaStr = formatValue(value.second - value.first, value.unit, { sign: true });
           return `${value.metric}: (${firstStr} → ${secondStr}) ${deltaStr}`;
+        },
+      },
+    },
+    annotation: {
+      annotations: {
+        line: {
+          type: "line",
+          borderWidth: 1,
+          borderColor: "#ddd",
+          drawTime: "beforeDatasetsDraw",
         },
       },
     },
