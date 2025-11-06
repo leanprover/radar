@@ -3,6 +3,7 @@ import { useCommit } from "@/api/commit.ts";
 import { useCompare } from "@/api/compare.ts";
 import { useRepo } from "@/api/repos.ts";
 import { JsonMetricComparison } from "@/api/types.ts";
+import CBrutzelBox from "@/components/CBrutzelBox.vue";
 import CCommitDetails from "@/components/CCommitDetails.vue";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
@@ -158,7 +159,9 @@ watchEffect(() => {
   </CSection>
 
   <CSection title="Scatter plot" collapsible>
-    <PGraphScatter :measurements @filter="(metrics) => (queryFilter = escapeMetrics(metrics))" />
+    <CBrutzelBox class="w-[600px] overflow-clip">
+      <PGraphScatter :measurements @filter="(metrics) => (queryFilter = escapeMetrics(metrics))" />
+    </CBrutzelBox>
   </CSection>
 
   <CSection title="Measurements">

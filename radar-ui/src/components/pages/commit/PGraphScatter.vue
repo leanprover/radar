@@ -174,9 +174,5 @@ const options = computed<ChartOptions<"scatter">>(() => ({
 </script>
 
 <template>
-  <div class="overflow-clip">
-    <div class="w-[600px]">
-      <Scatter id="scatter" :options :data />
-    </div>
-  </div>
+  <Scatter id="scatter" :options :data />
 </template>
