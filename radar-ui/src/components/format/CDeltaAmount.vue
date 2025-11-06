@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Direction } from "@/api/types.ts";
 import { formatValue } from "@/lib/format.ts";
+import { getGrade } from "@/lib/utils.ts";
 import { computed } from "vue";
 
 const {
@@ -13,12 +14,8 @@ const {
   direction?: Direction;
 }>();
 
-const color = computed(() => {
-  const sign = Math.sign(amount);
-  if (sign === direction) return "text-green";
-  if (sign === -direction) return "text-red";
-  return undefined;
-});
+const colors = { good: "text-green", bad: "text-red", neutral: undefined };
+const color = computed(() => colors[getGrade(amount, direction)]);
 </script>
 
 <template>

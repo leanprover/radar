@@ -1,3 +1,4 @@
+import type { Direction } from "@/api/types.ts";
 import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -34,4 +35,13 @@ export function metricFilterMatches(filter: string, metric: string): boolean {
     // Invalid regex syntax
     return false;
   }
+}
+
+export type Grade = "good" | "bad" | "neutral";
+export function getGrade(delta: number | [number, number], direction: Direction): Grade {
+  if (typeof delta !== "number") delta = delta[1] - delta[0];
+  const sign = Math.sign(delta);
+  if (sign === direction) return "good";
+  if (sign === -direction) return "bad";
+  return "neutral";
 }

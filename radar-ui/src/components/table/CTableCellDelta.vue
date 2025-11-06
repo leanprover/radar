@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Direction } from "@/api/types.ts";
 import { formatValue } from "@/lib/format.ts";
-import { cn } from "@/lib/utils.ts";
+import { cn, getGrade } from "@/lib/utils.ts";
 import { computed } from "vue";
 
 const {
@@ -22,13 +22,8 @@ const amount = computed(() => {
 });
 
 const grade = computed(() => {
-  if (amount.value === undefined) return undefined;
-  const sign = Math.sign(amount.value);
-  if (sign === 0) return undefined;
-  if (direction === 0) return "neutral";
-  if (sign === direction) return "good";
-  if (sign === -direction) return "bad";
-  return undefined; // This shouldn't happen unless NaN is involved
+  if (amount.value === undefined || amount.value === 0) return undefined;
+  return getGrade(amount.value, direction);
 });
 </script>
 
