@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { JsonMetricComparison } from "@/api/types.ts";
+import CControl from "@/components/CControl.vue";
+import CControlRow from "@/components/CControlRow.vue";
 import { formatValue } from "@/lib/format.ts";
 import { getGrade, type Grade } from "@/lib/utils.ts";
 import {
@@ -14,11 +16,13 @@ import {
   Tooltip,
 } from "chart.js";
 import Annotation from "chartjs-plugin-annotation";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { Scatter } from "vue-chartjs";
 
 const emit = defineEmits<{ filter: [metrics: string[]] }>();
 const { measurements } = defineProps<{ measurements: JsonMetricComparison[] }>();
+
+const log = ref(true);
 
 // Modules we don't register here may get minimized out later.
 // https://www.chartjs.org/docs/latest/getting-started/integration.html#bundle-optimization
@@ -96,7 +100,31 @@ function getEvaluated(datasetIndex: number, index: number): Evaluated | undefine
 // Options //
 /////////////
 
-const LOG_PADDING = 1.5;
+const PADDING = 0.02; // of the width from min to max
+
+function padLinear(min: number, max: number): { min: number; max: number } {
+  const delta = (max - min) * PADDING;
+  return { min: min - delta, max: max + delta };
+}
+
+function padLog(min: number, max: number): { min: number; max: number } {
+  // y = log(x)
+  // y_min = log(min)
+  // y_min' = log(min) - [ log(max) - log(min) ] * PADDING
+  //        = log(min) - [ log(max) * PADDING - log(min) * PADDING ]
+  //        = log(min) - [ log(max^PADDING) - log(min^PADDING) ]
+  //        = log(min) - log(max^PADDING / min^PADDING)
+  //        = log(min / [max^PADDING / min^PADDING])
+  //        = log(min / (max / min)^PADDING)
+  const delta = Math.pow(max / min, PADDING);
+  return { min: min / delta, max: max * delta };
+}
+
+function pad(min: number, max: number, log: boolean): { min: number; max: number } {
+  // return { min, max };
+  if (log) return padLog(min, max);
+  return padLinear(min, max);
+}
 
 const min = computed(() => {
   const result = Math.min(...evaluated.value.map((it) => Math.min(it.x, it.y)));
@@ -115,64 +143,73 @@ function formatTick(value: string | number): string {
   return formatValue(value);
 }
 
-const options = computed<ChartOptions<"scatter">>(() => ({
-  responsive: true,
-  aspectRatio: 1,
-  animation: false,
-  scales: {
-    x: {
-      title: { display: true, text: "Reference commit" },
-      type: "logarithmic",
-      position: "bottom",
-      ticks: { callback: formatTick },
-      min: min.value / LOG_PADDING,
-      max: max.value * LOG_PADDING,
+const options = computed<ChartOptions<"scatter">>(() => {
+  const type = log.value ? "logarithmic" : "linear";
+  const padded = pad(min.value, max.value, log.value);
+  return {
+    responsive: true,
+    aspectRatio: 1,
+    animation: false,
+    scales: {
+      x: {
+        title: { display: true, text: "Reference commit" },
+        type,
+        position: "bottom",
+        ticks: { callback: formatTick },
+        min: padded.min,
+        max: padded.max,
+      },
+      y: {
+        title: { display: true, text: "Commit" },
+        type,
+        position: "left",
+        ticks: { callback: formatTick },
+        min: padded.min,
+        max: padded.max,
+      },
     },
-    y: {
-      title: { display: true, text: "Commit" },
-      type: "logarithmic",
-      position: "left",
-      ticks: { callback: formatTick },
-      min: min.value / LOG_PADDING,
-      max: max.value * LOG_PADDING,
-    },
-  },
-  plugins: {
-    legend: {
-      position: "bottom",
-    },
-    tooltip: {
-      callbacks: {
-        label(item) {
-          const value = item.raw as Evaluated;
-          const firstStr = formatValue(value.first, value.unit);
-          const secondStr = formatValue(value.second, value.unit);
-          const deltaStr = formatValue(value.second - value.first, value.unit, { sign: true });
-          return `${value.metric}: (${firstStr} → ${secondStr}) ${deltaStr}`;
+    plugins: {
+      legend: {
+        position: "bottom",
+      },
+      tooltip: {
+        callbacks: {
+          label(item) {
+            const value = item.raw as Evaluated;
+            const firstStr = formatValue(value.first, value.unit);
+            const secondStr = formatValue(value.second, value.unit);
+            const deltaStr = formatValue(value.second - value.first, value.unit, { sign: true });
+            return `${value.metric}: (${firstStr} → ${secondStr}) ${deltaStr}`;
+          },
+        },
+      },
+      annotation: {
+        annotations: {
+          line: {
+            type: "line",
+            borderWidth: 1,
+            borderColor: "#ddd",
+            drawTime: "beforeDatasetsDraw",
+          },
         },
       },
     },
-    annotation: {
-      annotations: {
-        line: {
-          type: "line",
-          borderWidth: 1,
-          borderColor: "#ddd",
-          drawTime: "beforeDatasetsDraw",
-        },
-      },
+    onClick(_, elements) {
+      let metrics = elements
+        .map((it) => getEvaluated(it.datasetIndex, it.index))
+        .filter((it) => it !== undefined)
+        .map((it) => it.metric);
+      emit("filter", metrics);
     },
-  },
-  onClick(_, elements) {
-    let metrics = elements
-      .map((it) => getEvaluated(it.datasetIndex, it.index))
-      .filter((it) => it !== undefined)
-      .map((it) => it.metric);
-    emit("filter", metrics);
-  },
-}));
+  };
+});
 </script>
 
 <template>
+  <CControlRow>
+    <CControl>
+      <label>Logarithmic: <input v-model="log" type="checkbox" /></label>
+    </CControl>
+  </CControlRow>
   <Scatter id="scatter" :options :data />
 </template>
