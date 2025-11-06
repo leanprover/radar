@@ -32,7 +32,7 @@ watchEffect(() => {
 <template>
   <div class="flex flex-col gap-2">
     <div class="flex max-w-[80ch] flex-col gap-1">
-      <CControlFilter v-model="filter" placeholder="<chronological>" />
+      <CControlFilter v-model="filter" label="Search:" placeholder="<chronological>" />
       <CControlPages v-model:page="page" v-model:page-size="pageSize" :page-sizes="pageSizes" :total />
     </div>
 
