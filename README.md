@@ -103,11 +103,6 @@ Each row is a JSON object with the following fields:
 - `value`: The measured value (a floating point number).
 - `unit` (optional): The value's unit (a string).
   Some units have special support by radar.
-- `direction` (optional):
-  -1 if a decrease in value is a good thing,
-  1 if an increase in value is a good thing,
-  0 if values have no direction.
-  **Warning:** This option is going to be moved into the config file at some point in the future.
 
 Unit names are case-sensitive.
 The units with special support are:
