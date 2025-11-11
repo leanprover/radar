@@ -208,7 +208,7 @@ watchEffect(() => {
       <CCommitDetails
         v-if="hoverCommit"
         :repo="route.params.repo"
-        :url="repo?.url"
+        :repo-url="repo?.url"
         :commit="hoverCommit"
         :query-s="queryS"
         class="border-t pt-1 dark:border-none"
