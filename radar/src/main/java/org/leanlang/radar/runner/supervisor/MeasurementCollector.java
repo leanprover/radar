@@ -26,8 +26,9 @@ public class MeasurementCollector {
     }
 
     public boolean addLineFromOutput(String line) {
-        if (!line.startsWith(OUTPUT_PREFIX)) return false;
-        String json = line.substring(OUTPUT_PREFIX.length()).strip();
+        int i = line.indexOf(OUTPUT_PREFIX);
+        if (i < 0) return false;
+        String json = line.substring(i + OUTPUT_PREFIX.length()).strip();
 
         JsonRunResultEntry entry;
         try {

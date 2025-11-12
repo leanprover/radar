@@ -99,8 +99,9 @@ The bench script has two ways of submitting measurements to radar:
    The output file follows the [JSON Lines](https://jsonlines.org/) format
    with each row containing the JSON representation of a measurement.
 2. **Through its stdout and stderr.**
-   Whenever a line on stdout or stderr starts with the prefix `radar::measurement=`,
-   the remainder of the line is interpreted as the JSON representation of a measurement and collected.
+   Whenever a line on stdout or stderr contains the substring `radar::measurement=`,
+   the remainder of the line after the substring
+   is interpreted as the JSON representation of a measurement and collected.
 
 When a metric is measured multiple times,
 all the values are added together automatically.
