@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
+rsync -v radar/target/radar-*.jar root@runner2.lean-fro.org:/var/lib/radar-runner/radar.jar
 rsync -v radar/target/radar-*.jar root@runner3.lean-fro.org:/var/lib/radar-runner/radar.jar
 rsync -v radar/target/radar-*.jar root@runner4.lean-fro.org:/var/lib/radar-runner/radar.jar
+ssh root@runner2.lean-fro.org systemctl restart radar-runner.service
 ssh root@runner3.lean-fro.org systemctl restart radar-runner.service
 ssh root@runner4.lean-fro.org systemctl restart radar-runner.service
