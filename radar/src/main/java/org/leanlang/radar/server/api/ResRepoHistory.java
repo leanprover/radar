@@ -2,6 +2,7 @@ package org.leanlang.radar.server.api;
 
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
+import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 import static org.leanlang.radar.codegen.jooq.Tables.SIGNIFICANCE_FEED;
 
@@ -16,7 +17,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.jooq.Configuration;
-import org.jooq.Record13;
+import org.jooq.Record14;
 import org.jooq.SelectSelectStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
@@ -26,7 +27,10 @@ import org.leanlang.radar.server.repos.Repos;
 @Path("/repos/{repo}/history/")
 public record ResRepoHistory(Repos repos) {
     public record JsonEntry(
-            @JsonProperty(required = true) JsonCommit commit, boolean hasRuns, @Nullable Boolean significant) {}
+            @JsonProperty(required = true) JsonCommit commit,
+            boolean hasRuns,
+            boolean enqueued,
+            @Nullable Boolean significant) {}
 
     public record JsonGet(
             @JsonProperty(required = true) int total, @JsonProperty(required = true) List<JsonEntry> entries) {
@@ -53,7 +57,7 @@ public record ResRepoHistory(Repos repos) {
     }
 
     private static SelectSelectStep<
-                    Record13<
+                    Record14<
                             String,
                             String,
                             String,
@@ -65,6 +69,7 @@ public record ResRepoHistory(Repos repos) {
                             Integer,
                             String,
                             String,
+                            Boolean,
                             Boolean,
                             Integer>>
             select(Configuration ctx) {
@@ -82,11 +87,12 @@ public record ResRepoHistory(Repos repos) {
                         COMMITS.MESSAGE_TITLE,
                         COMMITS.MESSAGE_BODY,
                         DSL.exists(DSL.selectOne().from(RUNS).where(RUNS.CHASH.eq(COMMITS.CHASH))),
+                        DSL.exists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(COMMITS.CHASH))),
                         SIGNIFICANCE_FEED.SIGNIFICANT);
     }
 
     private static JsonEntry mkEntry(
-            Record13<
+            Record14<
                             String,
                             String,
                             String,
@@ -98,6 +104,7 @@ public record ResRepoHistory(Repos repos) {
                             Integer,
                             String,
                             String,
+                            Boolean,
                             Boolean,
                             Integer>
                     row) {
@@ -113,7 +120,8 @@ public record ResRepoHistory(Repos repos) {
         String messageTitle = row.value10();
         String messageBody = row.value11(); // Nullable
         Boolean hasRuns = row.value12();
-        Integer feedSignificant = row.value13(); // Nullable
+        Boolean enqueued = row.value13();
+        Integer feedSignificant = row.value14(); // Nullable
 
         JsonCommit.Ident author = new JsonCommit.Ident(authorName, authorEmail, authorTime, authorOffset);
         JsonCommit.Ident committer =
@@ -121,7 +129,7 @@ public record ResRepoHistory(Repos repos) {
         JsonCommit commit = new JsonCommit(chash, author, committer, messageTitle, Optional.ofNullable(messageBody));
         Boolean significant =
                 Optional.ofNullable(feedSignificant).map(it -> it != 0).orElse(null);
-        return new JsonEntry(commit, hasRuns, significant);
+        return new JsonEntry(commit, hasRuns, enqueued, significant);
     }
 
     private static JsonGet getChronologicalHistory(Configuration ctx, int skip, int n) {

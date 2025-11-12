@@ -5,9 +5,16 @@ import type { MaybeRefOrGetter } from "@vueuse/core";
 import { toValue } from "vue";
 import * as z from "zod";
 
+export interface JsonEntry {
+  commit: JsonCommit;
+  hasRuns: boolean;
+  enqueued: boolean;
+  significant?: boolean;
+}
 const JsonEntry = z.object({
   commit: JsonCommit,
   hasRuns: z.boolean(),
+  enqueued: z.boolean(),
   significant: z
     .boolean()
     .nullish()

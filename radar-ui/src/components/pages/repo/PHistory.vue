@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRepoHistory } from "@/api/repoHistory.ts";
+import { type JsonEntry, useRepoHistory } from "@/api/repoHistory.ts";
 import CControlFilter from "@/components/CControlFilter.vue";
 import CControlPages from "@/components/CControlPages.vue";
 import CList from "@/components/CList.vue";
@@ -27,6 +27,18 @@ watchEffect(() => {
   if (!history.isSuccess) return;
   total.value = history.data.total;
 });
+
+function title(entry: JsonEntry): string | undefined {
+  if (entry.enqueued) return "This commit is in the queue.";
+  if (!entry.hasRuns) return "This commit hasn't been benchmarked yet.";
+  if (entry.significant === true) return "This commit is significant.";
+  return undefined;
+}
+
+function classes(entry: JsonEntry): string | undefined {
+  if (entry.enqueued || !entry.hasRuns) return "text-foreground-alt italic";
+  if (entry.significant === true) return "text-magenta font-bold";
+}
 </script>
 
 <template>
@@ -40,25 +52,14 @@ watchEffect(() => {
     <CList v-else>
       <div v-if="history.data.entries.length === 0">No commits found.</div>
       <CListItem v-for="entry in history.data.entries" :key="entry.commit.chash">
-        <span
-          :title="
-            !entry.hasRuns
-              ? 'This commit hasn\'t been benchmarked yet.'
-              : entry.significant === true
-                ? 'This commit is significant.'
-                : undefined
-          "
-        >
+        <span :title="title(entry)">
           <CLinkCommit
             :repo
             :chash="entry.commit.chash"
             :title="entry.commit.title"
             :author="entry.commit.author.name"
             :time="entry.commit.committer.time"
-            :class="{
-              'text-foreground-alt italic': !entry.hasRuns,
-              'text-magenta font-bold': entry.hasRuns && entry.significant === true,
-            }"
+            :class="classes(entry)"
           />
         </span>
       </CListItem>
