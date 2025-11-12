@@ -88,16 +88,26 @@ The bench script receives two arguments:
 1. An absolute path to the clone of the repo.
 2. An absolute path to the output file, which does not yet exist.
 
-While the bench script is running, its stdout and stderr are captured by the runner.
-Its exit code is recorded as well.
-When it is 0, the run is considered successful
-while a nonzero exit code indicates that an error occurs.
-Regardless of the exit code, after the bench script exits,
-the runner attempts to read the output file at the path passed to the bench script.
+While the bench script is running, its stdout, stderr, and exit code are recorded by the runner.
+When the exit code is 0, the run is considered successful
+while a nonzero exit code indicates an error.
+Regardless of the exit code, any measurements produced by the script are collected.
 
-The output file follows the [JSON Lines](https://jsonlines.org/) format
-containing one row for each measurement.
-Each row is a JSON object with the following fields:
+The bench script has two ways of submitting measurements to radar:
+
+1. **Through the output file.**
+   The output file follows the [JSON Lines](https://jsonlines.org/) format
+   with each row containing the JSON representation of a measurement.
+2. **Through its stdout and stderr.**
+   Whenever a line on stdout or stderr starts with the prefix `radar::measurement=`,
+   the remainder of the line is interpreted as the JSON representation of a measurement and collected.
+
+When a metric is measured multiple times,
+all the values are added together automatically.
+The unit of the last measurement is used as the resulting unit,
+with the output file taking precedence over stdout and stderr.
+
+The JSON representation of a measurement is a JSON object containing the following fields:
 
 - `metric`: The name of the metric (a string).
 - `value`: The measured value (a floating point number).

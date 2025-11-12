@@ -12,7 +12,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -90,13 +89,13 @@ public final class Supervisor {
         log.debug("Acquired job {}", job);
 
         Instant startTime = Instant.now();
-        OutputLines lines = new OutputLines();
+        MeasurementCollector entries = new MeasurementCollector(mapper);
+        OutputLines lines = new OutputLines(entries);
         setStatus(new SupervisorStatus(job, startTime, lines));
 
         Instant scriptStartTime = null;
         Instant scriptEndTime = null;
         int exitCode;
-        List<JsonRunResultEntry> entries = new ArrayList<>();
         try {
             lines.addInternal("Clearing tmp directory...");
             FsUtil.removeDirRecursively(dirs.tmp());
@@ -111,7 +110,7 @@ public final class Supervisor {
                 scriptEndTime = Instant.now();
             }
 
-            entries.addAll(readResultFile(lines));
+            readResultFile(lines, entries);
 
             // Being considerate towards the next run :)
             lines.addInternal("Clearing tmp directory again...");
@@ -140,7 +139,7 @@ public final class Supervisor {
                     Optional.of("s")));
 
         JsonRunResult result = new JsonRunResult(
-                job, startTime, endTime, scriptStartTime, scriptEndTime, exitCode, entries, lines.getAll());
+                job, startTime, endTime, scriptStartTime, scriptEndTime, exitCode, entries.entries(), lines.getAll());
 
         while (true) {
             try {
@@ -182,23 +181,20 @@ public final class Supervisor {
         }
     }
 
-    private List<JsonRunResultEntry> readResultFile(OutputLines lines) throws Exception {
-        lines.addInternal("Reading result file...");
-        List<JsonRunResultEntry> entries = new ArrayList<>();
+    private void readResultFile(OutputLines lines, MeasurementCollector entries) throws Exception {
+        lines.addInternal("Reading measurements from result file...");
 
         String contents;
         try {
             contents = Files.readString(dirs.tmpResultFile());
         } catch (NoSuchFileException e) {
             lines.addInternal("No result file found.");
-            return new ArrayList<>();
+            return;
         }
 
         for (String line : contents.lines().toList()) {
-            entries.add(mapper.readValue(line, JsonRunResultEntry.class));
+            entries.addLineFromResultFile(line);
         }
-
-        return entries;
     }
 
     private void submitResult(JsonRunResult runResult) {

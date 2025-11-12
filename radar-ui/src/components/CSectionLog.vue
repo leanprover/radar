@@ -21,7 +21,15 @@ const { lines = undefined, start = 0 } = defineProps<{ lines?: Line[]; start?: n
         <span
           v-for="(line, index) in lines"
           :key="index"
-          :class="['whitespace-pre-wrap', { 'text-red': line.source === 1, 'text-blue': line.source === 2 }]"
+          :class="[
+            'whitespace-pre-wrap',
+            {
+              'text-red': line.source === 1,
+              'text-blue': line.source === 2,
+              'font-bold': line.source === 3,
+              'text-red font-bold': line.source === 4,
+            },
+          ]"
           >[{{ formatZonedTime(instantToZoned(line.time)) }}] {{ line.line }}{{ "\n" }}</span
         >
       </div>

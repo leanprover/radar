@@ -11,9 +11,16 @@ import org.slf4j.LoggerFactory;
 public final class OutputLines {
     private static final Logger log = LoggerFactory.getLogger(OutputLines.class);
 
-    private final List<JsonOutputLine> lines = new ArrayList<>();
+    private final MeasurementCollector entries;
+    private final List<JsonOutputLine> lines;
+
+    public OutputLines(MeasurementCollector entries) {
+        this.entries = entries;
+        this.lines = new ArrayList<>();
+    }
 
     private synchronized void add(JsonOutputLine line) {
+        if (entries.addLineFromOutput(line.line())) line = line.withMeasurement();
         lines.add(line);
         log.debug("[{}] {}", line.source(), line.line());
     }
