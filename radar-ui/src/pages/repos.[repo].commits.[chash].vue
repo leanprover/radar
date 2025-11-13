@@ -19,7 +19,7 @@ import { comparisonSignificance } from "@/components/pages/commit/significance.t
 import { useQueryParamAsString } from "@/lib/query.ts";
 import { escapeMetrics, metricFilterMatches, setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
-import { useIntervalFn } from "@vueuse/core";
+import { refDebounced, useIntervalFn } from "@vueuse/core";
 import { computed, reactive, watch, watchEffect } from "vue";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 
@@ -30,6 +30,7 @@ const queryReference = useQueryParamAsString("reference");
 const queryFilter = useQueryParamAsString("s");
 
 const reference = computed(() => queryReference.value || "parent");
+const filterDebounced = refDebounced(queryFilter, 300);
 
 const repo = useRepo(route.params.repo);
 const commit = reactive(
@@ -50,7 +51,7 @@ const measurements = computed<JsonMetricComparison[]>(() => {
   if (!compare.isSuccess) return [];
   return compare.data.comparison.metrics
     .filter((it) => it.second !== undefined)
-    .filter((it) => metricFilterMatches(queryFilter.value, it.metric));
+    .filter((it) => metricFilterMatches(filterDebounced.value, it.metric));
 });
 
 const details = computed(() => comparisonSignificance(compare.data?.comparison));

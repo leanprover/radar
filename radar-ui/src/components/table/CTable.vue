@@ -36,11 +36,6 @@ const tableData = useVueTable({
   get data() {
     return data;
   },
-  state: {
-    get globalFilter() {
-      return filter.value;
-    },
-  },
   initialState: {
     sorting: initialSort ? [initialSort] : [],
   },
