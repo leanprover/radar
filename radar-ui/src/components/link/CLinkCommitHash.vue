@@ -29,7 +29,7 @@ function href(url: string, chash: string): string {
     </RouterLink>
     <span v-else>{{ chash }}</span>
     <span v-if="url !== undefined">
-      (<a :href="href(url, chash)" target="_blank" class="hover:underline">original</a>)</span
+      (<a :href="href(url, chash)" target="_blank" class="hover:underline">source</a>)</span
     >
   </span>
 </template>
