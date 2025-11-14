@@ -1,10 +1,12 @@
 package org.leanlang.radar.server.queue;
 
+import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
 import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE_SEEN;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
+import static org.leanlang.radar.codegen.jooq.Tables.SIGNIFICANCE_FEED;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jooq.Record1;
 import org.leanlang.radar.codegen.jooq.Tables;
+import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.QueueRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
@@ -285,6 +288,26 @@ public record Queue(Repos repos, Runners runners) {
             boolean allRunsFinished = repo.benchRuns().stream().allMatch(it -> runs.contains(it.name()));
             if (!allRunsFinished) return;
             ctx.dsl().deleteFrom(QUEUE).where(QUEUE.CHASH.eq(runResult.chash())).execute();
+
+            // Recompute significance of the newly finished commit
+            ctx.dsl()
+                    .deleteFrom(SIGNIFICANCE_FEED)
+                    .where(SIGNIFICANCE_FEED.CHASH.eq(runResult.chash()))
+                    .execute();
+
+            // Recompute significance of the next child commit
+            History hChild = HISTORY.as("h_child");
+            History hParent = HISTORY.as("h_parent");
+            Record1<String> childChash = ctx.dsl()
+                    .select(hChild.CHASH)
+                    .from(hChild.join(hParent).on(hParent.POSITION.add(1).eq(hChild.POSITION)))
+                    .where(hParent.CHASH.eq(runResult.chash()))
+                    .fetchOne();
+            if (childChash != null)
+                ctx.dsl()
+                        .deleteFrom(SIGNIFICANCE_FEED)
+                        .where(SIGNIFICANCE_FEED.CHASH.eq(childChash.value1()))
+                        .execute();
         });
 
         repo.saveRunLog(runResult.chash(), runResult.name(), runResult.lines());
