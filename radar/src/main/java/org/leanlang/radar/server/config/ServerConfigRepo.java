@@ -15,6 +15,7 @@ public class ServerConfigRepo {
     // Repo source
     public @JsonProperty(required = true) URI url;
     public @NotEmpty @JsonProperty(required = true) String ref;
+    public boolean firstParentsOnly = false;
     public @Nullable String lakeprofReportUrl;
 
     // How to benchmark

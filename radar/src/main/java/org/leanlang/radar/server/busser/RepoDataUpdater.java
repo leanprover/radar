@@ -11,8 +11,10 @@ import java.util.stream.StreamSupport;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.AnyObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.jooq.Configuration;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
@@ -85,14 +87,9 @@ public record RepoDataUpdater(Repo repo) {
     }
 
     private void updateHistory(Configuration tx) throws IOException, GitAPIException {
-        LogCommand logCommand = repo.git().porcelain().log().add(repo.git().resolveRef(repo.ref()));
-
-        // Topologically sorted with the oldest commits coming first.
-        List<String> hashesInChronologicalOrder = StreamSupport.stream(
-                        logCommand.call().spliterator(), false)
-                .map(AnyObjectId::name)
-                .toList()
-                .reversed();
+        List<String> hashesInChronologicalOrder;
+        if (repo.firstParentsOnly()) hashesInChronologicalOrder = chronologicalHashesFirstParent();
+        else hashesInChronologicalOrder = chronologicalHashesTopo();
 
         List<HistoryRecord> records = new ArrayList<>();
         for (int i = 0; i < hashesInChronologicalOrder.size(); i++) {
@@ -102,5 +99,33 @@ public record RepoDataUpdater(Repo repo) {
         tx.dsl().deleteFrom(HISTORY).execute();
         tx.dsl().batchInsert(records).execute();
         log.info("Updated {} history commits", records.size());
+    }
+
+    // Topologically sorted with the oldest commits coming first.
+    private List<String> chronologicalHashesTopo() throws IOException, GitAPIException {
+        ObjectId startId = repo.git().resolveRef(repo.ref());
+
+        LogCommand logCommand = repo.git().porcelain().log().add(startId);
+        return StreamSupport.stream(logCommand.call().spliterator(), false)
+                .map(AnyObjectId::name)
+                .toList()
+                .reversed();
+    }
+
+    // Always following only the first parent, sorted so the oldest commits come first.
+    private List<String> chronologicalHashesFirstParent() throws IOException {
+        ObjectId startId = repo.git().resolveRef(repo.ref());
+
+        List<String> reverseChronologicalHashes = new ArrayList<>();
+        try (RevWalk walk = new RevWalk(repo.git().plumbing())) {
+            RevCommit head = walk.parseCommit(startId);
+            while (true) {
+                reverseChronologicalHashes.add(head.getName());
+                RevCommit[] parents = head.getParents();
+                if (parents == null || parents.length == 0) break;
+                head = walk.parseCommit(parents[0]);
+            }
+        }
+        return reverseChronologicalHashes.reversed();
     }
 }
