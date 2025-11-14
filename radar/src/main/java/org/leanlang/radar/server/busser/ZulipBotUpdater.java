@@ -130,6 +130,11 @@ public record ZulipBotUpdater(
 
     private void formatTitle(StringBuilder sb, String chash, String title) {
         URI url = linker.linkToCommit(repo.name(), chash);
+        if (linkifier.isEmpty()) {
+            sb.append("[").append(title).append("](").append(url).append(")");
+            return;
+        }
+
         Matcher m = Pattern.compile("(?<!\\w)(#\\d+)\\b").matcher(title);
         int end = 0;
 
@@ -144,7 +149,7 @@ public record ZulipBotUpdater(
                         .append(url)
                         .append(")");
 
-            sb.append(linkifier).append(m.group(1));
+            sb.append(linkifier.get()).append(m.group(1));
             end = mEnd;
         }
 
