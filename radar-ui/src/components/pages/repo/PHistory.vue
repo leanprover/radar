@@ -36,7 +36,8 @@ function title(entry: JsonEntry): string | undefined {
 }
 
 function classes(entry: JsonEntry): string | undefined {
-  if (entry.enqueued || !entry.hasRuns) return "text-foreground-alt italic";
+  if (entry.enqueued) return "text-foreground-alt italic";
+  if (!entry.hasRuns) return "text-foreground-alt ";
   if (entry.significant === true) return "text-magenta font-bold";
 }
 </script>
