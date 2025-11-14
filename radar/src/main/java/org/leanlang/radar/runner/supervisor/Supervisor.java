@@ -109,6 +109,7 @@ public final class Supervisor {
                 exitCode = benchScriptExecutor.result();
                 scriptEndTime = Instant.now();
             }
+            lines.addInternal("Bench script exited with code " + exitCode + ".");
 
             readResultFile(lines, entries);
 
