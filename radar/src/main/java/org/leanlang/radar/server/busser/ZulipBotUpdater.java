@@ -5,7 +5,11 @@ import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.SIGNIFICANCE_FEED;
 import static org.leanlang.radar.codegen.jooq.Tables.ZULIP_FEED;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.jooq.Record3;
 import org.jooq.Result;
 import org.jooq.impl.DSL;
@@ -21,7 +25,9 @@ import org.leanlang.radar.server.repos.RepoZulip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record ZulipBotUpdater(Linker linker, Repo repo, RepoZulip repoZulip, String channel, String topic) {
+public record ZulipBotUpdater(
+        Linker linker, Repo repo, RepoZulip repoZulip, String channel, String topic, Optional<String> linkifier) {
+
     private static final Logger log = LoggerFactory.getLogger(ZulipBotUpdater.class);
 
     public void update() {
@@ -98,11 +104,9 @@ public record ZulipBotUpdater(Linker linker, Repo repo, RepoZulip repoZulip, Str
     private String messageContent(String childChash, String childTitle, JsonCommitComparison comparison) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("**[")
-                .append(childTitle)
-                .append("](")
-                .append(linker.linkToCommit(repo.name(), childChash))
-                .append(")**\n");
+        sb.append("**");
+        formatTitle(sb, childChash, childTitle);
+        sb.append("**");
 
         List<List<JsonMessageSegment>> significantRuns =
                 comparison.runSignificances().map(JsonSignificance::message).toList();
@@ -122,6 +126,34 @@ public record ZulipBotUpdater(Linker linker, Repo repo, RepoZulip repoZulip, Str
         formatSignificanceSection(sb, "Minor changes", significantMinorMetrics);
 
         return sb.toString();
+    }
+
+    private void formatTitle(StringBuilder sb, String chash, String title) {
+        URI url = linker.linkToCommit(repo.name(), chash);
+        Matcher m = Pattern.compile("(?<!\\w)(#\\d+)\\b").matcher(title);
+        int end = 0;
+
+        while (m.find()) {
+            int mStart = m.start(1);
+            int mEnd = m.end(1);
+
+            if (mStart > end)
+                sb.append("[")
+                        .append(title, end, mStart)
+                        .append("](")
+                        .append(url)
+                        .append(")");
+
+            sb.append(linkifier).append(m.group(1));
+            end = mEnd;
+        }
+
+        if (end < title.length())
+            sb.append("[")
+                    .append(title, end, title.length())
+                    .append("](")
+                    .append(url)
+                    .append(")");
     }
 
     private void formatSignificanceSection(StringBuilder sb, String name, List<List<JsonMessageSegment>> messages) {

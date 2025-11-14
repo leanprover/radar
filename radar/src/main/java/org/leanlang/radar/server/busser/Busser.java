@@ -1,6 +1,7 @@
 package org.leanlang.radar.server.busser;
 
 import io.dropwizard.lifecycle.Managed;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -113,9 +114,10 @@ public final class Busser implements Managed {
         if (repoZulip == null) return null;
         String channel = repoZulip.config().feedChannel();
         String topic = repoZulip.config().feedTopic();
+        String linkifier = repoZulip.config().linkifier();
         if (channel == null) return null;
         if (topic == null) return null;
-        return new ZulipBotUpdater(linker, repo, repoZulip, channel, topic);
+        return new ZulipBotUpdater(linker, repo, repoZulip, channel, topic, Optional.ofNullable(linkifier));
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {
