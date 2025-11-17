@@ -46,6 +46,9 @@ public record RepoGh(Client client, String owner, String repo, GithubCredentials
                 // we might get some comments twice if new comments get posted while we're iterating,
                 // but we won't miss any (unless more than 100 comments are posted in-between two page requests).
                 .queryParam("direction", "desc")
+                // From the docs:
+                // "Only show results that were last updated after the given time."
+                // This means that we'll have to filter the comments for creation time manually.
                 .queryParam("since", DateTimeFormatter.ISO_INSTANT.format(since))
                 .queryParam("page", page)
                 .queryParam("per_page", perPage)
@@ -53,11 +56,14 @@ public record RepoGh(Client client, String owner, String repo, GithubCredentials
                 .headers(headers())
                 .get(JsonGhComment[].class);
 
-        return Arrays.asList(comments).reversed(); // Should be old to new, not new to old
+        return Arrays.stream(comments)
+                .filter(it -> !it.createdAt().isBefore(since))
+                .toList()
+                .reversed(); // Should be old to new, not new to old
     }
 
     /**
-     * Fetch all comments since the given time, from new to old.
+     * Fetch all comments since the given time, from old to new.
      */
     public List<JsonGhComment> getComments(Instant since) {
         List<JsonGhComment> result = new ArrayList<>();
