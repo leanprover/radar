@@ -1,7 +1,10 @@
 package org.leanlang.radar.server.repos;
 
+import java.util.Optional;
+
 public record RepoMetricMetadata(
         int direction,
+        Optional<String> baseCategory,
         float lowerThreshold,
         float upperThreshold,
         boolean minorAppear,
@@ -18,6 +21,7 @@ public record RepoMetricMetadata(
     public RepoMetricMetadata() {
         this(
                 0,
+                Optional.empty(),
                 Float.NEGATIVE_INFINITY,
                 Float.POSITIVE_INFINITY,
                 false,

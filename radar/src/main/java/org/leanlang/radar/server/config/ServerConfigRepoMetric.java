@@ -7,6 +7,9 @@ public final class ServerConfigRepoMetric {
 
     public @Nullable Integer direction = null;
 
+    // Estimate expected delta based on this metric to compare the actual values against.
+    public @Nullable String baseCategory = null;
+
     // Don't make a metric significant if it is below the lower or above the upper threshold.
     public @Nullable Float lowerThreshold = null;
     public @Nullable Float upperThreshold = null;
