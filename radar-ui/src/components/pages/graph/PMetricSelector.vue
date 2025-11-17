@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { metricsLimit } from "@/api/repoGraph.ts";
 import { useRepoMetrics } from "@/api/repoMetrics.ts";
 import CButton from "@/components/CButton.vue";
 import CControl from "@/components/CControl.vue";
@@ -9,7 +10,7 @@ import CPlural from "@/components/format/CPlural.vue";
 import { metricFilterMatches, parseMetric } from "@/lib/utils.ts";
 import { computed, reactive, ref } from "vue";
 
-const { repo, limit } = defineProps<{ repo: string; limit: number }>();
+const { repo } = defineProps<{ repo: string }>();
 const filter = defineModel<string>("filter", { required: true });
 const selected = defineModel<Set<string>>("selected", { required: true });
 
@@ -31,7 +32,7 @@ function toggle(metric: string) {
   // Not deeply reactive, so we always create a new Set
   const result = new Set(selected.value);
   if (result.has(metric)) result.delete(metric);
-  else if (selected.value.size >= limit) return;
+  else if (selected.value.size >= metricsLimit) return;
   else result.add(metric);
   selected.value = result;
 }
@@ -61,9 +62,11 @@ const pageMetrics = computed(() => {
           {{ allMetrics.length }} <CPlural :n="allMetrics.length">metric</CPlural>, {{ selected.size }} selected.
         </div>
         <CButton
-          :disabled="visibleMetrics.length > limit"
+          :disabled="visibleMetrics.length > metricsLimit"
           class="shrink-0"
-          :title="visibleMetrics.length > limit ? `Too many metrics, can select at most ${limit}` : undefined"
+          :title="
+            visibleMetrics.length > metricsLimit ? `Too many metrics, can select at most ${metricsLimit}` : undefined
+          "
           @click="selected = new Set(visibleMetrics)"
         >
           Select visible
@@ -87,7 +90,7 @@ const pageMetrics = computed(() => {
           <input
             type="checkbox"
             :checked="selected.has(metric)"
-            :disabled="!selected.has(metric) && selected.size >= limit"
+            :disabled="!selected.has(metric) && selected.size >= metricsLimit"
             class="align-[-2px]"
             @change="toggle(metric)"
             @click.stop

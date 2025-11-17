@@ -27,6 +27,8 @@ export async function getRepoGraph(repo: string, m: string[], n: number) {
   return await fetchJson(JsonGet, `/repos/${enc(repo)}/graph/`, queryParams);
 }
 
+export const metricsLimit = 500;
+
 export function useRepoGraph(
   repo: MaybeRefOrGetter<string>,
   m: MaybeRefOrGetter<string[]>,

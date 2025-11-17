@@ -18,8 +18,6 @@ import type uPlot from "uplot";
 import { computed, reactive, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-const metricLimit = 100;
-
 const nMin = 100;
 const nMax = 1000;
 const nStep = 100;
@@ -219,7 +217,6 @@ watchEffect(() => {
       v-model:filter="queryS"
       v-model:selected="queryM"
       :repo="route.params.repo"
-      :limit="metricLimit"
       class="min-w-fit flex-1"
     />
   </div>
