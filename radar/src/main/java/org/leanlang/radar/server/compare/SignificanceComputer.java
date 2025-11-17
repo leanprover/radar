@@ -56,6 +56,11 @@ public final class SignificanceComputer {
     private static Optional<JsonSignificance> compareMetricWithValues(
             String metric, @Nullable String unit, RepoMetricMetadata metadata, float first, float second) {
 
+        // lowerThresholdAmount, upperThresholdAmount
+        if (second < metadata.lowerThreshold() || second > metadata.upperThreshold()) {
+            return Optional.empty();
+        }
+
         // majorAnyDelta, minorAnyDelta
         if (first != second && (metadata.majorAnyDelta() || metadata.minorAnyDelta()))
             return msg(

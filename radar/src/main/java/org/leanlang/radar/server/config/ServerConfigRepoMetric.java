@@ -7,6 +7,10 @@ public final class ServerConfigRepoMetric {
 
     public @Nullable Integer direction = null;
 
+    // Don't make a metric significant if it is below the lower or above the upper threshold.
+    public @Nullable Float lowerThreshold = null;
+    public @Nullable Float upperThreshold = null;
+
     // Make a metric significant if it appears.
     public @Nullable Boolean minorAppear = null;
     public @Nullable Boolean majorAppear = null;

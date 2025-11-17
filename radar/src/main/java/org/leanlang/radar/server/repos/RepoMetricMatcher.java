@@ -7,6 +7,8 @@ import org.leanlang.radar.server.config.ServerConfigRepoMetric;
 public record RepoMetricMatcher(
         Pattern match,
         Optional<Integer> direction,
+        Optional<Float> lowerThreshold,
+        Optional<Float> upperThreshold,
         Optional<Boolean> minorAppear,
         Optional<Boolean> majorAppear,
         Optional<Boolean> minorDisappear,
@@ -22,6 +24,8 @@ public record RepoMetricMatcher(
         this(
                 Pattern.compile(config.match),
                 Optional.ofNullable(config.direction),
+                Optional.ofNullable(config.lowerThreshold),
+                Optional.ofNullable(config.upperThreshold),
                 Optional.ofNullable(config.minorAppear),
                 Optional.ofNullable(config.majorAppear),
                 Optional.ofNullable(config.minorDisappear),
@@ -41,6 +45,8 @@ public record RepoMetricMatcher(
     public RepoMetricMetadata update(RepoMetricMetadata metadata) {
         return new RepoMetricMetadata(
                 direction.orElse(metadata.direction()),
+                lowerThreshold.orElse(metadata.lowerThreshold()),
+                upperThreshold.orElse(metadata.upperThreshold()),
                 minorAppear.orElse(metadata.minorAppear()),
                 majorAppear.orElse(metadata.majorAppear()),
                 minorDisappear.orElse(metadata.minorDisappear()),
