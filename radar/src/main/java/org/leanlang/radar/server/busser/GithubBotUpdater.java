@@ -169,7 +169,7 @@ public final class GithubBotUpdater {
         // Update last checked table to ensure we don't unnecessarily request too many comments
         Instant lastSeen;
         if (comments.isEmpty()) lastSeen = since;
-        else lastSeen = comments.getLast().createdAt();
+        else lastSeen = comments.getFirst().createdAt();
         log.info("Updating last seen time to {}", lastSeen);
         repo.db().writeTransaction(ctx -> {
             ctx.dsl().deleteFrom(GITHUB_LAST_CHECKED).execute();

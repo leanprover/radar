@@ -56,6 +56,9 @@ public record RepoGh(Client client, String owner, String repo, GithubCredentials
         return Arrays.asList(comments).reversed(); // Should be old to new, not new to old
     }
 
+    /**
+     * Fetch all comments since the given time, from new to old.
+     */
     public List<JsonGhComment> getComments(Instant since) {
         List<JsonGhComment> result = new ArrayList<>();
         for (int page = 1; true; page++) {
