@@ -31,6 +31,7 @@ public record StatusUpdater(RunnerConfig config, Supervisor supervisor, Client c
 
         client.target(config.apiUrl(ResQueueRunnerStatus.PATH))
                 .request(MediaType.APPLICATION_JSON_TYPE)
-                .post(Entity.json(new ResQueueRunnerStatus.JsonPostInput(config.name, config.token, activeRun)));
+                .post(Entity.json(new ResQueueRunnerStatus.JsonPostInput(config.name, config.token, activeRun)))
+                .close();
     }
 }
