@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRepoGraph } from "@/api/repoGraph.ts";
+import { commitsLimit, useRepoGraph } from "@/api/repoGraph.ts";
 import { useRepo } from "@/api/repos.ts";
 import CBrutzelBox from "@/components/CBrutzelBox.vue";
 import CCommitDetails from "@/components/CCommitDetails.vue";
@@ -19,7 +19,7 @@ import { computed, reactive, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const nMin = 100;
-const nMax = 1000;
+const nMax = commitsLimit;
 const nStep = 100;
 const nDefault = 200;
 

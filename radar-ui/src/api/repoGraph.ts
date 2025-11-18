@@ -28,6 +28,7 @@ export async function getRepoGraph(repo: string, m: string[], n: number) {
 }
 
 export const metricsLimit = 500;
+export const commitsLimit = 100000;
 
 export function useRepoGraph(
   repo: MaybeRefOrGetter<string>,
