@@ -36,7 +36,7 @@ public final class CommitComparer {
         boolean firstInQueue = fetchInQueue(ctx, chashFirst);
         boolean secondInQueue = fetchInQueue(ctx, chashSecond);
 
-        List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond);
+        List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond, !repo.significantRunFailures());
         List<JsonMetricComparison> measurementComparisons =
                 compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond, firstInQueue, secondInQueue);
 
@@ -76,18 +76,19 @@ public final class CommitComparer {
         return ctx.dsl().fetchExists(QUEUE, QUEUE.CHASH.eq(chash));
     }
 
-    private static List<JsonRunAnalysis> analyzeRuns(List<RunsRecord> runs) {
+    private static List<JsonRunAnalysis> analyzeRuns(List<RunsRecord> runs, boolean ignoreFailedRuns) {
         return runs.stream()
                 .map(run -> new JsonRunAnalysis(
                         run.getName(),
                         run.getScript(),
                         run.getRunner(),
                         run.getExitCode(),
-                        analyzeRun(run.getName(), run.getExitCode())))
+                        analyzeRun(run.getName(), run.getExitCode(), ignoreFailedRuns)))
                 .toList();
     }
 
-    public static Optional<JsonSignificance> analyzeRun(String name, int exitCode) {
+    public static Optional<JsonSignificance> analyzeRun(String name, int exitCode, boolean ignoreFailedRuns) {
+        if (ignoreFailedRuns) return Optional.empty();
         if (exitCode == 0) return Optional.empty();
         return msg(
                 true,
