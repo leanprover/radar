@@ -2,6 +2,7 @@
 import CSection from "@/components/CSection.vue";
 import PFormMaintain from "@/components/pages/repoAdmin/PFormMaintain.vue";
 import PFormRecomputeSignificance from "@/components/pages/repoAdmin/PFormRecomputeSignificance.vue";
+import PMetricRenamer from "@/components/pages/repoAdmin/PMetricRenamer.vue";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
@@ -27,5 +28,9 @@ const repo = computed(() => route.params.repo);
       Recompute the significance of all commits, which is stored in the DB. This is useful after changing the
       significance settings in the server config. It may take a while for the changes to take effect.
     </div>
+  </CSection>
+
+  <CSection title="Measurement renaming" class="w-fit">
+    <PMetricRenamer :repo />
   </CSection>
 </template>
