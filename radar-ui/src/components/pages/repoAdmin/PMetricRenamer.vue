@@ -24,7 +24,12 @@ const allMetrics = computed<JsonMetric[]>(() => {
 });
 
 const visibleMetrics = computed(() => {
-  const regex = new RegExp(pattern.value);
+  let regex: RegExp;
+  try {
+    regex = new RegExp(pattern.value);
+  } catch {
+    return [];
+  }
 
   const result: { metric: JsonMetric; replacement: string }[] = [];
   for (const metric of allMetrics.value) {
@@ -85,10 +90,13 @@ async function onClick() {
       <div v-if="allMetrics.length === 0">No metrics.</div>
       <div v-else-if="visibleMetrics.length === 0">No metrics match the filter.</div>
       <div v-for="metric in pageMetrics" :key="metric.metric.metric" class="group contents cursor-default">
-        <div>{{ metric.metric.metric }}</div>
-        <div :class="{ 'font-bold': metric.metric.appearsInLatestCommit }">
-          ({{ metric.metric.appearsInHistoricalCommits }})
+        <div
+          :class="{ 'text-right': true, 'font-bold': metric.metric.appearsInLatestCommit }"
+          :title="metric.metric.appearsInLatestCommit ? 'Appears in latest commit' : 'Does not appear in latest commit'"
+        >
+          {{ metric.metric.appearsInHistoricalCommits }}:
         </div>
+        <div>{{ metric.metric.metric }}</div>
         <div>→</div>
         <div v-if="metric.replacement">{{ metric.replacement }}</div>
         <div v-else class="text-foreground-alt italic">empty string</div>
@@ -104,6 +112,7 @@ async function onClick() {
         Rename {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
       </CButton>
       <CButton disabled title="Not implemented yet">
+        <!-- TODO Implement -->
         Delete {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
       </CButton>
     </CControlRow>

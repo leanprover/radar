@@ -30,7 +30,7 @@ const repo = computed(() => route.params.repo);
     </div>
   </CSection>
 
-  <CSection title="Measurement renaming" class="w-fit">
+  <CSection title="Measurement management" class="w-fit">
     <PMetricRenamer :repo />
   </CSection>
 </template>
