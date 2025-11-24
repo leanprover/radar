@@ -17,6 +17,11 @@ server:
     - type: http
       port: 8081
 
+  # Disable request logs
+  # https://www.dropwizard.io/en/stable/manual/configuration.html#request-log
+  requestLog:
+    appenders: [ ]
+
 url: https://example.com/
 
 repos:
