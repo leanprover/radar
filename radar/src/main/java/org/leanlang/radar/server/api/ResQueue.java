@@ -10,6 +10,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.leanlang.radar.Constants;
@@ -48,6 +49,7 @@ public record ResQueue(Repos repos, Runners runners, Queue queue) {
                                 .map(it -> it.from().isAfter(connectedCutoff))
                                 .orElse(false),
                         runner.status().map(RunnerStatus::from)))
+                .sorted(Comparator.comparing(JsonRunner::name))
                 .toList();
 
         List<JsonTask> tasks = queue.getTasks().stream()
