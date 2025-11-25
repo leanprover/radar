@@ -6,23 +6,49 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public final class MessageBuilder {
-    List<JsonMessageSegment> sections = new ArrayList<>();
+    private final JsonMessageGoodness goodness;
+    private final List<JsonMessageSegment> sections = new ArrayList<>();
+
+    public MessageBuilder(JsonMessageGoodness goodness) {
+        this.goodness = goodness;
+    }
 
     public MessageBuilder add(JsonMessageSegment section) {
         sections.add(section);
         return this;
     }
 
+    public MessageBuilder addDelta(float amount, @Nullable String unit, JsonMessageGoodness goodness) {
+        return add(new JsonMessageSegment.Delta(amount, Optional.ofNullable(unit), goodness));
+    }
+
     public MessageBuilder addDelta(float amount, @Nullable String unit, int direction) {
-        return add(new JsonMessageSegment.Delta(amount, Optional.ofNullable(unit), direction));
+        return addDelta(amount, unit, JsonMessageGoodness.fromDelta(amount, direction));
+    }
+
+    public MessageBuilder addDeltaPercent(float factor, JsonMessageGoodness goodness) {
+        return add(new JsonMessageSegment.DeltaPercent(factor, goodness));
     }
 
     public MessageBuilder addDeltaPercent(float factor, int direction) {
-        return add(new JsonMessageSegment.DeltaPercent(factor, direction));
+        return addDeltaPercent(factor, JsonMessageGoodness.fromDelta(factor, direction));
+    }
+
+    public MessageBuilder addDeltaAndDeltaPercent(float first, float second, @Nullable String unit, int direction) {
+        addDelta(second - first, unit, direction);
+
+        if (first != 0) {
+            addText(" (");
+            addDeltaPercent((second - first) / first, direction);
+            addText(")");
+        }
+
+        return this;
     }
 
     public MessageBuilder addExitCode(int exitCode) {
-        return add(new JsonMessageSegment.ExitCode(exitCode));
+        return add(new JsonMessageSegment.ExitCode(
+                exitCode, exitCode == 0 ? JsonMessageGoodness.GOOD : JsonMessageGoodness.BAD));
     }
 
     public MessageBuilder addMetric(String metric) {
@@ -37,7 +63,7 @@ public final class MessageBuilder {
         return add(new JsonMessageSegment.Text(text));
     }
 
-    public List<JsonMessageSegment> build() {
-        return sections.stream().toList();
+    public JsonMessage build() {
+        return new JsonMessage(goodness, sections.stream().toList());
     }
 }

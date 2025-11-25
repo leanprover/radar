@@ -1,11 +1,11 @@
-import { type JsonCommitComparison, type JsonMessageSegment } from "@/api/types.ts";
+import { type JsonCommitComparison, type JsonMessage } from "@/api/types.ts";
 
 export interface ComparisonSignificance {
   major: number;
   minor: number;
-  runs: JsonMessageSegment[][];
-  metricsMajor: JsonMessageSegment[][];
-  metricsMinor: JsonMessageSegment[][];
+  runs: JsonMessage[];
+  metricsMajor: JsonMessage[];
+  metricsMinor: JsonMessage[];
 }
 
 export function comparisonSignificance(comparison?: JsonCommitComparison): ComparisonSignificance {

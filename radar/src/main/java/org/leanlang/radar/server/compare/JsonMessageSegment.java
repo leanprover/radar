@@ -1,5 +1,6 @@
 package org.leanlang.radar.server.compare;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Optional;
@@ -7,13 +8,16 @@ import java.util.Optional;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public sealed interface JsonMessageSegment {
     @JsonTypeName("delta")
-    record Delta(float amount, Optional<String> unit, int direction) implements JsonMessageSegment {}
+    record Delta(float amount, Optional<String> unit, @JsonProperty(required = true) JsonMessageGoodness goodness)
+            implements JsonMessageSegment {}
 
     @JsonTypeName("deltaPercent")
-    record DeltaPercent(float factor, int direction) implements JsonMessageSegment {}
+    record DeltaPercent(float factor, @JsonProperty(required = true) JsonMessageGoodness goodness)
+            implements JsonMessageSegment {}
 
     @JsonTypeName("exitCode")
-    record ExitCode(int exitCode) implements JsonMessageSegment {}
+    record ExitCode(int exitCode, @JsonProperty(required = true) JsonMessageGoodness goodness)
+            implements JsonMessageSegment {}
 
     @JsonTypeName("metric")
     record Metric(String metric) implements JsonMessageSegment {}

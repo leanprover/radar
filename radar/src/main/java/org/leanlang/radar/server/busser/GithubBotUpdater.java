@@ -27,6 +27,8 @@ import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandResolvedRecor
 import org.leanlang.radar.codegen.jooq.tables.records.GithubLastCheckedRecord;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
+import org.leanlang.radar.server.compare.JsonMessage;
+import org.leanlang.radar.server.compare.JsonMessageGoodness;
 import org.leanlang.radar.server.compare.JsonMessageSegment;
 import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.queue.Queue;
@@ -414,14 +416,14 @@ public final class GithubBotUpdater {
 
         JsonCommitComparison comparison = CommitComparer.compareCommits(repo, baseChash, headChash);
 
-        List<List<JsonMessageSegment>> significantRuns =
+        List<JsonMessage> significantRuns =
                 comparison.runSignificances().map(JsonSignificance::message).toList();
-        List<List<JsonMessageSegment>> significantMajorMetrics = comparison
+        List<JsonMessage> significantMajorMetrics = comparison
                 .metricSignificances()
                 .filter(JsonSignificance::major)
                 .map(JsonSignificance::message)
                 .toList();
-        List<List<JsonMessageSegment>> significantMinorMetrics = comparison
+        List<JsonMessage> significantMinorMetrics = comparison
                 .metricSignificances()
                 .filter(it -> !it.major())
                 .map(JsonSignificance::message)
@@ -434,7 +436,7 @@ public final class GithubBotUpdater {
         return sb.toString();
     }
 
-    private void formatSignificanceSection(StringBuilder sb, String name, List<List<JsonMessageSegment>> messages) {
+    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonMessage> messages) {
         if (messages.isEmpty()) return;
 
         sb.append("\n<details open>\n");
@@ -449,7 +451,7 @@ public final class GithubBotUpdater {
         // If there's no empty line between the <summary> and the list, GitHub won't render it correctly.
         sb.append("\n");
 
-        for (List<JsonMessageSegment> message : messages) {
+        for (JsonMessage message : messages) {
             sb.append("- ");
             formatMessage(sb, message);
             sb.append("\n");
@@ -458,9 +460,24 @@ public final class GithubBotUpdater {
         sb.append("</details>");
     }
 
-    private void formatMessage(StringBuilder sb, List<JsonMessageSegment> message) {
-        for (JsonMessageSegment segment : message) {
+    public static void formatMessage(StringBuilder sb, JsonMessage message) {
+        formatMessageGoodness(sb, message.goodness(), true);
+        for (JsonMessageSegment segment : message.segments()) {
             formatMessageSegment(sb, segment);
+        }
+    }
+
+    private static void formatMessageGoodness(StringBuilder sb, JsonMessageGoodness goodness, boolean trailingSpace) {
+        switch (goodness) {
+            case JsonMessageGoodness.GOOD -> {
+                sb.append("✅");
+                if (trailingSpace) sb.append(" ");
+            }
+            case JsonMessageGoodness.BAD -> {
+                sb.append("\uD83D\uDFE5");
+                if (trailingSpace) sb.append(" ");
+            }
+            case JsonMessageGoodness.NEUTRAL -> {}
         }
     }
 
@@ -471,18 +488,12 @@ public final class GithubBotUpdater {
                 sb.append("**")
                         .append(fmt.formatValueWithUnit(it.amount(), it.unit().orElse(null)))
                         .append("**");
-                if (it.amount() * it.direction() > 0) sb.append(" (✅)");
-                else if (it.amount() * it.direction() < 0) sb.append(" (\uD83D\uDFE5)");
                 break;
             case JsonMessageSegment.DeltaPercent it:
                 sb.append("**").append(fmt.formatValue(it.factor(), "100%")).append("**");
-                if (it.factor() * it.direction() > 0) sb.append(" (✅)");
-                else if (it.factor() * it.direction() < 0) sb.append(" (\uD83D\uDFE5)");
                 break;
             case JsonMessageSegment.ExitCode it:
                 sb.append("**").append(it.exitCode()).append("**");
-                if (it.exitCode() == 0) sb.append(" (✅)");
-                else sb.append(" (\uD83D\uDFE5)");
                 break;
             case JsonMessageSegment.Metric it:
                 sb.append("`").append(it.metric()).append("`");

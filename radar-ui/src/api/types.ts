@@ -55,10 +55,13 @@ export const JsonCommit = z.object({
     .transform((it) => it ?? undefined),
 });
 
+export type JsonMessageGoodness = "GOOD" | "NEUTRAL" | "BAD";
+export const JsonMessageGoodness = z.union([z.literal("GOOD"), z.literal("NEUTRAL"), z.literal("BAD")]);
+
 export type JsonMessageSegment =
-  | { type: "delta"; amount: number; unit?: string; direction: Direction }
-  | { type: "deltaPercent"; factor: number; direction: Direction }
-  | { type: "exitCode"; exitCode: number }
+  | { type: "delta"; amount: number; unit?: string; goodness: JsonMessageGoodness }
+  | { type: "deltaPercent"; factor: number; goodness: JsonMessageGoodness }
+  | { type: "exitCode"; exitCode: number; goodness: JsonMessageGoodness }
   | { type: "metric"; metric: string }
   | { type: "run"; run: string }
   | { type: "text"; text: string };
@@ -70,22 +73,31 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
       .string()
       .nullish()
       .transform((it) => it ?? undefined),
-    direction: Direction,
+    goodness: JsonMessageGoodness,
   }),
-  z.object({ type: z.literal("deltaPercent"), factor: z.number(), direction: Direction }),
-  z.object({ type: z.literal("exitCode"), exitCode: z.int() }),
+  z.object({ type: z.literal("deltaPercent"), factor: z.number(), goodness: JsonMessageGoodness }),
+  z.object({ type: z.literal("exitCode"), exitCode: z.int(), goodness: JsonMessageGoodness }),
   z.object({ type: z.literal("metric"), metric: z.string() }),
   z.object({ type: z.literal("run"), run: z.string() }),
   z.object({ type: z.literal("text"), text: z.string() }),
 ]);
 
+export interface JsonMessage {
+  goodness: JsonMessageGoodness;
+  segments: JsonMessageSegment[];
+}
+export const JsonMessage = z.object({
+  goodness: JsonMessageGoodness,
+  segments: JsonMessageSegment.array(),
+});
+
 export interface JsonSignificance {
   major: boolean;
-  message: JsonMessageSegment[];
+  message: JsonMessage;
 }
 export const JsonSignificance = z.object({
   major: z.boolean(),
-  message: JsonMessageSegment.array(),
+  message: JsonMessage,
 });
 
 export interface JsonRunAnalysis {

@@ -12,9 +12,9 @@ const { repo, chash, segment } = defineProps<{ repo: string; chash: string; segm
     v-if="segment.type === 'delta'"
     :amount="segment.amount"
     :unit="segment.unit"
-    :direction="segment.direction"
+    :goodness="segment.goodness"
   />
-  <CDeltaPercent v-else-if="segment.type === 'deltaPercent'" :factor="segment.factor" :direction="segment.direction" />
+  <CDeltaPercent v-else-if="segment.type === 'deltaPercent'" :factor="segment.factor" :goodness="segment.goodness" />
   <span
     v-else-if="segment.type === 'exitCode'"
     :class="{ 'font-bold': true, 'text-green': segment.exitCode === 0, 'text-red': segment.exitCode !== 0 }"

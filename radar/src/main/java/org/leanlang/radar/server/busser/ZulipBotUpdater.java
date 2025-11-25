@@ -18,7 +18,7 @@ import org.leanlang.radar.Linker;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
-import org.leanlang.radar.server.compare.JsonMessageSegment;
+import org.leanlang.radar.server.compare.JsonMessage;
 import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoZulip;
@@ -108,14 +108,14 @@ public record ZulipBotUpdater(
         formatTitle(sb, childChash, childTitle);
         sb.append("**");
 
-        List<List<JsonMessageSegment>> significantRuns =
+        List<JsonMessage> significantRuns =
                 comparison.runSignificances().map(JsonSignificance::message).toList();
-        List<List<JsonMessageSegment>> significantMajorMetrics = comparison
+        List<JsonMessage> significantMajorMetrics = comparison
                 .metricSignificances()
                 .filter(JsonSignificance::major)
                 .map(JsonSignificance::message)
                 .toList();
-        List<List<JsonMessageSegment>> significantMinorMetrics = comparison
+        List<JsonMessage> significantMinorMetrics = comparison
                 .metricSignificances()
                 .filter(it -> !it.major())
                 .map(JsonSignificance::message)
@@ -161,22 +161,16 @@ public record ZulipBotUpdater(
                     .append(")");
     }
 
-    private void formatSignificanceSection(StringBuilder sb, String name, List<List<JsonMessageSegment>> messages) {
+    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonMessage> messages) {
         if (messages.isEmpty()) return;
         sb.append("\n");
 
         sb.append("**").append(name).append("** (").append(messages.size()).append(")\n\n");
 
-        for (List<JsonMessageSegment> message : messages) {
+        for (JsonMessage message : messages) {
             sb.append("- ");
-            formatMessage(sb, message);
+            GithubBotUpdater.formatMessage(sb, message);
             sb.append("\n");
-        }
-    }
-
-    private void formatMessage(StringBuilder sb, List<JsonMessageSegment> message) {
-        for (JsonMessageSegment segment : message) {
-            GithubBotUpdater.formatMessageSegment(sb, segment);
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.leanlang.radar.server.compare;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record JsonSignificance(boolean major, List<JsonMessageSegment> message) {}
+public record JsonSignificance(
+        @JsonProperty(required = true) boolean major, @JsonProperty(required = true) JsonMessage message) {}

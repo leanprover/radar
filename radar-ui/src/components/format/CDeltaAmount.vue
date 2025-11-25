@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import type { Direction } from "@/api/types.ts";
+import type { JsonMessageGoodness } from "@/api/types.ts";
 import { formatValue } from "@/lib/format.ts";
-import { getGrade } from "@/lib/utils.ts";
 import { computed } from "vue";
 
 const {
   amount,
   unit = undefined,
-  direction = 0,
+  goodness,
 } = defineProps<{
   amount: number;
   unit?: string;
-  direction?: Direction;
+  goodness: JsonMessageGoodness;
 }>();
 
-const colors = { good: "text-green", bad: "text-red", neutral: undefined };
-const color = computed(() => colors[getGrade(amount, direction)]);
+const colors = { GOOD: "text-green", BAD: "text-red", NEUTRAL: undefined };
+const color = computed(() => colors[goodness]);
 </script>
 
 <template>

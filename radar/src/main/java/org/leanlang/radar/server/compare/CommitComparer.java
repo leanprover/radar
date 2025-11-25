@@ -93,7 +93,7 @@ public final class CommitComparer {
         return msg(
                 true,
                 false,
-                new MessageBuilder()
+                new MessageBuilder(JsonMessageGoodness.BAD)
                         .addRun(name)
                         .addText(" exited with code ")
                         .addExitCode(exitCode)
@@ -176,9 +176,9 @@ public final class CommitComparer {
             return msg(
                     metadata.majorAppear(),
                     metadata.minorAppear(),
-                    new MessageBuilder()
+                    new MessageBuilder(JsonMessageGoodness.NEUTRAL)
                             .addMetric(metric)
-                            .addText(" has appeared.")
+                            .addText(": appeared")
                             .build());
         }
 
@@ -188,9 +188,9 @@ public final class CommitComparer {
             return msg(
                     metadata.majorDisappear(),
                     metadata.minorDisappear(),
-                    new MessageBuilder()
+                    new MessageBuilder(JsonMessageGoodness.NEUTRAL)
                             .addMetric(metric)
-                            .addText(" has disappeared.")
+                            .addText(": disappeared")
                             .build());
         }
 
@@ -204,7 +204,11 @@ public final class CommitComparer {
             return msg(
                     metadata.majorAnyDelta(),
                     metadata.minorAnyDelta(),
-                    new MessageBuilder().addMetric(metric).addText(" changed.").build());
+                    new MessageBuilder(JsonMessageGoodness.fromDelta(second - first, metadata.direction()))
+                            .addMetric(metric)
+                            .addText(": ")
+                            .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
+                            .build());
 
         if (baseMetric != null && baseFirst != null && baseSecond != null) {
             return compareMetricWithValuesAndBase(
@@ -225,11 +229,10 @@ public final class CommitComparer {
             return msg(
                     majorDeltaAmount,
                     minorDeltaAmount,
-                    new MessageBuilder()
+                    new MessageBuilder(JsonMessageGoodness.fromDelta(deltaAmount, metadata.direction()))
                             .addMetric(metric)
-                            .addText(" changed by ")
-                            .addDelta(deltaAmount, unit, metadata.direction())
-                            .addText(".")
+                            .addText(": ")
+                            .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
                             .build());
 
         // majorDeltaFactor, minorDeltaFactor
@@ -241,11 +244,10 @@ public final class CommitComparer {
                 return msg(
                         majorDeltaFactor,
                         minorDeltaFactor,
-                        new MessageBuilder()
+                        new MessageBuilder(JsonMessageGoodness.fromDelta(deltaFactor, metadata.direction()))
                                 .addMetric(metric)
-                                .addText(" changed by ")
-                                .addDeltaPercent(deltaFactor, metadata.direction())
-                                .addText(".")
+                                .addText(": ")
+                                .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
                                 .build());
         }
 
@@ -266,7 +268,6 @@ public final class CommitComparer {
         float expectedSecond = first / baseFirst * baseSecond;
 
         // majorDeltaAmount, minorDeltaAmount
-        float deltaAmountFromFirst = second - first;
         float deltaAmountFromExpected = second - expectedSecond;
         boolean majorDeltaAmount = Math.abs(deltaAmountFromExpected) > metadata.majorDeltaAmount();
         boolean minorDeltaAmount = Math.abs(deltaAmountFromExpected) > metadata.minorDeltaAmount();
@@ -274,20 +275,17 @@ public final class CommitComparer {
             return msg(
                     majorDeltaAmount,
                     minorDeltaAmount,
-                    new MessageBuilder()
+                    new MessageBuilder(JsonMessageGoodness.fromDelta(deltaAmountFromExpected, metadata.direction()))
                             .addMetric(metric)
-                            .addText(" changed by ")
-                            .addDelta(deltaAmountFromExpected, unit, metadata.direction())
-                            .addText(" compared to estimated value based on ")
-                            .addMetric(baseMetric)
-                            .addText(" (")
-                            .addDelta(deltaAmountFromFirst, unit, metadata.direction())
-                            .addText(" compared to previous value).")
+                            .addText(": ")
+                            .addDeltaAndDeltaPercent(expectedSecond, second, unit, metadata.direction())
+                            .addText(" from estimate, ")
+                            .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
+                            .addText(" from previous value")
                             .build());
 
         // majorDeltaFactor, minorDeltaFactor
         if (first != 0 && expectedSecond != 0) {
-            float deltaFactorFromFirst = (second - first) / first;
             float deltaFactorFromExpected = (second - expectedSecond) / expectedSecond;
             boolean majorDeltaFactor = Math.abs(deltaFactorFromExpected) > metadata.majorDeltaFactor();
             boolean minorDeltaFactor = Math.abs(deltaFactorFromExpected) > metadata.minorDeltaFactor();
@@ -295,22 +293,20 @@ public final class CommitComparer {
                 return msg(
                         majorDeltaFactor,
                         minorDeltaFactor,
-                        new MessageBuilder()
+                        new MessageBuilder(JsonMessageGoodness.fromDelta(deltaAmountFromExpected, metadata.direction()))
                                 .addMetric(metric)
-                                .addText(" changed by ")
-                                .addDeltaPercent(deltaFactorFromExpected, metadata.direction())
-                                .addText(" compared to estimated value based on ")
-                                .addMetric(baseMetric)
-                                .addText(" (")
-                                .addDeltaPercent(deltaFactorFromFirst, metadata.direction())
-                                .addText(" compared to previous value).")
+                                .addText(": ")
+                                .addDeltaAndDeltaPercent(expectedSecond, second, unit, metadata.direction())
+                                .addText(" from estimate, ")
+                                .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
+                                .addText(" from previous value")
                                 .build());
         }
 
         return Optional.empty();
     }
 
-    private static Optional<JsonSignificance> msg(boolean major, boolean minor, List<JsonMessageSegment> message) {
+    private static Optional<JsonSignificance> msg(boolean major, boolean minor, JsonMessage message) {
         if (major) return Optional.of(new JsonSignificance(true, message));
         if (minor) return Optional.of(new JsonSignificance(false, message));
         return Optional.empty();
