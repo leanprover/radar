@@ -23,6 +23,7 @@ import org.leanlang.radar.server.api.ResAdminRepoMetricsRename;
 import org.leanlang.radar.server.api.ResCommit;
 import org.leanlang.radar.server.api.ResCommitRun;
 import org.leanlang.radar.server.api.ResCompare;
+import org.leanlang.radar.server.api.ResMetricsProm;
 import org.leanlang.radar.server.api.ResQueue;
 import org.leanlang.radar.server.api.ResQueueRun;
 import org.leanlang.radar.server.api.ResQueueRunnerFinish;
@@ -106,6 +107,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().register(new ResCommit(repos, queue));
         environment.jersey().register(new ResCommitRun(repos, queue));
         environment.jersey().register(new ResCompare(repos));
+        environment.jersey().register(new ResMetricsProm(repos, queue));
         environment.jersey().register(new ResQueue(repos, runners, queue));
         environment.jersey().register(new ResQueueRun(queue));
         environment.jersey().register(new ResQueueRunnerFinish(runners, queue, busser));
