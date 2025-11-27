@@ -1,7 +1,9 @@
 package org.leanlang.radar.server.api;
 
+import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
 import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND_RESOLVED;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
+import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.jooq.Record1;
+import org.jooq.impl.DSL;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.queue.Task;
 import org.leanlang.radar.server.repos.Repo;
@@ -49,6 +52,21 @@ public record ResMetricsProm(Repos repos, Queue queue) {
                     .map(Record1::value1)
                     .orElse(0);
             addRepoMetric(sb, "history_total", repo.name(), count);
+        }
+
+        sb.append("\n");
+        sb.append("# Runs\n");
+        for (Repo repo : repos.repos()) {
+            int count = repo.db()
+                    .read()
+                    .dsl()
+                    .selectCount()
+                    .from(COMMITS)
+                    .whereExists(DSL.selectOne().from(RUNS).where(RUNS.CHASH.eq(COMMITS.CHASH)))
+                    .fetchOptional()
+                    .map(Record1::value1)
+                    .orElse(0);
+            addRepoMetric(sb, "runs_total", repo.name(), count);
         }
 
         sb.append("\n");
