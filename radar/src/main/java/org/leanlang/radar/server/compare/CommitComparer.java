@@ -142,7 +142,6 @@ public final class CommitComparer {
                     unit.orElse(null),
                     first.orElse(null),
                     second.orElse(null),
-                    baseMetric.orElse(null),
                     baseFirst.orElse(null),
                     baseSecond.orElse(null),
                     ignoreAppearances,
@@ -161,7 +160,6 @@ public final class CommitComparer {
             @Nullable String unit,
             @Nullable Float first,
             @Nullable Float second,
-            @Nullable String baseMetric,
             @Nullable Float baseFirst,
             @Nullable Float baseSecond,
             boolean ignoreAppearances,
@@ -210,9 +208,8 @@ public final class CommitComparer {
                             .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
                             .build());
 
-        if (baseMetric != null && baseFirst != null && baseSecond != null) {
-            return compareMetricWithValuesAndBase(
-                    metadata, metric, unit, first, second, baseMetric, baseFirst, baseSecond);
+        if (baseFirst != null && baseSecond != null) {
+            return compareMetricWithValuesAndBase(metadata, metric, unit, first, second, baseFirst, baseSecond);
         } else {
             return compareMetricWithValues(metadata, metric, unit, first, second);
         }
@@ -260,11 +257,11 @@ public final class CommitComparer {
             @Nullable String unit,
             float first,
             float second,
-            String baseMetric,
             float baseFirst,
             float baseSecond) {
 
-        if (baseFirst == 0) return compareMetricWithValues(metadata, metric, unit, first, second);
+        if (baseFirst == 0 || baseFirst == baseSecond)
+            return compareMetricWithValues(metadata, metric, unit, first, second);
         float expectedSecond = first / baseFirst * baseSecond;
 
         // majorDeltaAmount, minorDeltaAmount
