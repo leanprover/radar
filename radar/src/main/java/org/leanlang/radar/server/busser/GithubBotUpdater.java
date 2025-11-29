@@ -286,7 +286,6 @@ public final class GithubBotUpdater {
     }
 
     private List<String> getUsersWhoReactedToReplyWithEye(long commentId) {
-
         GithubCommandRecord command = repo.db()
                 .read()
                 .dsl()
@@ -298,9 +297,15 @@ public final class GithubBotUpdater {
         Long replyId = command.getReplyIdLong();
         if (replyId == null) return List.of();
 
-        return repoGh.getReactions(replyId, "eyes").stream()
-                .map(it -> it.user().login())
-                .toList();
+        try {
+            return repoGh.getReactions(replyId, "eyes").stream()
+                    .map(it -> it.user().login())
+                    .toList();
+        } catch (NotFoundException e) {
+            // Looks like our reply was deleted.
+            log.error("Reactions retrieval failed because of 404", e);
+            return List.of();
+        }
     }
 
     private void updateReplies() {
