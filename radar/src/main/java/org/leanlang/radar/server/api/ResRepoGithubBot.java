@@ -78,7 +78,7 @@ public record ResRepoGithubBot(Repos repos) {
                             chash,
                             againstChash,
                             prCommentUrl(ownerName, repoName, issueNumber, id),
-                            prCommentUrl(ownerName, repoName, issueNumber, replyId),
+                            replyId == null ? null : prCommentUrl(ownerName, repoName, issueNumber, replyId),
                             created,
                             completed);
                 })
