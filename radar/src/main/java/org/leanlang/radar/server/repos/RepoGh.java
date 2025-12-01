@@ -123,7 +123,8 @@ public record RepoGh(Client client, String owner, String repo, GithubCredentials
         }
     }
 
-    private record JsonPostCommentData(@JsonProperty(required = true) String body) {}
+    private record JsonPostCommentData(
+            @JsonProperty(required = true) String body) {}
 
     // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#create-an-issue-comment
     public JsonGhComment postComment(int prNumber, String content) {

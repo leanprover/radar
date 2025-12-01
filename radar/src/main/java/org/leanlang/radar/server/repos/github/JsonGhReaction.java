@@ -6,4 +6,5 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record JsonGhReaction(
-        @JsonProperty(required = true) JsonGhUser user, @JsonProperty(required = true) String content) {}
+        @JsonProperty(required = true) JsonGhUser user,
+        @JsonProperty(required = true) String content) {}

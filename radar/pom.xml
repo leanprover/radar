@@ -40,7 +40,8 @@
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
     <maven-plugin-shade.version>3.6.1</maven-plugin-shade.version>
     <!-- https://mvnrepository.com/artifact/com.diffplug.spotless/spotless-maven-plugin -->
-    <maven-plugin-spotless.version>3.0.0</maven-plugin-spotless.version>
+    <!-- https://github.com/diffplug/spotless/releases -->
+    <maven-plugin-spotless.version>3.1.0</maven-plugin-spotless.version>
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin -->
     <maven-plugin-surefire.version>3.5.4</maven-plugin-surefire.version>
   </properties>

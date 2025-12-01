@@ -15,7 +15,9 @@ public record JsonGhPull(
         @JsonProperty(required = true) Location base,
         @JsonProperty(required = true) Location head) {
 
-    public record Repo(@JsonProperty(required = true) String name, @JsonProperty(required = true) JsonGhUser owner) {}
+    public record Repo(
+            @JsonProperty(required = true) String name,
+            @JsonProperty(required = true) JsonGhUser owner) {}
 
     public record Location(
             @JsonProperty(required = true) String sha,

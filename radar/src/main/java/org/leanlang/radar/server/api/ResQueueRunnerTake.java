@@ -18,7 +18,8 @@ public record ResQueueRunnerTake(Runners runners, Queue queue) {
     public static final String PATH = "/queue/runner/take/";
 
     public record JsonPostInput(
-            @JsonProperty(required = true) String runner, @JsonProperty(required = true) String token) {}
+            @JsonProperty(required = true) String runner,
+            @JsonProperty(required = true) String token) {}
 
     public record JsonPost(Optional<JsonJob> job) {}
 

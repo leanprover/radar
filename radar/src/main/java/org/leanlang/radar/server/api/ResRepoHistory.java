@@ -33,7 +33,8 @@ public record ResRepoHistory(Repos repos) {
             @Nullable Boolean significant) {}
 
     public record JsonGet(
-            @JsonProperty(required = true) int total, @JsonProperty(required = true) List<JsonEntry> entries) {
+            @JsonProperty(required = true) int total,
+            @JsonProperty(required = true) List<JsonEntry> entries) {
         public JsonGet() {
             this(0, List.of());
         }

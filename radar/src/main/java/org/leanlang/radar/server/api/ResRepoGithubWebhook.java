@@ -19,7 +19,8 @@ import org.slf4j.LoggerFactory;
 public record ResRepoGithubWebhook(Repos repos, Busser busser) {
 
     public record JsonHookInfo(
-            @JsonProperty(required = true) String action, @JsonProperty(required = true) JsonGhComment comment) {}
+            @JsonProperty(required = true) String action,
+            @JsonProperty(required = true) JsonGhComment comment) {}
 
     private static final Logger log = LoggerFactory.getLogger(ResRepoGithubWebhook.class);
 

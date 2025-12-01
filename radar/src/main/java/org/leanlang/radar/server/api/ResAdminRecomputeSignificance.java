@@ -11,7 +11,8 @@ import org.leanlang.radar.server.busser.Busser;
 
 @Path("/admin/recompute-significance/")
 public record ResAdminRecomputeSignificance(Busser busser) {
-    public record JsonPostInput(@JsonProperty(required = true) String repo) {}
+    public record JsonPostInput(
+            @JsonProperty(required = true) String repo) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

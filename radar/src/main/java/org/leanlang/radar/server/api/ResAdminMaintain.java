@@ -12,7 +12,8 @@ import org.leanlang.radar.server.busser.Busser;
 @Path("/admin/maintain/")
 public record ResAdminMaintain(Busser busser) {
     public record JsonPostInput(
-            @JsonProperty(required = true) String repo, @JsonProperty(required = true) boolean aggressive) {}
+            @JsonProperty(required = true) String repo,
+            @JsonProperty(required = true) boolean aggressive) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
