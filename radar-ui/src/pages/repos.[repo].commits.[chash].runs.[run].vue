@@ -3,7 +3,7 @@ import { useCommitRun } from "@/api/commitRun.ts";
 import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
-import CSectionLog from "@/components/CSectionLog.vue";
+import CLogs from "@/components/CLogs.vue";
 import CTimeDurationBetween from "@/components/format/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/format/CTimeRange.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
@@ -66,5 +66,13 @@ const run = reactive(
     </div>
   </CSection>
 
-  <CSectionLog v-if="run.isSuccess" :lines="run.data.lines" />
+  <CSection v-if="run.isSuccess" title="Logs">
+    <CLogs
+      v-if="run.data.lines !== undefined"
+      :start-time="run.data.startTime"
+      :start-line="0"
+      :lines="run.data.lines"
+    />
+    <div v-else>No logs available.</div>
+  </CSection>
 </template>

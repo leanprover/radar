@@ -48,6 +48,21 @@ export function formatDuration(duration: Temporal.Duration, opts?: { sign?: bool
   return (duration.sign < 0 ? "-" : sign ? "+" : "") + result.join(" ");
 }
 
+export function formatDurationLikeTimestamp(duration: Temporal.Duration): string {
+  let rounded = duration.round({ smallestUnit: "seconds", largestUnit: "days" });
+  if (rounded.sign < 0) rounded = rounded.negated();
+
+  const hours = rounded.hours.toFixed().padStart(2, "0");
+  const minutes = rounded.minutes.toFixed().padStart(2, "0");
+  const seconds = rounded.seconds.toFixed().padStart(2, "0");
+  if (rounded.days > 0) {
+    const days = rounded.days.toFixed().padStart(2, "0");
+    return `${days}:${hours}:${minutes}:${seconds}`;
+  } else {
+    return `${hours}:${minutes}:${seconds}`;
+  }
+}
+
 export const decimalPrefixes: [string, number][] = [
   ["E", 1000 ** 6], // exa
   ["P", 1000 ** 5], // peta

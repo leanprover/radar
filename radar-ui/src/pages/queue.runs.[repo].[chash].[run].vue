@@ -3,7 +3,7 @@ import { useQueueRun } from "@/api/queueRun.ts";
 import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
-import CSectionLog from "@/components/CSectionLog.vue";
+import CLogs from "@/components/CLogs.vue";
 import CTimeDurationSince from "@/components/format/CTimeDurationSince.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
 import CLinkRepo from "@/components/link/CLinkRepo.vue";
@@ -62,9 +62,13 @@ watch(run, (newValue) => {
     <div v-else class="col-span-full">Currently awaiting runner...</div>
   </CSection>
 
-  <CSectionLog
-    v-if="run.isSuccess && run.data !== 'not found'"
-    :lines="run.data.activeRun?.lines.lines"
-    :start="run.data.activeRun?.lines.start"
-  />
+  <CSection v-if="run.isSuccess && run.data !== 'not found'" title="Logs">
+    <CLogs
+      v-if="run.data.activeRun !== undefined"
+      :start-time="run.data.activeRun.startTime"
+      :start-line="run.data.activeRun.lines.start"
+      :lines="run.data.activeRun.lines.lines"
+    />
+    <div v-else>No logs available.</div>
+  </CSection>
 </template>
