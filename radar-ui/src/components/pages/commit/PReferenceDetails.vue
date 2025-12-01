@@ -16,5 +16,5 @@ const commit = reactive(
 
 <template>
   <CLoading v-if="!commit.isSuccess" :error="commit.error" />
-  <CCommitDetails v-else :commit="commit.data.commit" />
+  <CCommitDetails v-else :repo :commit="commit.data.commit" />
 </template>
