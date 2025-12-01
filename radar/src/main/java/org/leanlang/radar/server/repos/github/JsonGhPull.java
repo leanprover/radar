@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.time.Instant;
+import java.util.List;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record JsonGhPull(
@@ -12,6 +13,7 @@ public record JsonGhPull(
         @JsonProperty(required = true) Instant createdAt,
         @JsonProperty(required = true) JsonGhUser user,
         @JsonProperty(required = true) String author_association,
+        @JsonProperty(required = true) List<Label> labels,
         @JsonProperty(required = true) Location base,
         @JsonProperty(required = true) Location head) {
 
@@ -23,4 +25,6 @@ public record JsonGhPull(
             @JsonProperty(required = true) String sha,
             @JsonProperty(required = true) String ref,
             @JsonProperty(required = true) Repo repo) {}
+
+    public record Label(@JsonProperty(required = true) String name) {}
 }

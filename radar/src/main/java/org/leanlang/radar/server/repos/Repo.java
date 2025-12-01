@@ -61,15 +61,15 @@ public final class Repo implements AutoCloseable {
         this.db = new RepoDb(name(), dirs.repoDb(name()));
         this.git = new RepoGit(dirs.repoGit(name()), this.source.gitUrl());
         this.gitBench = new RepoGit(dirs.repoGitBench(name()), this.benchSource.gitUrl());
-        this.gh = mkRepoGh(client, this.source, githubCredentials);
+        this.gh = mkRepoGh(client, config, this.source, githubCredentials);
         this.zulip = mkRepoZulip(client, config, zulipCredentials);
     }
 
     private static @Nullable RepoGh mkRepoGh(
-            Client client, RepoSource source, @Nullable GithubCredentials credentials) {
+            Client client, ServerConfigRepo config, RepoSource source, @Nullable GithubCredentials credentials) {
         if (!(source instanceof RepoSourceGithub(String owner, String repo))) return null;
         if (credentials == null) return null;
-        return new RepoGh(client, owner, repo, credentials);
+        return new RepoGh(client, config.github, owner, repo, credentials);
     }
 
     private static @Nullable RepoZulip mkRepoZulip(

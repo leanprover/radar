@@ -6,8 +6,11 @@ import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_LAST_CHECKED;
 
 import jakarta.ws.rs.NotFoundException;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.jgit.lib.ObjectId;
@@ -234,6 +237,7 @@ public final class GithubBotUpdater {
                 .select(
                         GITHUB_COMMAND.COMMENT_ID_LONG,
                         GITHUB_COMMAND.COMMENT_AUTHOR_LOGIN,
+                        GITHUB_COMMAND_RESOLVED.PULL_NUMBER,
                         GITHUB_COMMAND_RESOLVED.CHASH,
                         GITHUB_COMMAND_RESOLVED.AGAINST_CHASH)
                 .from(GITHUB_COMMAND
@@ -248,8 +252,32 @@ public final class GithubBotUpdater {
         for (var command : commands) {
             long id = command.value1();
             String authorLogin = command.value2();
-            String chash = command.value3();
-            String againstChash = command.value4();
+            Integer pullNumber = command.value3();
+            String chash = command.value4();
+            String againstChash = command.value5();
+
+            // Wait until all blocking labels are removed
+            Set<String> blockingLabels = new HashSet<>(repoGh.config().blockingLabels);
+            if (!blockingLabels.isEmpty()) {
+                // Query PR
+                Optional<JsonGhPull> pullOpt = repoGh.getPull(pullNumber);
+                if (pullOpt.isEmpty()) {
+                    log.error("Failed to retrieve metadata for #{}", pullNumber);
+                    continue;
+                }
+                JsonGhPull pull = pullOpt.get();
+
+                // Check if PR is blocked by any labels
+                List<String> blockedBy = pull.labels().stream()
+                        .map(JsonGhPull.Label::name)
+                        .filter(blockingLabels::contains)
+                        .sorted()
+                        .toList();
+                if (!blockedBy.isEmpty()) {
+                    updateMessage(id, msgBlockedByLabel(chash, againstChash, blockedBy));
+                    continue;
+                }
+            }
 
             // Try to finish the benchmark for the comparison commit first,
             // so that when the user sees results, they're also immediately seeing a comparison.
@@ -257,17 +285,17 @@ public final class GithubBotUpdater {
             // Note that the commit being compared against is usually in the history and already benchmarked anyway.
             boolean againstInQueue = queue.enqueueSoft(repo.name(), againstChash, Constants.PRIORITY_GITHUB_COMMAND);
             boolean inQueue = queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_GITHUB_COMMAND);
-
             if (inQueue || againstInQueue) {
                 updateMessage(id, msgInProgress(chash, againstChash));
-            } else {
-                updateMessage(id, msgFinished(chash, againstChash, authorLogin, getUsersWhoReactedToReplyWithEye(id)));
-                repo.db().writeTransaction(ctx -> ctx.dsl()
-                        .update(GITHUB_COMMAND_RESOLVED)
-                        .set(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME, Instant.now())
-                        .where(condGhCommandResolvedOwnerRepoId(id))
-                        .execute());
+                continue;
             }
+
+            updateMessage(id, msgFinished(chash, againstChash, authorLogin, getUsersWhoReactedToReplyWithEye(id)));
+            repo.db().writeTransaction(ctx -> ctx.dsl()
+                    .update(GITHUB_COMMAND_RESOLVED)
+                    .set(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME, Instant.now())
+                    .where(condGhCommandResolvedOwnerRepoId(id))
+                    .execute());
         }
     }
 
@@ -389,6 +417,36 @@ public final class GithubBotUpdater {
 
     private String msgNoBase() {
         return "Failed to find a commit to compare against.";
+    }
+
+    private String msgBlockedByLabel(String headChash, String baseChash, Collection<String> labels) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Waiting to benchmark ")
+                .append(headChash)
+                .append(" ([status](")
+                .append(linker.linkToCommit(repo.name(), headChash))
+                .append(")) against ")
+                .append(baseChash)
+                .append(" ([status](")
+                .append(linker.linkToCommit(repo.name(), baseChash))
+                .append(")) until the following labels are removed:\n");
+
+        for (String label : labels) {
+            sb.append("- https://github.com/")
+                    .append(repoGh.owner())
+                    .append("/")
+                    .append(repoGh.repo())
+                    .append("/labels/")
+                    .append(label)
+                    .append("\n");
+        }
+
+        sb.append("\n\n")
+                .append("<sub>React with :eyes: to be notified when the results are in.")
+                .append(" The command author is always notified.</sub>");
+
+        return sb.toString();
     }
 
     private String msgInProgress(String headChash, String baseChash) {

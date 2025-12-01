@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.leanlang.radar.server.config.ServerConfigRepoGithub;
 import org.leanlang.radar.server.config.credentials.GithubCredentials;
 import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.leanlang.radar.server.repos.github.JsonGhPull;
@@ -22,7 +23,8 @@ import org.leanlang.radar.server.repos.github.JsonGhReaction;
 // Thus, we need to call the relevant API ourselves.
 // While I'm already doing that, I'm also calling the other APIs directly because it's little overhead.
 
-public record RepoGh(Client client, String owner, String repo, GithubCredentials credentials) {
+public record RepoGh(
+        Client client, ServerConfigRepoGithub config, String owner, String repo, GithubCredentials credentials) {
     public static final int PER_PAGE = 100; // The maximum value
     public static final String API_URL = "https://api.github.com/";
 

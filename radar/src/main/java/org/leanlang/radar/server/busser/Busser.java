@@ -112,9 +112,9 @@ public final class Busser implements Managed {
     private @Nullable ZulipBotUpdater zulipBotUpdater(Repo repo) {
         RepoZulip repoZulip = repo.zulip().orElse(null);
         if (repoZulip == null) return null;
-        String channel = repoZulip.config().feedChannel();
-        String topic = repoZulip.config().feedTopic();
-        String linkifier = repoZulip.config().linkifier();
+        String channel = repoZulip.config().feedChannel;
+        String topic = repoZulip.config().feedTopic;
+        String linkifier = repoZulip.config().linkifier;
         if (channel == null) return null;
         if (topic == null) return null;
         return new ZulipBotUpdater(linker, repo, repoZulip, channel, topic, Optional.ofNullable(linkifier));

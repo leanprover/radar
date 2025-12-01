@@ -29,6 +29,7 @@ public class ServerConfigRepo {
     public int significantMinorMetrics = Integer.MAX_VALUE;
     public boolean significantRunFailures = true;
 
-    // Zulip
-    public @Valid @JsonProperty(required = true) ServerConfigRepoZulip zulip;
+    // Other platforms
+    public @Valid ServerConfigRepoGithub github = new ServerConfigRepoGithub();
+    public @Valid ServerConfigRepoZulip zulip = new ServerConfigRepoZulip();
 }
