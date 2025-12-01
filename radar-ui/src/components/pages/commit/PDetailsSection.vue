@@ -4,9 +4,10 @@ import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
 import PDetailsMessage from "@/components/pages/commit/PDetailsMessage.vue";
 
-const { repo, chash, title, messages } = defineProps<{
+const { repo, chash, reference, title, messages } = defineProps<{
   repo: string;
   chash: string;
+  reference: string;
   title: string;
   messages: JsonMessage[];
 }>();
@@ -25,7 +26,7 @@ const colors = { GOOD: "text-green", BAD: "text-red", NEUTRAL: undefined };
         :marker="markers[message.goodness]"
         :class="colors[message.goodness]"
       >
-        <PDetailsMessage :repo :chash :message />
+        <PDetailsMessage :repo :chash :reference :message />
       </CListItem>
     </CList>
   </template>

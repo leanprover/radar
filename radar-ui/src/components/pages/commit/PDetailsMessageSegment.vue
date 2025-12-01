@@ -4,7 +4,12 @@ import CDeltaAmount from "@/components/format/CDeltaAmount.vue";
 import CDeltaPercent from "@/components/format/CDeltaPercent.vue";
 import { escapeMetrics } from "@/lib/utils.ts";
 
-const { repo, chash, segment } = defineProps<{ repo: string; chash: string; segment: JsonMessageSegment }>();
+const { repo, chash, reference, segment } = defineProps<{
+  repo: string;
+  chash: string;
+  reference: string;
+  segment: JsonMessageSegment;
+}>();
 </script>
 
 <template>
@@ -25,7 +30,7 @@ const { repo, chash, segment } = defineProps<{ repo: string; chash: string; segm
     :to="{
       name: '/repos.[repo].commits.[chash]',
       params: { repo, chash },
-      query: { s: escapeMetrics([segment.metric]) },
+      query: { reference: reference || undefined, s: escapeMetrics([segment.metric]) },
     }"
     class="italic hover:underline"
   >

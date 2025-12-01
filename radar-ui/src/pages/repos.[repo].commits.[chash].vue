@@ -137,6 +137,7 @@ watchEffect(() => {
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
+        :reference="queryReference"
         title="Runs"
         :messages="details.runs"
         open
@@ -144,6 +145,7 @@ watchEffect(() => {
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
+        :reference="queryReference"
         title="Major changes"
         :messages="details.metricsMajor"
         open
@@ -151,6 +153,7 @@ watchEffect(() => {
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
+        :reference="queryReference"
         title="Minor changes"
         :messages="details.metricsMinor"
         open
