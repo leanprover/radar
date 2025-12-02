@@ -5,6 +5,7 @@ import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.StreamSupport;
@@ -13,6 +14,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.jooq.Configuration;
@@ -20,6 +22,7 @@ import org.leanlang.radar.codegen.jooq.tables.records.CommitRelationshipsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.CommitsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
 import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.RepoGit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,9 +90,13 @@ public record RepoDataUpdater(Repo repo) {
     }
 
     private void updateHistory(Configuration tx) throws IOException, GitAPIException {
+        List<ObjectId> refs = refsInAlphabeticalOrder();
+
         List<String> hashesInChronologicalOrder;
-        if (repo.firstParentsOnly()) hashesInChronologicalOrder = chronologicalHashesFirstParent();
-        else hashesInChronologicalOrder = chronologicalHashesTopo();
+        if (repo.refParentsNone())
+            hashesInChronologicalOrder = refs.stream().map(AnyObjectId::name).toList();
+        else if (repo.refParentsFirst()) hashesInChronologicalOrder = chronologicalHashesFirstParent(refs);
+        else hashesInChronologicalOrder = chronologicalHashesTopo(refs);
 
         List<HistoryRecord> records = new ArrayList<>();
         for (int i = 0; i < hashesInChronologicalOrder.size(); i++) {
@@ -101,20 +108,27 @@ public record RepoDataUpdater(Repo repo) {
         log.info("Updated {} history commits", records.size());
     }
 
-    // Topologically sorted with the oldest commits coming first.
-    private List<String> chronologicalHashesTopo() throws IOException, GitAPIException {
-        ObjectId startId = repo.git().resolveRef(repo.ref());
+    private List<ObjectId> refsInAlphabeticalOrder() throws IOException, GitAPIException {
+        RepoGit git = repo.git();
+        String ref = repo.ref();
 
-        LogCommand logCommand = repo.git().porcelain().log().add(startId);
-        return StreamSupport.stream(logCommand.call().spliterator(), false)
-                .map(AnyObjectId::name)
-                .toList()
-                .reversed();
+        if (!repo.refRegex()) {
+            return List.of(git.resolveRef(ref));
+        }
+
+        return git.plumbing().getRefDatabase().getRefs().stream()
+                .filter(it -> it.getName().matches(ref))
+                .sorted(Comparator.comparing(Ref::getName))
+                .map(git::resolveRef)
+                .distinct()
+                .toList();
     }
 
     // Always following only the first parent, sorted so the oldest commits come first.
-    private List<String> chronologicalHashesFirstParent() throws IOException {
-        ObjectId startId = repo.git().resolveRef(repo.ref());
+    private List<String> chronologicalHashesFirstParent(List<ObjectId> refs) throws IOException {
+        if (refs.size() != 1)
+            throw new IllegalArgumentException("First-parent chronological history is only supported for a single ref");
+        ObjectId startId = refs.getFirst();
 
         List<String> reverseChronologicalHashes = new ArrayList<>();
         try (RevWalk walk = new RevWalk(repo.git().plumbing())) {
@@ -126,6 +140,17 @@ public record RepoDataUpdater(Repo repo) {
                 head = walk.parseCommit(parents[0]);
             }
         }
+
         return reverseChronologicalHashes.reversed();
+    }
+
+    // Topologically sorted with the oldest commits coming first.
+    private List<String> chronologicalHashesTopo(List<ObjectId> refs) throws IOException, GitAPIException {
+        LogCommand logCommand = repo.git().porcelain().log();
+        for (ObjectId ref : refs) logCommand.add(ref);
+        return StreamSupport.stream(logCommand.call().spliterator(), false)
+                .map(AnyObjectId::name)
+                .toList()
+                .reversed();
     }
 }

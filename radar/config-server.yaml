@@ -93,6 +93,19 @@ repos:
         script: main.py
         runner: testrunner
 
+  - name: mathlib4-nightly-testing
+    url: https://github.com/leanprover-community/mathlib4-nightly-testing
+    ref: refs/tags/nightly-testing-\d{4}-\d{2}-\d{2}
+    refRegex: true
+    refParentsNone: true
+    description: The nightly testing fork of mathlib4
+    benchUrl: https://github.com/Garmelon/radar-bench-loc
+    benchRef: master
+    benchRuns:
+      - name: main
+        script: main.py
+        runner: testrunner
+
 runners:
   - name: testrunner
     token: testrunnertoken

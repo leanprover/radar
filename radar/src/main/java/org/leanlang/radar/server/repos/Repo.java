@@ -101,8 +101,16 @@ public final class Repo implements AutoCloseable {
         return config.ref;
     }
 
-    public boolean firstParentsOnly() {
-        return config.firstParentsOnly;
+    public boolean refRegex() {
+        return config.refRegex;
+    }
+
+    public boolean refParentsNone() {
+        return config.refParentsNone;
+    }
+
+    public boolean refParentsFirst() {
+        return config.refParentsFirst;
     }
 
     public Optional<String> lakeprofReportUrl() {

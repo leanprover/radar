@@ -8,6 +8,7 @@ import java.util.Objects;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.RefSpec;
@@ -57,8 +58,16 @@ public final class RepoGit implements AutoCloseable {
 
     public ObjectId resolveRef(String ref) throws IOException {
         ObjectId id = plumbing().resolve(ref);
-        if (id == null) throw new IllegalArgumentException("Failed to resolve ref " + ref);
-        return id;
+        if (id != null) return id;
+        throw new IllegalArgumentException("Failed to resolve ref " + ref);
+    }
+
+    public ObjectId resolveRef(Ref ref) {
+        ObjectId id = ref.getPeeledObjectId();
+        if (id != null) return id;
+        id = ref.getObjectId();
+        if (id != null) return id;
+        throw new IllegalArgumentException("Failed to resolve ref " + ref);
     }
 
     public void fetch() throws GitAPIException {
