@@ -14,19 +14,23 @@ import org.jooq.Record3;
 import org.jooq.Result;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.Linker;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.compare.JsonMessage;
-import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoZulip;
+import org.leanlang.radar.util.RadarLinker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public record ZulipBotUpdater(
-        Linker linker, Repo repo, RepoZulip repoZulip, String channel, String topic, Optional<String> linkifier) {
+        RadarLinker radarLinker,
+        Repo repo,
+        RepoZulip repoZulip,
+        String channel,
+        String topic,
+        Optional<String> linkifier) {
 
     private static final Logger log = LoggerFactory.getLogger(ZulipBotUpdater.class);
 
@@ -108,18 +112,9 @@ public record ZulipBotUpdater(
         formatTitle(sb, childChash, childTitle);
         sb.append("**");
 
-        List<JsonMessage> significantRuns =
-                comparison.runSignificances().map(JsonSignificance::message).toList();
-        List<JsonMessage> significantMajorMetrics = comparison
-                .metricSignificances()
-                .filter(JsonSignificance::major)
-                .map(JsonSignificance::message)
-                .toList();
-        List<JsonMessage> significantMinorMetrics = comparison
-                .metricSignificances()
-                .filter(it -> !it.major())
-                .map(JsonSignificance::message)
-                .toList();
+        List<JsonMessage> significantRuns = GithubBotMessages.getSignificantRuns(comparison);
+        List<JsonMessage> significantMajorMetrics = GithubBotMessages.getSignificantMajorMetrics(comparison);
+        List<JsonMessage> significantMinorMetrics = GithubBotMessages.getSignificantMinorMetrics(comparison);
 
         formatSignificanceSection(sb, "Runs", significantRuns);
         formatSignificanceSection(sb, "Major changes", significantMajorMetrics);
@@ -129,7 +124,7 @@ public record ZulipBotUpdater(
     }
 
     private void formatTitle(StringBuilder sb, String chash, String title) {
-        URI url = linker.linkToCommit(repo.name(), chash);
+        URI url = radarLinker.commit(repo.name(), chash);
         if (linkifier.isEmpty()) {
             sb.append("[").append(title).append("](").append(url).append(")");
             return;
@@ -169,7 +164,7 @@ public record ZulipBotUpdater(
 
         for (JsonMessage message : messages) {
             sb.append("- ");
-            GithubBotUpdater.formatMessage(sb, message);
+            GithubBotMessages.formatMessage(sb, message);
             sb.append("\n");
         }
     }

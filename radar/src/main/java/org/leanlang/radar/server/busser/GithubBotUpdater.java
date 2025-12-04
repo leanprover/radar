@@ -1,332 +1,209 @@
 package org.leanlang.radar.server.busser;
 
-import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND;
-import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND_RESOLVED;
-import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_LAST_CHECKED;
-
 import jakarta.ws.rs.NotFoundException;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
-import org.jooq.Condition;
-import org.jooq.Result;
-import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
-import org.leanlang.radar.Formatter;
-import org.leanlang.radar.Linker;
-import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRecord;
-import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandResolvedRecord;
-import org.leanlang.radar.codegen.jooq.tables.records.GithubLastCheckedRecord;
+import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRunningRecord;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
-import org.leanlang.radar.server.compare.JsonMessage;
-import org.leanlang.radar.server.compare.JsonMessageGoodness;
-import org.leanlang.radar.server.compare.JsonMessageSegment;
-import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoGh;
 import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.leanlang.radar.server.repos.github.JsonGhPull;
+import org.leanlang.radar.util.GithubLinker;
+import org.leanlang.radar.util.Pair;
+import org.leanlang.radar.util.RadarLinker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class GithubBotUpdater {
     private static final Logger log = LoggerFactory.getLogger(GithubBotUpdater.class);
 
-    private final Linker linker;
-    private final Repo repo;
     private final Queue queue;
+    private final Repo repo;
     private final RepoGh repoGh;
 
-    private @Nullable Instant since = null;
-    private @Nullable List<JsonGhComment> comments = null;
+    private final GithubBotDb db;
+    private final GithubBotMessages msgs;
 
-    public GithubBotUpdater(Linker linker, Repo repo, Queue queue, RepoGh repoGh) {
-        this.linker = linker;
-        this.repo = repo;
+    public GithubBotUpdater(RadarLinker radarLinker, Queue queue, Repo repo, RepoGh repoGh) {
         this.queue = queue;
+        this.repo = repo;
         this.repoGh = repoGh;
+
+        this.db = new GithubBotDb(repo, repoGh);
+        this.msgs = new GithubBotMessages(radarLinker, new GithubLinker(repoGh.owner(), repoGh.repo()));
     }
 
     public void fetch() {
-        if (since != null || comments != null)
-            throw new IllegalStateException("fetch() must not be called more than once");
-
         log.info("Fetching GitHub commands for repo {}", repo.name());
-        since = since();
-        comments = searchForComments(since);
+
+        Instant lastChecked = db.lastChecked();
+        List<JsonGhComment> comments = repoGh.getComments(lastChecked);
+
+        for (JsonGhComment comment : comments) {
+            db.addOrUpdateCommand(comment);
+            if (comment.createdAt().isAfter(lastChecked)) lastChecked = comment.createdAt();
+        }
+
+        db.setLastChecked(lastChecked);
+
         log.info("Fetched GitHub commands for repo {}", repo.name());
     }
 
     public void update() {
         log.info("Updating GitHub commands for repo {}", repo.name());
-        if (since != null && comments != null) addCommands(comments, since);
-        executeCommands();
-        updateReplies();
+
+        db.pruneCommandsNotFromCurrentRepo();
+        for (var command : db.unfinishedCommands()) checkUnfinishedCommand(command);
+        for (var pair : db.runningCommands()) executeRunningCommand(pair.left(), pair.right());
+        for (var command : db.commandsToUpdateRepliesOf()) updateReply(command);
+
         log.info("Updated GitHub commands for repo {}", repo.name());
     }
 
-    private Instant since() {
-        return Optional.ofNullable(repo.db()
-                        .read()
-                        .dsl()
-                        .selectFrom(Tables.GITHUB_LAST_CHECKED)
-                        .fetchOne())
-                .map(GithubLastCheckedRecord::getLastCheckedTime)
-                .orElse(Instant.now());
-    }
+    private void checkUnfinishedCommand(GithubCommandRecord command) {
+        Long commandId = command.getCommandIdLong();
+        log.debug("Checking unfinished command {} in #{}", commandId, command.getNumber());
 
-    private List<JsonGhComment> searchForComments(Instant since) {
-        log.info("Searching for comments since {}", since);
-        List<JsonGhComment> comments = repoGh.getComments(since);
-        log.info("Found {} comment{} since {}", comments.size(), comments.size() == 1 ? "" : "s", since);
-
-        return comments;
-    }
-
-    private Condition condGhCommandOwnerRepo() {
-        return (GITHUB_COMMAND.OWNER.eq(repoGh.owner())).and(GITHUB_COMMAND.REPO.eq(repoGh.repo()));
-    }
-
-    private Condition condGhCommandOwnerRepoId(long id) {
-        return condGhCommandOwnerRepo().and(GITHUB_COMMAND.COMMENT_ID_LONG.eq(id));
-    }
-
-    private Condition condGhCommandResolvedOwnerRepoId(long id) {
-        return (GITHUB_COMMAND_RESOLVED.OWNER.eq(repoGh.owner()))
-                .and(Tables.GITHUB_COMMAND_RESOLVED.REPO.eq(repoGh.repo()))
-                .and(GITHUB_COMMAND_RESOLVED.COMMENT_ID_LONG.eq(id));
-    }
-
-    private void addCommands(List<JsonGhComment> comments, Instant since) {
-        // Remove all commands from different GitHub repos in case we have switched repos.
-        // Because of this transaction, in theory we wouldn't need to use the owner and repo in subsequent interactions,
-        // but we still spell out the entire primary key every time, just to be on the safe side.
-        repo.db().writeTransaction(ctx -> ctx.dsl()
-                .deleteFrom(GITHUB_COMMAND)
-                .where(condGhCommandOwnerRepo().not())
-                .execute());
-
-        for (JsonGhComment comment : comments) {
-            Optional<GithubBotCommand> commandOpt = resolveCommand(comment);
-            if (commandOpt.isEmpty()) continue;
-            GithubBotCommand command = commandOpt.get();
-
-            log.info(
-                    "Found command {} on #{}",
-                    command.json().id(),
-                    command.json().issueNumber());
-
-            GithubCommandRecord commandRecord = new GithubCommandRecord(
-                    command.owner(),
-                    command.repo(),
-                    command.json().id(),
-                    command.json().issueNumber(),
-                    command.json().createdAt(),
-                    command.json().user().id(),
-                    command.json().user().login(),
-                    command.json().authorAssociation(),
-                    command.json().body(),
-                    null,
-                    command.replyContent(),
-                    0);
-
-            Optional<GithubCommandResolvedRecord> commandResolvedRecord = command.resolved()
-                    .map(it -> new GithubCommandResolvedRecord(
-                            command.owner(),
-                            command.repo(),
-                            command.json().id(),
-                            it.json().id(),
-                            it.json().number(),
-                            it.json().createdAt(),
-                            it.json().user().id(),
-                            it.json().user().login(),
-                            it.json().author_association(),
-                            it.json().head().sha(),
-                            it.json().head().ref(),
-                            it.json().head().repo().owner().login(),
-                            it.json().head().repo().name(),
-                            it.json().base().sha(),
-                            it.json().base().ref(),
-                            it.chash(),
-                            it.againstChash(),
-                            Instant.now(),
-                            null));
-
-            repo.db().writeTransaction(ctx -> {
-                ctx.dsl().batchInsert(commandRecord).execute();
-                commandResolvedRecord.ifPresent(it -> ctx.dsl().batchInsert(it).execute());
-            });
+        JsonGhPull pull = repoGh.getPull(command.getNumber()).orElse(null);
+        if (pull == null) {
+            // We don't need to accept edits, so STATUS_SUCCEEDED, not STATUS_FAILED.
+            log.debug("Command is not in a PR.");
+            db.setCommandSucceeded(commandId, msgs.notInPr());
+            return;
         }
 
-        // Update last checked table to ensure we don't unnecessarily request too many comments
-        Instant lastSeen;
-        if (comments.isEmpty()) lastSeen = since;
-        else lastSeen = comments.getLast().createdAt();
-        log.info("Updating last seen time to {}", lastSeen);
-        repo.db().writeTransaction(ctx -> {
-            ctx.dsl().deleteFrom(GITHUB_LAST_CHECKED).execute();
-            ctx.dsl()
-                    .insertInto(GITHUB_LAST_CHECKED, GITHUB_LAST_CHECKED.LAST_CHECKED_TIME)
-                    .values(lastSeen)
-                    .execute();
-        });
+        JsonGhComment comment = repoGh.getComment(commandId).orElse(null);
+        if (comment == null) {
+            // The original comment is gone, so there's no need to accept edits.
+            log.debug("Command is deleted.");
+            db.setCommandSucceeded(commandId, msgs.deleted());
+            return;
+        }
+
+        // Unconditionally updating, rather than adding.
+        db.addOrUpdateCommand(comment);
+
+        GithubBotCommand parsed = GithubBotCommand.parse(comment.body()).orElse(null);
+        if (parsed == null) {
+            log.debug("Message contains no command.");
+            db.setCommandFailed(commandId, msgs.noLongerACommand());
+            return;
+        }
+
+        switch (parsed) {
+            case GithubBotCommand.TooManyCommands p -> db.setCommandFailed(commandId, msgs.tooManyCommands());
+            case GithubBotCommand.Bench p -> startBenchCommand(command, pull);
+            case GithubBotCommand.BenchMathlib p -> db.setCommandFailed(commandId, msgs.benchMathlibNotImplemented());
+        }
     }
 
-    private Optional<GithubBotCommand> resolveCommand(JsonGhComment comment) {
-        if (!GithubBotCommand.isCommand(comment.body())) return Optional.empty();
+    private List<String> blockedByLabels(JsonGhPull pull) {
+        Set<String> blockingLabels = new HashSet<>(repoGh.config().blockingLabels);
+        return pull.labels().stream()
+                .map(JsonGhPull.Label::name)
+                .filter(blockingLabels::contains)
+                .sorted()
+                .toList();
+    }
 
-        boolean commandAlreadyKnown = repo.db()
-                .read()
-                .dsl()
-                .selectOne()
-                .from(GITHUB_COMMAND)
-                .where(condGhCommandOwnerRepoId(comment.id()))
-                .fetch()
-                .isNotEmpty();
-        if (commandAlreadyKnown) return Optional.empty();
-
-        Optional<JsonGhPull> pullOpt = repoGh.getPull(comment.issueNumber());
-        if (pullOpt.isEmpty())
-            return Optional.of(new GithubBotCommand(repoGh, comment, msgNotInPr(), Optional.empty()));
-        JsonGhPull pull = pullOpt.get();
-        String headChash = pull.head().sha();
-        String baseChash = pull.base().sha();
+    private Optional<Pair<String, String>> findComparisonCommits(Repo repo, JsonGhPull pull) {
+        String head = pull.head().sha();
+        String base = pull.base().sha();
 
         // GitHub's "base.sha" doesn't seem to correspond to the merge base.
         // Instead, I suspect it's the sha of the base branch at the time the PR was created.
         // Thus, we need to find the actual merge base commit ourselves.
-        String againstChash;
         try {
             Repository plumbing = repo.git().plumbing();
             RevWalk revWalk = new RevWalk(plumbing);
             revWalk.setRevFilter(RevFilter.MERGE_BASE);
-            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(headChash)));
-            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(baseChash)));
+            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(head)));
+            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(base)));
             RevCommit mergeBase = revWalk.next();
             if (mergeBase == null) throw new Exception("RevWalk returned null");
-            againstChash = mergeBase.name();
+            return Optional.of(new Pair<>(mergeBase.name(), head));
         } catch (Exception e) {
-            log.error("Failed to find merge base between {} and {}", headChash, baseChash, e);
-            return Optional.of(new GithubBotCommand(repoGh, comment, msgNoBase(), Optional.empty()));
-        }
-
-        return Optional.of(new GithubBotCommand(
-                repoGh,
-                comment,
-                msgInProgress(headChash, againstChash),
-                Optional.of(new GithubBotCommand.Resolved(pull, headChash, againstChash))));
-    }
-
-    private void executeCommands() {
-        var commands = repo.db()
-                .read()
-                .dsl()
-                .select(
-                        GITHUB_COMMAND.COMMENT_ID_LONG,
-                        GITHUB_COMMAND.COMMENT_AUTHOR_LOGIN,
-                        GITHUB_COMMAND_RESOLVED.PULL_NUMBER,
-                        GITHUB_COMMAND_RESOLVED.CHASH,
-                        GITHUB_COMMAND_RESOLVED.AGAINST_CHASH)
-                .from(GITHUB_COMMAND
-                        .join(GITHUB_COMMAND_RESOLVED)
-                        .on(GITHUB_COMMAND.OWNER.eq(GITHUB_COMMAND_RESOLVED.OWNER))
-                        .and(GITHUB_COMMAND.REPO.eq(GITHUB_COMMAND_RESOLVED.REPO))
-                        .and(GITHUB_COMMAND.COMMENT_ID_LONG.eq(GITHUB_COMMAND_RESOLVED.COMMENT_ID_LONG)))
-                .where(condGhCommandOwnerRepo())
-                .and(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME.isNull())
-                .fetch();
-
-        for (var command : commands) {
-            long id = command.value1();
-            String authorLogin = command.value2();
-            Integer pullNumber = command.value3();
-            String chash = command.value4();
-            String againstChash = command.value5();
-
-            // Wait until all blocking labels are removed
-            Set<String> blockingLabels = new HashSet<>(repoGh.config().blockingLabels);
-            if (!blockingLabels.isEmpty()) {
-                // Query PR
-                Optional<JsonGhPull> pullOpt = repoGh.getPull(pullNumber);
-                if (pullOpt.isEmpty()) {
-                    log.error("Failed to retrieve metadata for #{}", pullNumber);
-                    continue;
-                }
-                JsonGhPull pull = pullOpt.get();
-
-                // Check if PR is blocked by any labels
-                List<String> blockedBy = pull.labels().stream()
-                        .map(JsonGhPull.Label::name)
-                        .filter(blockingLabels::contains)
-                        .sorted()
-                        .toList();
-                if (!blockedBy.isEmpty()) {
-                    updateMessage(id, msgBlockedByLabel(chash, againstChash, blockedBy));
-                    continue;
-                }
-            }
-
-            // Try to finish the benchmark for the comparison commit first,
-            // so that when the user sees results, they're also immediately seeing a comparison.
-            // Otherwise, they may falsely think that nothing has changed.
-            // Note that the commit being compared against is usually in the history and already benchmarked anyway.
-            boolean againstInQueue = queue.enqueueSoft(repo.name(), againstChash, Constants.PRIORITY_GITHUB_COMMAND);
-            boolean inQueue = queue.enqueueSoft(repo.name(), chash, Constants.PRIORITY_GITHUB_COMMAND);
-            if (inQueue || againstInQueue) {
-                updateMessage(id, msgInProgress(chash, againstChash));
-                continue;
-            }
-
-            updateMessage(id, msgFinished(chash, againstChash, authorLogin, getUsersWhoReactedToReplyWithEye(id)));
-            repo.db().writeTransaction(ctx -> ctx.dsl()
-                    .update(GITHUB_COMMAND_RESOLVED)
-                    .set(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME, Instant.now())
-                    .where(condGhCommandResolvedOwnerRepoId(id))
-                    .execute());
+            log.error("Failed to find merge base between {} and {}", head, base, e);
+            return Optional.empty();
         }
     }
 
-    private void updateMessage(long id, String newMessage) {
-        repo.db().writeTransaction(ctx -> {
-            GithubCommandRecord command = ctx.dsl()
-                    .selectFrom(GITHUB_COMMAND)
-                    .where(condGhCommandOwnerRepoId(id))
-                    .fetchOne();
-            if (command == null) return;
-            if (command.getReplyContent().equals(newMessage)) return;
-            command.setReplyContent(newMessage);
-            command.setReplyTries(0);
-            ctx.dsl().batchUpdate(command).execute();
-        });
+    private void startBenchCommand(GithubCommandRecord command, JsonGhPull pull) {
+        Long commandId = command.getCommandIdLong();
+        log.info("Starting bench command for comment {} in #{}", commandId, command.getNumber());
+
+        List<String> blockingLabels = blockedByLabels(pull);
+        if (!blockingLabels.isEmpty()) {
+            log.info("Bench command is blocked by labels {}", blockingLabels);
+            db.setCommandWaiting(commandId, msgs.blockedByLabels(blockingLabels));
+            return;
+        }
+
+        Pair<String, String> commits = findComparisonCommits(repo, pull).orElse(null);
+        if (commits == null) {
+            log.info("Failed to find appropriate commits for comparison");
+            db.setCommandFailed(commandId, msgs.failedToFindMergeBase());
+            return;
+        }
+
+        db.setCommandRunningStarted(
+                commandId,
+                msgs.inProgress(repo.name(), commits.left(), commits.right()),
+                null,
+                commits.left(),
+                commits.right());
     }
 
-    private List<String> getUsersWhoReactedToReplyWithEye(long commentId) {
-        GithubCommandRecord command = repo.db()
-                .read()
-                .dsl()
-                .selectFrom(GITHUB_COMMAND)
-                .where(condGhCommandOwnerRepoId(commentId))
-                .fetchOne();
-        if (command == null) return List.of();
+    private void executeRunningCommand(GithubCommandRecord command, GithubCommandRunningRecord running) {
+        Long commandId = command.getCommandIdLong();
 
-        Long replyId = command.getReplyIdLong();
-        if (replyId == null) return List.of();
+        String inRepo = running.getInRepo();
+        if (inRepo == null) inRepo = repo.name();
 
+        String chashFirst = running.getChashFirst();
+        String chashSecond = running.getChashSecond();
+
+        // Try to finish the benchmark for the comparison commit first,
+        // so that when the user sees results, they're also immediately seeing a comparison.
+        // Otherwise, they may falsely think that nothing has changed.
+        // Note that the commit being compared against is usually in the history and already benchmarked anyway.
+        boolean firstInQueue = queue.enqueueSoft(repo.name(), chashFirst, Constants.PRIORITY_GITHUB_COMMAND);
+        boolean secondInQueue = queue.enqueueSoft(repo.name(), chashSecond, Constants.PRIORITY_GITHUB_COMMAND);
+        if (firstInQueue || secondInQueue) {
+            db.setCommandRunningUpdate(commandId, msgs.inProgress(inRepo, chashFirst, chashSecond));
+            return;
+        }
+
+        List<String> usersThatReactedWithEye = getUsersThatReactedWithEyes(command);
+        JsonCommitComparison comparison = CommitComparer.compareCommits(repo, chashFirst, chashSecond);
+
+        db.setCommandRunningFinished(
+                commandId,
+                msgs.finished(
+                        inRepo,
+                        chashFirst,
+                        chashSecond,
+                        command.getCommandAuthorLogin(),
+                        usersThatReactedWithEye,
+                        comparison));
+    }
+
+    private List<String> getUsersThatReactedWithEyes(GithubCommandRecord command) {
         try {
-            return repoGh.getReactions(replyId, "eyes").stream()
+            return repoGh.getEyesReactions(command.getReplyIdLong()).stream()
                     .map(it -> it.user().login())
                     .toList();
         } catch (NotFoundException e) {
@@ -336,237 +213,30 @@ public final class GithubBotUpdater {
         }
     }
 
-    private void updateReplies() {
-        Result<GithubCommandRecord> commands = repo.db()
-                .read()
-                .dsl()
-                .selectFrom(GITHUB_COMMAND)
-                .where(GITHUB_COMMAND.REPLY_CONTENT.isNotNull())
-                .and(GITHUB_COMMAND.REPLY_TRIES.isNotNull())
-                .and(GITHUB_COMMAND.REPLY_TRIES.lt(Constants.GITHUB_MAX_TRIES))
-                .fetch();
-
-        for (GithubCommandRecord command : commands) {
-            updateReply(command);
-        }
-    }
-
     private void updateReply(GithubCommandRecord command) {
-        long id = command.getCommentIdLong();
-        int issueNumber = command.getCommentIssueNumber();
+        int number = command.getNumber();
+        long commandId = command.getCommandIdLong();
         Long replyId = command.getReplyIdLong();
-        String replyContent = command.getReplyContent();
+        String replyBody = command.getReplyBody();
         Integer replyTries = command.getReplyTries();
-
-        // When updating the DB, make sure nothing important changed since the last fetch.
-        var condition = condGhCommandOwnerRepo()
-                .and(GITHUB_COMMAND.COMMENT_ID_LONG.eq(id))
-                .and(replyId == null ? GITHUB_COMMAND.REPLY_ID_LONG.isNull() : GITHUB_COMMAND.REPLY_ID_LONG.eq(replyId))
-                .and(GITHUB_COMMAND.REPLY_CONTENT.eq(replyContent))
-                .and(
-                        replyTries == null
-                                ? GITHUB_COMMAND.REPLY_TRIES.isNull()
-                                : GITHUB_COMMAND.REPLY_TRIES.eq(replyTries));
 
         try {
             if (replyId == null) {
-                log.info("Replying to {} in #{} (try {})", id, issueNumber, replyTries);
-                JsonGhComment reply = repoGh.postComment(issueNumber, replyContent);
-                repo.db().writeTransaction(ctx -> ctx.dsl()
-                        .update(GITHUB_COMMAND)
-                        .set(GITHUB_COMMAND.REPLY_ID_LONG, reply.id())
-                        .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
-                        .where(condition)
-                        .execute());
-
+                log.info("Replying to {} in #{} (try {})", commandId, number, replyTries);
+                JsonGhComment reply = repoGh.postComment(number, replyBody);
+                db.replySent(commandId, replyBody, replyTries, reply.id());
             } else {
-                log.info("Updating reply {} to {} in {} (try {})", replyId, id, issueNumber, replyTries);
-                repoGh.updateComment(replyId, replyContent);
-                repo.db().writeTransaction(ctx -> ctx.dsl()
-                        .update(GITHUB_COMMAND)
-                        .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
-                        .where(condition)
-                        .execute());
+                log.info("Updating reply {} to {} in {} (try {})", replyId, commandId, number, replyTries);
+                repoGh.updateComment(replyId, replyBody);
+                db.replyUpdated(commandId, replyId, replyBody, replyTries);
             }
         } catch (NotFoundException e) {
-            // Presumably our reply was deleted or something, so let's just send a new one instead the next time.
+            // Looks like our reply was intentionally deleted, so we'll stay silent.
             log.error("Reply failed because of 404", e);
-            repo.db().writeTransaction(ctx -> ctx.dsl()
-                    .update(GITHUB_COMMAND)
-                    .set(GITHUB_COMMAND.REPLY_TRIES, GITHUB_COMMAND.REPLY_TRIES.add(1))
-                    .set(GITHUB_COMMAND.REPLY_ID_LONG, (Long) null)
-                    .where(condition)
-                    .execute());
+            db.replyDisappeared(commandId);
         } catch (Exception e) {
             log.error("Reply failed", e);
-            repo.db().writeTransaction(ctx -> ctx.dsl()
-                    .update(GITHUB_COMMAND)
-                    .set(GITHUB_COMMAND.REPLY_TRIES, GITHUB_COMMAND.REPLY_TRIES.add(1))
-                    .where(condition)
-                    .execute());
-        }
-    }
-
-    /*
-     * Messages
-     */
-
-    private String msgNotInPr() {
-        return "This command can only be used in pull requests.";
-    }
-
-    private String msgNoBase() {
-        return "Failed to find a commit to compare against.";
-    }
-
-    private String msgBlockedByLabel(String headChash, String baseChash, Collection<String> labels) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Waiting to benchmark ")
-                .append(headChash)
-                .append(" ([status](")
-                .append(linker.linkToCommit(repo.name(), headChash))
-                .append(")) against ")
-                .append(baseChash)
-                .append(" ([status](")
-                .append(linker.linkToCommit(repo.name(), baseChash))
-                .append(")) until the following labels are removed:\n");
-
-        for (String label : labels) {
-            sb.append("- https://github.com/")
-                    .append(repoGh.owner())
-                    .append("/")
-                    .append(repoGh.repo())
-                    .append("/labels/")
-                    .append(label)
-                    .append("\n");
-        }
-
-        sb.append("\n\n")
-                .append("<sub>React with :eyes: to be notified when the results are in.")
-                .append(" The command author is always notified.</sub>");
-
-        return sb.toString();
-    }
-
-    private String msgInProgress(String headChash, String baseChash) {
-        return "Benchmarking " + (headChash + " ([status](" + linker.linkToCommit(repo.name(), headChash) + "))")
-                + " against "
-                + (baseChash + " ([status](" + linker.linkToCommit(repo.name(), baseChash) + "))")
-                + ".\n\n"
-                + "<sub>React with :eyes: to be notified when the results are in."
-                + " The command author is always notified.</sub>";
-    }
-
-    private String msgFinished(
-            String headChash, String baseChash, @Nullable String userLogin, List<String> usersThatReactedWithEye) {
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("[Benchmark results](")
-                .append(linker.linkToComparison(repo.name(), baseChash, headChash))
-                .append(") for ")
-                .append(headChash)
-                .append(" against ")
-                .append(baseChash)
-                .append(" are in!");
-
-        Stream.concat(Optional.ofNullable(userLogin).stream(), usersThatReactedWithEye.stream())
-                .collect(Collectors.toSet())
-                .stream()
-                .sorted()
-                .forEach(it -> sb.append(" @").append(it));
-
-        JsonCommitComparison comparison = CommitComparer.compareCommits(repo, baseChash, headChash);
-
-        List<JsonMessage> significantRuns =
-                comparison.runSignificances().map(JsonSignificance::message).toList();
-        List<JsonMessage> significantMajorMetrics = comparison
-                .metricSignificances()
-                .filter(JsonSignificance::major)
-                .map(JsonSignificance::message)
-                .toList();
-        List<JsonMessage> significantMinorMetrics = comparison
-                .metricSignificances()
-                .filter(it -> !it.major())
-                .map(JsonSignificance::message)
-                .toList();
-
-        formatSignificanceSection(sb, "Runs", significantRuns);
-        formatSignificanceSection(sb, "Major changes", significantMajorMetrics);
-        formatSignificanceSection(sb, "Minor changes", significantMinorMetrics);
-
-        return sb.toString();
-    }
-
-    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonMessage> messages) {
-        if (messages.isEmpty()) return;
-
-        sb.append("\n<details open>\n");
-
-        sb.append("<summary>")
-                .append(name)
-                .append(" (")
-                .append(messages.size())
-                .append(")")
-                .append("</summary>\n");
-
-        // If there's no empty line between the <summary> and the list, GitHub won't render it correctly.
-        sb.append("\n");
-
-        for (JsonMessage message : messages) {
-            sb.append("- ");
-            formatMessage(sb, message);
-            sb.append("\n");
-        }
-
-        sb.append("</details>");
-    }
-
-    public static void formatMessage(StringBuilder sb, JsonMessage message) {
-        formatMessageGoodness(sb, message.goodness(), true);
-        for (JsonMessageSegment segment : message.segments()) {
-            formatMessageSegment(sb, segment);
-        }
-    }
-
-    private static void formatMessageGoodness(StringBuilder sb, JsonMessageGoodness goodness, boolean trailingSpace) {
-        switch (goodness) {
-            case JsonMessageGoodness.GOOD -> {
-                sb.append("✅");
-                if (trailingSpace) sb.append(" ");
-            }
-            case JsonMessageGoodness.BAD -> {
-                sb.append("\uD83D\uDFE5");
-                if (trailingSpace) sb.append(" ");
-            }
-            case JsonMessageGoodness.NEUTRAL -> {}
-        }
-    }
-
-    public static void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
-        Formatter fmt = new Formatter().withSign(true);
-        switch (segment) {
-            case JsonMessageSegment.Delta it:
-                sb.append("**")
-                        .append(fmt.formatValueWithUnit(it.amount(), it.unit().orElse(null)))
-                        .append("**");
-                break;
-            case JsonMessageSegment.DeltaPercent it:
-                sb.append("**").append(fmt.formatValue(it.factor(), "100%")).append("**");
-                break;
-            case JsonMessageSegment.ExitCode it:
-                sb.append("**").append(it.exitCode()).append("**");
-                break;
-            case JsonMessageSegment.Metric it:
-                sb.append("`").append(it.metric()).append("`");
-                break;
-            case JsonMessageSegment.Run it:
-                sb.append("`").append(it.run()).append("`");
-                break;
-            case JsonMessageSegment.Text it:
-                sb.append(it.text());
-                break;
+            db.replyFailed(commandId, replyId, replyBody, replyTries);
         }
     }
 }

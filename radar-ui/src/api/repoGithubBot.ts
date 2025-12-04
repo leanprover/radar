@@ -8,17 +8,22 @@ import * as z from "zod";
 
 export interface JsonCommand {
   pr: number;
-  chash: string;
-  againstChash: string;
+  inRepo?: string;
+  chashFirst: string;
+  chashSecond: string;
   url: string;
   replyUrl?: string;
   created: Temporal.Instant;
   completed?: Temporal.Instant;
 }
 const JsonCommand = z.object({
-  pr: z.int(),
-  chash: z.string(),
-  againstChash: z.string(),
+  pr: z.number().int(),
+  inRepo: z
+    .string()
+    .nullish()
+    .transform((it) => it ?? undefined),
+  chashFirst: z.string(),
+  chashSecond: z.string(),
   url: z.string(),
   replyUrl: z
     .string()

@@ -1,7 +1,7 @@
 package org.leanlang.radar.server.api;
 
 import static org.leanlang.radar.codegen.jooq.Tables.COMMITS;
-import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND_RESOLVED;
+import static org.leanlang.radar.codegen.jooq.Tables.GITHUB_COMMAND_RUNNING;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
@@ -76,7 +76,7 @@ public record ResMetricsProm(Repos repos, Queue queue) {
                     .read()
                     .dsl()
                     .selectCount()
-                    .from(GITHUB_COMMAND_RESOLVED)
+                    .from(GITHUB_COMMAND_RUNNING)
                     .fetchOptional()
                     .map(Record1::value1)
                     .orElse(0);
@@ -84,8 +84,8 @@ public record ResMetricsProm(Repos repos, Queue queue) {
                     .read()
                     .dsl()
                     .selectCount()
-                    .from(GITHUB_COMMAND_RESOLVED)
-                    .where(GITHUB_COMMAND_RESOLVED.COMPLETED_TIME.isNotNull())
+                    .from(GITHUB_COMMAND_RUNNING)
+                    .where(GITHUB_COMMAND_RUNNING.COMPLETED_TIME.isNotNull())
                     .fetchOptional()
                     .map(Record1::value1)
                     .orElse(0);

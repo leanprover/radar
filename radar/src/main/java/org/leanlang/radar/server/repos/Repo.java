@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.FsUtil;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
@@ -22,6 +21,7 @@ import org.leanlang.radar.server.config.credentials.GithubCredentials;
 import org.leanlang.radar.server.config.credentials.ZulipCredentials;
 import org.leanlang.radar.server.repos.source.RepoSource;
 import org.leanlang.radar.server.repos.source.RepoSourceGithub;
+import org.leanlang.radar.util.FsUtil;
 
 public final class Repo implements AutoCloseable {
     private final Environment environment;

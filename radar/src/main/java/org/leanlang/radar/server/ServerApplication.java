@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.Linker;
 import org.leanlang.radar.server.api.ResAdminEnqueue;
 import org.leanlang.radar.server.api.ResAdminMaintain;
 import org.leanlang.radar.server.api.ResAdminRecomputeSignificance;
@@ -44,6 +43,7 @@ import org.leanlang.radar.server.config.credentials.CredentialsByRepo;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repos;
 import org.leanlang.radar.server.runners.Runners;
+import org.leanlang.radar.util.RadarLinker;
 
 public final class ServerApplication extends Application<ServerConfig> {
     public static final String NAME = "Radar Server";
@@ -88,12 +88,13 @@ public final class ServerApplication extends Application<ServerConfig> {
         configureAdminAuth(environment, configuration.adminToken);
         var client = configureJerseyClient(configuration, environment);
 
-        var linker = new Linker(configuration.url);
+        var radarLinker = new RadarLinker(configuration.url);
+
         var dirs = new Dirs(configFile, stateDir, cacheDir, configuration.dirs);
         var repos = new Repos(environment, client, dirs, credentials, configuration.repos);
         var runners = new Runners(configuration.runners);
         var queue = new Queue(repos, runners);
-        var busser = new Busser(linker, repos, queue);
+        var busser = new Busser(radarLinker, repos, queue);
 
         environment.lifecycle().manage(repos);
         environment.lifecycle().manage(busser);

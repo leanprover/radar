@@ -25,8 +25,10 @@ import org.leanlang.radar.server.repos.github.JsonGhReaction;
 
 public record RepoGh(
         Client client, ServerConfigRepoGithub config, String owner, String repo, GithubCredentials credentials) {
-    public static final int PER_PAGE = 100; // The maximum value
-    public static final String API_URL = "https://api.github.com/";
+
+    private static final int PER_PAGE = 100; // The maximum value
+    private static final String API_URL = "https://api.github.com/";
+    private static final String REACTION_EYES = "eyes";
 
     private MultivaluedMap<String, Object> headers() {
         MultivaluedHashMap<String, Object> result = new MultivaluedHashMap<>();
@@ -35,50 +37,77 @@ public record RepoGh(
         return result;
     }
 
+    // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
+    public Optional<JsonGhPull> getPull(long number) {
+        try {
+            return Optional.of(client.target(API_URL)
+                    .path("repos")
+                    .path(owner)
+                    .path(repo)
+                    .path("pulls")
+                    .path(String.valueOf(number))
+                    .request(MediaType.APPLICATION_JSON_TYPE)
+                    .headers(headers())
+                    .get(JsonGhPull.class));
+        } catch (NotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
+    // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#get-an-issue-comment
+    public Optional<JsonGhComment> getComment(long commentId) {
+        try {
+            return Optional.of(client.target(API_URL)
+                    .path("repos")
+                    .path(owner)
+                    .path(repo)
+                    .path("issues")
+                    .path("comments")
+                    .path(String.valueOf(commentId))
+                    .request(MediaType.APPLICATION_JSON_TYPE)
+                    .headers(headers())
+                    .get(JsonGhComment.class));
+        } catch (NotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
     // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#list-issue-comments-for-a-repository
-    private List<JsonGhComment> getCommentsPage(Instant since, int page, int perPage) {
-        JsonGhComment[] comments = client.target(API_URL)
+    private List<JsonGhComment> getCommentsPage(Instant since, int page) {
+        return List.of(client.target(API_URL)
                 .path("repos")
                 .path(owner)
                 .path(repo)
                 .path("issues")
                 .path("comments")
-                .queryParam("sort", "created")
+                .queryParam("sort", "updated")
                 // By choosing this direction and iterating in increasing page order,
                 // we might get some comments twice if new comments get posted while we're iterating,
                 // but we won't miss any (unless more than 100 comments are posted in-between two page requests).
                 .queryParam("direction", "desc")
-                // From the docs:
-                // "Only show results that were last updated after the given time."
-                // This means that we'll have to filter the comments for creation time manually.
                 .queryParam("since", DateTimeFormatter.ISO_INSTANT.format(since))
                 .queryParam("page", page)
-                .queryParam("per_page", perPage)
+                .queryParam("per_page", RepoGh.PER_PAGE)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .headers(headers())
-                .get(JsonGhComment[].class);
-
-        return Arrays.stream(comments)
-                .filter(it -> !it.createdAt().isBefore(since))
-                .toList()
-                .reversed(); // Should be old to new, not new to old
+                .get(JsonGhComment[].class));
     }
 
     /**
      * Fetch all comments since the given time, from old to new.
      */
     public List<JsonGhComment> getComments(Instant since) {
-        List<JsonGhComment> result = new ArrayList<>();
+        List<JsonGhComment> result = new ArrayList<>(); // Collect in descending order
         for (int page = 1; true; page++) {
-            List<JsonGhComment> comments = getCommentsPage(since, page, PER_PAGE);
+            List<JsonGhComment> comments = getCommentsPage(since, page);
             result.addAll(comments);
             if (comments.size() < PER_PAGE) break;
         }
-        return result;
+        return result.reversed(); // Return in ascending order
     }
 
     // https://docs.github.com/en/rest/reactions/reactions?apiVersion=2022-11-28#list-reactions-for-an-issue-comment
-    private List<JsonGhReaction> getReactionsPage(long commentId, String content, int page, int perPage) {
+    private List<JsonGhReaction> getEyesReactionsPage(long commentId, int page) {
         JsonGhReaction[] reactions = client.target(API_URL)
                 .path("repos")
                 .path(owner)
@@ -87,9 +116,9 @@ public record RepoGh(
                 .path("comments")
                 .path(String.valueOf(commentId))
                 .path("reactions")
-                .queryParam("content", content)
+                .queryParam("content", REACTION_EYES)
                 .queryParam("page", page)
-                .queryParam("per_page", perPage)
+                .queryParam("per_page", RepoGh.PER_PAGE)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .headers(headers())
                 .get(JsonGhReaction[].class);
@@ -97,32 +126,14 @@ public record RepoGh(
         return Arrays.asList(reactions).reversed();
     }
 
-    public List<JsonGhReaction> getReactions(long commentId, String content) {
+    public List<JsonGhReaction> getEyesReactions(long commentId) {
         List<JsonGhReaction> result = new ArrayList<>();
         for (int page = 1; true; page++) {
-            List<JsonGhReaction> comments = getReactionsPage(commentId, content, page, PER_PAGE);
+            List<JsonGhReaction> comments = getEyesReactionsPage(commentId, page);
             result.addAll(comments);
             if (comments.size() < PER_PAGE) break;
         }
         return result;
-    }
-
-    // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
-    public Optional<JsonGhPull> getPull(long number) {
-        try {
-            JsonGhPull pull = client.target(API_URL)
-                    .path("repos")
-                    .path(owner)
-                    .path(repo)
-                    .path("pulls")
-                    .path(String.valueOf(number))
-                    .request(MediaType.APPLICATION_JSON_TYPE)
-                    .headers(headers())
-                    .get(JsonGhPull.class);
-            return Optional.of(pull);
-        } catch (NotFoundException e) {
-            return Optional.empty();
-        }
     }
 
     private record JsonPostCommentData(

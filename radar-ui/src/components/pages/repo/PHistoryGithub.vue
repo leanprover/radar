@@ -11,22 +11,28 @@ const { repo, commands } = defineProps<{ repo: string; commands: JsonCommand[] }
   <CList>
     <CListItem v-for="command in commands" :key="command.url">
       <div :class="{ 'text-foreground-alt italic': !command.completed }">
-        In PR #{{ command.pr }}:
+        <!-- "In PR #<n>:" or "In PR #<n>, for <repo>:" -->
+        <template v-if="command.inRepo === undefined">In PR #{{ command.pr }}: </template>
+        <template v-else>In PR #{{ command.pr }}, for {{ command.inRepo }}: </template>
 
-        <a :href="command.url" target="_blank" class="hover:underline">command</a>
-        <template v-if="command.replyUrl"
-          >,
+        <!-- "command", or "command, bot reply" -->
+        <template v-if="command.replyUrl === undefined">
+          <a :href="command.url" target="_blank" class="hover:underline">command</a>
+        </template>
+        <template v-else>
+          <a :href="command.url" target="_blank" class="hover:underline">command</a>,
           <a :href="command.replyUrl" target="_blank" class="hover:underline">bot reply</a>
         </template>
 
+        <!-- "finished <time>" -->
         <template v-if="command.completed">
           {{ " " }}
           <span class="text-foreground-alt text-xs">
             <RouterLink
               :to="{
                 name: '/repos.[repo].commits.[chash]',
-                params: { repo, chash: command.chash },
-                query: { parent: command.againstChash },
+                params: { repo, chash: command.chashSecond },
+                query: { parent: command.chashFirst },
               }"
               class="hover:underline"
               >finished</RouterLink

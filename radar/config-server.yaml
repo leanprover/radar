@@ -45,6 +45,11 @@ repos:
         majorDeltaFactor: 0.2
     significantMajorMetrics: 1
     significantMinorMetrics: 5
+    github:
+      blockingLabels:
+        - duplicate
+        - question
+        - invalid
 
   - name: radar
     description: Do you know how fast you were going?

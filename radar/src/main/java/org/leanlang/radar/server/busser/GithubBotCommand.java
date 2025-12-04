@@ -1,21 +1,32 @@
 package org.leanlang.radar.server.busser;
 
+import java.util.List;
 import java.util.Optional;
-import org.leanlang.radar.server.repos.RepoGh;
-import org.leanlang.radar.server.repos.github.JsonGhComment;
-import org.leanlang.radar.server.repos.github.JsonGhPull;
 
-public record GithubBotCommand(
-        String owner, String repo, JsonGhComment json, String replyContent, Optional<Resolved> resolved) {
+public sealed interface GithubBotCommand {
+    record Bench() implements GithubBotCommand {}
 
-    public record Resolved(JsonGhPull json, String chash, String againstChash) {}
+    record BenchMathlib() implements GithubBotCommand {}
 
-    public GithubBotCommand(RepoGh repoGh, JsonGhComment comment, String replyContent, Optional<Resolved> resolved) {
-        this(repoGh.owner(), repoGh.repo(), comment, replyContent, resolved);
+    record TooManyCommands() implements GithubBotCommand {}
+
+    static boolean isCommand(String body) {
+        return parse(body).isPresent();
     }
 
-    public static boolean isCommand(String body) {
-        String text = body.strip();
-        return text.equals("!bench") || text.equals("!radar");
+    static Optional<GithubBotCommand> parse(String body) {
+        List<GithubBotCommand> commands =
+                body.lines().flatMap(it -> parseLine(it).stream()).toList();
+
+        if (commands.size() > 1) return Optional.of(new TooManyCommands());
+        if (commands.isEmpty()) return Optional.empty();
+        return Optional.of(commands.getFirst());
+    }
+
+    private static Optional<GithubBotCommand> parseLine(String line) {
+        line = line.strip();
+        if (line.matches("!(bench|radar)")) return Optional.of(new Bench());
+        if (line.matches("!(bench|radar)\\s+mathlib4?")) return Optional.of(new BenchMathlib());
+        return Optional.empty();
     }
 }

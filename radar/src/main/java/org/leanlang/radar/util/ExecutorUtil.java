@@ -1,4 +1,4 @@
-package org.leanlang.radar;
+package org.leanlang.radar.util;
 
 import java.time.Duration;
 import java.time.Instant;

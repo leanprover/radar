@@ -8,13 +8,13 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
-import org.leanlang.radar.ExecutorUtil;
-import org.leanlang.radar.Linker;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoGh;
 import org.leanlang.radar.server.repos.RepoZulip;
 import org.leanlang.radar.server.repos.Repos;
+import org.leanlang.radar.util.ExecutorUtil;
+import org.leanlang.radar.util.RadarLinker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,13 +24,13 @@ import org.slf4j.LoggerFactory;
 public final class Busser implements Managed {
     private static final Logger log = LoggerFactory.getLogger(Busser.class);
 
-    private final Linker linker;
+    private final RadarLinker radarLinker;
     private final Repos repos;
     private final Queue queue;
     private final ScheduledExecutorService executor;
 
-    public Busser(Linker linker, Repos repos, Queue queue) {
-        this.linker = linker;
+    public Busser(RadarLinker radarLinker, Repos repos, Queue queue) {
+        this.radarLinker = radarLinker;
         this.repos = repos;
         this.queue = queue;
         this.executor = Executors.newSingleThreadScheduledExecutor();
@@ -106,7 +106,7 @@ public final class Busser implements Managed {
     private @Nullable GithubBotUpdater githubBotUpdater(Repo repo) {
         RepoGh repoGh = repo.gh().orElse(null);
         if (repoGh == null) return null;
-        return new GithubBotUpdater(linker, repo, queue, repoGh);
+        return new GithubBotUpdater(radarLinker, queue, repo, repoGh);
     }
 
     private @Nullable ZulipBotUpdater zulipBotUpdater(Repo repo) {
@@ -117,12 +117,13 @@ public final class Busser implements Managed {
         String linkifier = repoZulip.config().linkifier;
         if (channel == null) return null;
         if (topic == null) return null;
-        return new ZulipBotUpdater(linker, repo, repoZulip, channel, topic, Optional.ofNullable(linkifier));
+        return new ZulipBotUpdater(radarLinker, repo, repoZulip, channel, topic, Optional.ofNullable(linkifier));
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {
-        if (repo.gh().isEmpty()) return;
-        new GithubBotUpdater(linker, repo, queue, repo.gh().get()).update();
+        GithubBotUpdater githubBotUpdater = githubBotUpdater(repo);
+        if (githubBotUpdater == null) return;
+        githubBotUpdater.update();
     }
 
     private synchronized void doMaintainAll() {
