@@ -34,4 +34,7 @@ public class ServerConfigRepo {
     // Other platforms
     public @Valid ServerConfigRepoGithub github = new ServerConfigRepoGithub();
     public @Valid ServerConfigRepoZulip zulip = new ServerConfigRepoZulip();
+
+    // Hacks :D
+    public boolean hackMathlibCommand = false;
 }

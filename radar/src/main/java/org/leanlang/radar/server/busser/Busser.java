@@ -73,6 +73,11 @@ public final class Busser implements Managed {
         executor.execute(() -> doRecomputeSignificance(repo));
     }
 
+    public synchronized void fetchRepoCallOnlyIfYouKnowWhatYoureDoing(String repoName) throws GitAPIException {
+        Repo repo = repos.repo(repoName);
+        new RepoDataUpdater(repo).update();
+    }
+
     // The following methods all have the prefix "do" so they don't collide with the public names.
 
     private synchronized void doUpdateAll() {
@@ -106,7 +111,7 @@ public final class Busser implements Managed {
     private @Nullable GithubBotUpdater githubBotUpdater(Repo repo) {
         RepoGh repoGh = repo.gh().orElse(null);
         if (repoGh == null) return null;
-        return new GithubBotUpdater(radarLinker, queue, repo, repoGh);
+        return new GithubBotUpdater(radarLinker, repos, queue, this, repo, repoGh);
     }
 
     private @Nullable ZulipBotUpdater zulipBotUpdater(Repo repo) {

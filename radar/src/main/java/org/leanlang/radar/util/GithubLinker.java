@@ -8,4 +8,8 @@ public record GithubLinker(String owner, String repo) {
     public URI label(String label) {
         return BASE.resolve(owner + "/" + repo + "/labels/" + label);
     }
+
+    public URI commit(String chash) {
+        return BASE.resolve(owner + "/" + repo + "/commit/" + chash);
+    }
 }

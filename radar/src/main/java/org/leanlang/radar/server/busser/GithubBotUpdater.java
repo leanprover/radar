@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -19,6 +22,7 @@ import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoGh;
+import org.leanlang.radar.server.repos.Repos;
 import org.leanlang.radar.server.repos.github.JsonGhComment;
 import org.leanlang.radar.server.repos.github.JsonGhPull;
 import org.leanlang.radar.util.GithubLinker;
@@ -30,15 +34,21 @@ import org.slf4j.LoggerFactory;
 public final class GithubBotUpdater {
     private static final Logger log = LoggerFactory.getLogger(GithubBotUpdater.class);
 
+    private final Repos repos;
     private final Queue queue;
+    private final Busser busser;
     private final Repo repo;
     private final RepoGh repoGh;
 
     private final GithubBotDb db;
     private final GithubBotMessages msgs;
 
-    public GithubBotUpdater(RadarLinker radarLinker, Queue queue, Repo repo, RepoGh repoGh) {
+    public GithubBotUpdater(
+            RadarLinker radarLinker, Repos repos, Queue queue, Busser busser, Repo repo, RepoGh repoGh) {
+
+        this.repos = repos;
         this.queue = queue;
+        this.busser = busser;
         this.repo = repo;
         this.repoGh = repoGh;
 
@@ -106,11 +116,11 @@ public final class GithubBotUpdater {
         switch (parsed) {
             case GithubBotCommand.TooManyCommands p -> db.setCommandFailed(commandId, msgs.tooManyCommands());
             case GithubBotCommand.Bench p -> startBenchCommand(command, pull);
-            case GithubBotCommand.BenchMathlib p -> db.setCommandFailed(commandId, msgs.benchMathlibNotImplemented());
+            case GithubBotCommand.BenchMathlib p -> startMathlibBenchCommand(command, pull);
         }
     }
 
-    private List<String> blockedByLabels(JsonGhPull pull) {
+    private List<String> superfluousLabels(JsonGhPull pull) {
         Set<String> blockingLabels = new HashSet<>(repoGh.config().blockingLabels);
         return pull.labels().stream()
                 .map(JsonGhPull.Label::name)
@@ -119,10 +129,7 @@ public final class GithubBotUpdater {
                 .toList();
     }
 
-    private Optional<Pair<String, String>> findComparisonCommits(Repo repo, JsonGhPull pull) {
-        String head = pull.head().sha();
-        String base = pull.base().sha();
-
+    private Optional<Pair<String, String>> findComparisonCommits(Repo repo, String base, String head) {
         // GitHub's "base.sha" doesn't seem to correspond to the merge base.
         // Instead, I suspect it's the sha of the base branch at the time the PR was created.
         // Thus, we need to find the actual merge base commit ourselves.
@@ -130,11 +137,13 @@ public final class GithubBotUpdater {
             Repository plumbing = repo.git().plumbing();
             RevWalk revWalk = new RevWalk(plumbing);
             revWalk.setRevFilter(RevFilter.MERGE_BASE);
-            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(head)));
-            revWalk.markStart(revWalk.parseCommit(ObjectId.fromString(base)));
+            ObjectId headId = plumbing.resolve(head);
+            ObjectId baseId = plumbing.resolve(base);
+            revWalk.markStart(revWalk.parseCommit(headId));
+            revWalk.markStart(revWalk.parseCommit(baseId));
             RevCommit mergeBase = revWalk.next();
             if (mergeBase == null) throw new Exception("RevWalk returned null");
-            return Optional.of(new Pair<>(mergeBase.name(), head));
+            return Optional.of(new Pair<>(mergeBase.name(), headId.name()));
         } catch (Exception e) {
             log.error("Failed to find merge base between {} and {}", head, base, e);
             return Optional.empty();
@@ -145,14 +154,16 @@ public final class GithubBotUpdater {
         Long commandId = command.getCommandIdLong();
         log.info("Starting bench command for comment {} in #{}", commandId, command.getNumber());
 
-        List<String> blockingLabels = blockedByLabels(pull);
-        if (!blockingLabels.isEmpty()) {
-            log.info("Bench command is blocked by labels {}", blockingLabels);
-            db.setCommandWaiting(commandId, msgs.blockedByLabels(blockingLabels));
+        List<String> superfluousLabels = superfluousLabels(pull);
+        if (!superfluousLabels.isEmpty()) {
+            log.info("Bench command is blocked by labels {}", superfluousLabels);
+            db.setCommandWaiting(commandId, msgs.labelMismatch(superfluousLabels, List.of()));
             return;
         }
 
-        Pair<String, String> commits = findComparisonCommits(repo, pull).orElse(null);
+        Pair<String, String> commits = findComparisonCommits(
+                        repo, pull.base().sha(), pull.head().sha())
+                .orElse(null);
         if (commits == null) {
             log.info("Failed to find appropriate commits for comparison");
             db.setCommandFailed(commandId, msgs.failedToFindMergeBase());
@@ -161,7 +172,7 @@ public final class GithubBotUpdater {
 
         db.setCommandRunningStarted(
                 commandId,
-                msgs.inProgress(repo.name(), commits.left(), commits.right()),
+                msgs.inProgress(repo, false, commits.left(), commits.right()),
                 null,
                 commits.left(),
                 commits.right());
@@ -170,8 +181,8 @@ public final class GithubBotUpdater {
     private void executeRunningCommand(GithubCommandRecord command, GithubCommandRunningRecord running) {
         Long commandId = command.getCommandIdLong();
 
-        String inRepo = running.getInRepo();
-        if (inRepo == null) inRepo = repo.name();
+        Repo inRepo = repo;
+        if (running.getInRepo() != null) inRepo = repos.repo(running.getInRepo());
 
         String chashFirst = running.getChashFirst();
         String chashSecond = running.getChashSecond();
@@ -180,20 +191,22 @@ public final class GithubBotUpdater {
         // so that when the user sees results, they're also immediately seeing a comparison.
         // Otherwise, they may falsely think that nothing has changed.
         // Note that the commit being compared against is usually in the history and already benchmarked anyway.
-        boolean firstInQueue = queue.enqueueSoft(repo.name(), chashFirst, Constants.PRIORITY_GITHUB_COMMAND);
-        boolean secondInQueue = queue.enqueueSoft(repo.name(), chashSecond, Constants.PRIORITY_GITHUB_COMMAND);
+        boolean firstInQueue = queue.enqueueSoft(inRepo.name(), chashFirst, Constants.PRIORITY_GITHUB_COMMAND);
+        boolean secondInQueue = queue.enqueueSoft(inRepo.name(), chashSecond, Constants.PRIORITY_GITHUB_COMMAND);
         if (firstInQueue || secondInQueue) {
-            db.setCommandRunningUpdate(commandId, msgs.inProgress(inRepo, chashFirst, chashSecond));
+            db.setCommandRunningUpdate(
+                    commandId, msgs.inProgress(inRepo, !inRepo.name().equals(repo.name()), chashFirst, chashSecond));
             return;
         }
 
         List<String> usersThatReactedWithEye = getUsersThatReactedWithEyes(command);
-        JsonCommitComparison comparison = CommitComparer.compareCommits(repo, chashFirst, chashSecond);
+        JsonCommitComparison comparison = CommitComparer.compareCommits(inRepo, chashFirst, chashSecond);
 
         db.setCommandRunningFinished(
                 commandId,
                 msgs.finished(
                         inRepo,
+                        !inRepo.name().equals(repo.name()),
                         chashFirst,
                         chashSecond,
                         command.getCommandAuthorLogin(),
@@ -241,5 +254,52 @@ public final class GithubBotUpdater {
             log.error("Reply failed", e);
             db.replyFailed(commandId, replyId, replyBody, replyTries);
         }
+    }
+
+    // Hack territory
+
+    private void startMathlibBenchCommand(GithubCommandRecord command, JsonGhPull pull) {
+        Repo repoMathlib = repos.repo("mathlib4-nightly-testing");
+        Long commandId = command.getCommandIdLong();
+        log.info("Starting mathlib bench command for comment {} in #{}", commandId, command.getNumber());
+        try {
+            busser.fetchRepoCallOnlyIfYouKnowWhatYoureDoing(repoMathlib.name());
+        } catch (GitAPIException e) {
+            log.error("Failed to fetch mathlib", e);
+            return;
+        }
+
+        Set<String> labels = pull.labels().stream().map(JsonGhPull.Label::name).collect(Collectors.toSet());
+        List<String> superfluousLabels = superfluousLabels(pull);
+        List<String> missingLabels = Stream.of("toolchain-available", "mathlib4-nightly-available")
+                .filter(it -> !labels.contains(it))
+                .sorted()
+                .toList();
+
+        if (!superfluousLabels.isEmpty() || !missingLabels.isEmpty()) {
+            log.info(
+                    "Mathlib bench command is blocked by labels superfluous={} missing={}",
+                    superfluousLabels,
+                    missingLabels);
+            db.setCommandWaiting(commandId, msgs.labelMismatch(superfluousLabels, missingLabels));
+            return;
+        }
+
+        String base = "nightly-testing";
+        String head = "lean-pr-testing-" + pull.number();
+        Pair<String, String> commits =
+                findComparisonCommits(repoMathlib, base, head).orElse(null);
+        if (commits == null) {
+            log.info("Failed to find appropriate commits for comparison in {}", repoMathlib.name());
+            db.setCommandFailed(commandId, msgs.failedToFindMergeBase());
+            return;
+        }
+
+        db.setCommandRunningStarted(
+                commandId,
+                msgs.inProgress(repoMathlib, true, commits.left(), commits.right()),
+                repoMathlib.name(),
+                commits.left(),
+                commits.right());
     }
 }

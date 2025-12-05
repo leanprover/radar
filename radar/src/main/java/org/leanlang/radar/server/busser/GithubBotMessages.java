@@ -4,11 +4,14 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.compare.JsonMessage;
 import org.leanlang.radar.server.compare.JsonMessageGoodness;
 import org.leanlang.radar.server.compare.JsonMessageSegment;
 import org.leanlang.radar.server.compare.JsonSignificance;
+import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.source.RepoSourceGithub;
 import org.leanlang.radar.util.Formatter;
 import org.leanlang.radar.util.GithubLinker;
 import org.leanlang.radar.util.RadarLinker;
@@ -34,36 +37,66 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 + EDIT_POSSIBLE;
     }
 
-    public String blockedByLabels(List<String> blockingLabels) {
-        String labelLinks = blockingLabels.stream()
-                .map(githubLinker::label)
-                .map(URI::toString)
-                .collect(Collectors.joining(", "));
+    public String labelMismatch(List<String> superfluousLabels, List<String> missingLabels) {
+        StringBuilder sb = new StringBuilder();
 
-        if (blockingLabels.size() == 1) return "Waiting until the label " + labelLinks + " is removed." + EDIT_POSSIBLE;
-        else return "Waiting until the labels " + labelLinks + " are removed." + EDIT_POSSIBLE;
+        sb.append("Waiting until ");
+
+        if (!superfluousLabels.isEmpty()) {
+            String links = superfluousLabels.stream()
+                    .map(githubLinker::label)
+                    .map(URI::toString)
+                    .collect(Collectors.joining(" "));
+
+            if (superfluousLabels.size() == 1)
+                sb.append("the label ").append(links).append(" is removed");
+            else sb.append("the labels ").append(links).append(" are removed");
+        }
+
+        if (!superfluousLabels.isEmpty() && !missingLabels.isEmpty()) {
+            sb.append(" and ");
+        }
+
+        if (!missingLabels.isEmpty()) {
+            String links = missingLabels.stream()
+                    .map(githubLinker::label)
+                    .map(URI::toString)
+                    .collect(Collectors.joining(" "));
+
+            if (missingLabels.size() == 1) sb.append("the label ").append(links).append(" is added");
+            else sb.append("the labels ").append(links).append(" are added");
+        }
+
+        sb.append(".").append(EDIT_POSSIBLE);
+        return sb.toString();
     }
 
     public String failedToFindMergeBase() {
         return "Failed to find a commit to compare against." + EDIT_POSSIBLE;
     }
 
-    public String benchMathlibNotImplemented() {
-        return "The `!bench mathlib` command is not yet implemented." + EDIT_POSSIBLE;
+    public String linkToChash(@Nullable Repo repo, String chash) {
+        if (repo == null) return chash;
+        if (repo.source() instanceof RepoSourceGithub(String ghOwner, String ghRepo))
+            return new GithubLinker(ghOwner, ghRepo).commit(chash).toString();
+        return chash;
     }
 
-    public String inProgress(String repo, String chashFirst, String chashSecond) {
+    public String inProgress(Repo repo, boolean repoForeign, String chashFirst, String chashSecond) {
         return "Benchmarking "
-                + chashSecond + " ([status](" + radarLinker.commit(repo, chashSecond) + "))"
+                + linkToChash(repoForeign ? repo : null, chashSecond)
+                + " ([status](" + radarLinker.commit(repo.name(), chashSecond) + "))"
                 + " against "
-                + chashFirst + " ([status](" + radarLinker.commit(repo, chashFirst) + "))"
+                + linkToChash(repoForeign ? repo : null, chashFirst)
+                + " ([status](" + radarLinker.commit(repo.name(), chashFirst) + "))"
                 + ".\n\n"
                 + "<sub>React with :eyes: to be notified when the results are in."
                 + " The command author is always notified.</sub>";
     }
 
     public String finished(
-            String repo,
+            Repo repo,
+            boolean repoForeign,
             String chashFirst,
             String chashSecond,
             String userLogin,
@@ -73,11 +106,11 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         StringBuilder sb = new StringBuilder();
 
         sb.append("[Benchmark results](")
-                .append(radarLinker.comparison(repo, chashFirst, chashSecond))
+                .append(radarLinker.comparison(repo.name(), chashFirst, chashSecond))
                 .append(") for ")
-                .append(chashSecond)
+                .append(linkToChash(repoForeign ? repo : null, chashSecond))
                 .append(" against ")
-                .append(chashFirst)
+                .append(linkToChash(repoForeign ? repo : null, chashFirst))
                 .append(" are in!");
 
         Stream.concat(Stream.of(userLogin), usersThatReactedWithEye.stream()).collect(Collectors.toSet()).stream()
