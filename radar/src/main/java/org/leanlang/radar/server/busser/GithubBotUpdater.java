@@ -202,8 +202,11 @@ public final class GithubBotUpdater {
     }
 
     private List<String> getUsersThatReactedWithEyes(GithubCommandRecord command) {
+        Long replyId = command.getReplyIdLong();
+        if (replyId == null) return List.of();
+
         try {
-            return repoGh.getEyesReactions(command.getReplyIdLong()).stream()
+            return repoGh.getEyesReactions(replyId).stream()
                     .map(it -> it.user().login())
                     .toList();
         } catch (NotFoundException e) {
