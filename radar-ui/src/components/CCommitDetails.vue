@@ -9,11 +9,13 @@ const {
   repo = undefined,
   repoUrl = undefined,
   commit,
+  chashAgainst = undefined,
   queryS = undefined,
 } = defineProps<{
   repo?: string;
   repoUrl?: string;
   commit: JsonCommit;
+  chashAgainst?: string;
   queryS?: string;
 }>();
 </script>
@@ -21,7 +23,8 @@ const {
 <template>
   <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
     <div class="text-yellow col-span-full">
-      commit <CLinkCommitHash :repo :url="repoUrl" :chash="commit.chash" :query-s="queryS" />
+      commit
+      <CLinkCommitHash :repo :url="repoUrl" :chash="commit.chash" :chash-against="chashAgainst" :query-s="queryS" />
     </div>
 
     <div>Author:</div>

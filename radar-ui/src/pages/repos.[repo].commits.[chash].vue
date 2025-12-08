@@ -56,6 +56,12 @@ const measurements = computed<JsonMetricComparison[]>(() => {
 
 const details = computed(() => comparisonSignificance(compare.data?.comparison));
 
+const referenceChash = computed(() => {
+  if (compare.isSuccess) return compare.data.chashFirst;
+  if (reference.value !== "parent") return reference.value;
+  return undefined;
+});
+
 // Regularly refetch the commit info (which includes the finished and unfinished runs) until all runs are finished.
 const tick = useIntervalFn(() => {
   if (!commit.isSuccess) return;
@@ -99,7 +105,7 @@ watchEffect(() => {
   <CSection title="Commit">
     <CLoading v-if="!commit.isSuccess" :error="commit.error" />
     <template v-else>
-      <CCommitDetails :repo-url="repo?.url" :commit="commit.data.commit" />
+      <CCommitDetails :repo-url="repo?.url" :commit="commit.data.commit" :chash-against="referenceChash" />
       <PCommitNav
         :repo="route.params.repo"
         :chash="route.params.chash"

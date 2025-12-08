@@ -3,18 +3,24 @@ const {
   repo = undefined,
   url = undefined,
   chash,
+  chashAgainst = undefined,
   queryS = undefined,
 } = defineProps<{
   repo?: string;
   url?: string;
   chash: string;
+  chashAgainst?: string;
   queryS?: string;
 }>();
 
-// Assumes a Github-like URL schema
-function href(url: string, chash: string): string {
+// Assuming a Github-like URL schema
+function linkSource(url: string, chash: string): string {
   const slash = url.endsWith("/") ? "" : "/";
   return `${url}${slash}commit/${chash}`;
+}
+function linkDiff(url: string, first: string, second: string): string {
+  const slash = url.endsWith("/") ? "" : "/";
+  return `${url}${slash}compare/${first}...${second}`;
 }
 </script>
 
@@ -28,8 +34,12 @@ function href(url: string, chash: string): string {
       {{ chash }}
     </RouterLink>
     <span v-else>{{ chash }}</span>
-    <span v-if="url !== undefined">
-      (<a :href="href(url, chash)" target="_blank" class="hover:underline">source</a>)</span
+    <span v-if="url !== undefined && chashAgainst !== undefined">
+      (<a :href="linkSource(url, chash)" target="_blank" class="hover:underline">source</a>,
+      <a :href="linkDiff(url, chashAgainst, chash)" target="_blank" class="hover:underline">diff</a>)</span
+    >
+    <span v-else-if="url !== undefined">
+      (<a :href="linkSource(url, chash)" target="_blank" class="hover:underline">source</a>)</span
     >
   </span>
 </template>
