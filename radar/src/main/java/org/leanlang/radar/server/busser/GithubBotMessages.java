@@ -125,6 +125,10 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         formatSignificanceSection(sb, "Major changes", significantMajorMetrics);
         formatSignificanceSection(sb, "Minor changes", significantMinorMetrics);
 
+        if (significantRuns.isEmpty() && significantMajorMetrics.isEmpty() && significantMinorMetrics.isEmpty()) {
+            sb.append("\n\nNo significant changes detected.");
+        }
+
         return sb.toString();
     }
 
