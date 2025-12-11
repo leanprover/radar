@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { invalidateAdminRepoMetrics, type JsonMetric, useAdminRepoMetrics } from "@/api/adminRepoMetrics.ts";
+import { postAdminRepoMetricsDelete } from "@/api/adminRepoMetricsDelete.ts";
 import { postAdminRepoMetricsRename } from "@/api/adminRepoMetricsRename.ts";
 import CButton from "@/components/CButton.vue";
 import CControlFilter from "@/components/CControlFilter.vue";
@@ -61,7 +62,7 @@ const allReplacementsUnique = computed(() => {
 });
 
 const admin = useAdminStore();
-async function onClick() {
+async function onRenameMetrics() {
   if (admin.token === undefined) return;
 
   const metrics = new Map<string, string>();
@@ -70,6 +71,14 @@ async function onClick() {
   }
 
   await postAdminRepoMetricsRename(admin.token, repo, metrics);
+  await invalidateAdminRepoMetrics(queryClient, repo);
+}
+async function onDeleteMetrics() {
+  if (admin.token === undefined) return;
+
+  const metrics = new Set(visibleMetrics.value.map((m) => m.metric.metric));
+
+  await postAdminRepoMetricsDelete(admin.token, repo, metrics);
   await invalidateAdminRepoMetrics(queryClient, repo);
 }
 </script>
@@ -105,14 +114,13 @@ async function onClick() {
 
     <CControlRow>
       <CButton
-        :disabled="!allReplacementsUnique"
+        :disabled="visibleMetrics.length === 0 || !allReplacementsUnique"
         :title="allReplacementsUnique ? '' : 'Not all replacements are unique'"
-        @click="onClick()"
+        @click="onRenameMetrics()"
       >
         Rename {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
       </CButton>
-      <CButton disabled title="Not implemented yet">
-        <!-- TODO Implement -->
+      <CButton :disabled="visibleMetrics.length === 0" @click="onDeleteMetrics()">
         Delete {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
       </CButton>
     </CControlRow>
