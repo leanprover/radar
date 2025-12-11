@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="server (zulip)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="org.leanlang.radar.Main" />
+    <module name="radar" />
+    <option name="PROGRAM_PARAMETERS" value="server ../radar-server/config.yaml --zuliprc-file=lean4=../radar-server/zuliprc" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.leanlang.radar.server.compare.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
