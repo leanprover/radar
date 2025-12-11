@@ -100,8 +100,17 @@ public final class Supervisor {
             lines.addInternal("Clearing tmp directory...");
             FsUtil.removeDirRecursively(dirs.tmp());
 
-            fetchAndCloneRepo(lines, job);
-            fetchAndCloneBenchRepo(lines, job);
+            try {
+                fetchAndCloneRepo(lines, job);
+            } catch (Exception e) {
+                fetchAndCloneRepo(lines, job);
+            }
+
+            try {
+                fetchAndCloneBenchRepo(lines, job);
+            } catch (Exception e) {
+                fetchAndCloneBenchRepo(lines, job);
+            }
 
             lines.addInternal("Executing bench script...");
             try (BenchScriptExecutor benchScriptExecutor = new BenchScriptExecutor(dirs, job, lines)) {
@@ -165,20 +174,36 @@ public final class Supervisor {
     }
 
     private void fetchAndCloneRepo(OutputLines lines, JsonJob job) throws Exception {
-        try (RepoGit repo = new RepoGit(dirs.bareRepo(job.repo()), job.url())) {
+        Path repoDir = dirs.bareRepo(job.repo());
+        try (RepoGit repo = new RepoGit(repoDir, job.url())) {
             lines.addInternal("Fetching repo...");
             repo.fetch();
             lines.addInternal("Cloning repo...");
             repo.cloneTo(dirs.tmpRepo(), job.chash());
+        } catch (Exception e) {
+            lines.addInternal("Error while fetching or cloning repo, resetting...");
+            lines.addInternal("If you force-pushed since issuing your command,"
+                    + " this error may be due to radar not being able to find the original commit."
+                    + " In that case, issuing a new command should fix the issue.");
+            FsUtil.removeDirRecursively(repoDir);
+            throw e;
         }
     }
 
     private void fetchAndCloneBenchRepo(OutputLines lines, JsonJob job) throws Exception {
-        try (RepoGit repo = new RepoGit(dirs.bareBenchRepo(job.repo()), job.benchUrl())) {
+        Path repoDir = dirs.bareBenchRepo(job.repo());
+        try (RepoGit repo = new RepoGit(repoDir, job.benchUrl())) {
             lines.addInternal("Fetching bench repo...");
             repo.fetch();
             lines.addInternal("Cloning bench repo...");
             repo.cloneTo(dirs.tmpBenchRepo(), job.benchChash());
+        } catch (Exception e) {
+            lines.addInternal("Error while fetching or cloning repo, resetting ...");
+            lines.addInternal("If you force-pushed since issuing your command,"
+                    + " this error may be due to radar not being able to find the original commit."
+                    + " In that case, issuing a new command should fix the issue.");
+            FsUtil.removeDirRecursively(repoDir);
+            throw e;
         }
     }
 
