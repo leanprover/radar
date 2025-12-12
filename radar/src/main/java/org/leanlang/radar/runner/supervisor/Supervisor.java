@@ -103,12 +103,14 @@ public final class Supervisor {
             try {
                 fetchAndCloneRepo(lines, job);
             } catch (Exception e) {
+                resetRepo(lines, job);
                 fetchAndCloneRepo(lines, job);
             }
 
             try {
                 fetchAndCloneBenchRepo(lines, job);
             } catch (Exception e) {
+                resetBenchRepo(lines, job);
                 fetchAndCloneBenchRepo(lines, job);
             }
 
@@ -175,19 +177,24 @@ public final class Supervisor {
 
     private void fetchAndCloneRepo(OutputLines lines, JsonJob job) throws Exception {
         Path repoDir = dirs.bareRepo(job.repo());
+
         try (RepoGit repo = new RepoGit(repoDir, job.url())) {
             lines.addInternal("Fetching repo...");
             repo.fetch();
             lines.addInternal("Cloning repo...");
             repo.cloneTo(dirs.tmpRepo(), job.chash());
-        } catch (Exception e) {
-            lines.addInternal("Error while fetching or cloning repo, resetting...");
-            lines.addInternal("If you force-pushed since issuing your command,"
-                    + " this error may be due to radar not being able to find the original commit."
-                    + " In that case, issuing a new command should fix the issue.");
-            FsUtil.removeDirRecursively(repoDir);
-            throw e;
         }
+    }
+
+    private void resetRepo(OutputLines lines, JsonJob job) throws Exception {
+        Path repoDir = dirs.bareRepo(job.repo());
+
+        lines.addInternal("Error while fetching or cloning repo, resetting...");
+        lines.addInternal("If you force-pushed since issuing your command,"
+                + " this error may be due to radar not being able to find the original commit."
+                + " In that case, issuing a new command should fix the issue.");
+
+        FsUtil.removeDirRecursively(repoDir);
     }
 
     private void fetchAndCloneBenchRepo(OutputLines lines, JsonJob job) throws Exception {
@@ -197,14 +204,13 @@ public final class Supervisor {
             repo.fetch();
             lines.addInternal("Cloning bench repo...");
             repo.cloneTo(dirs.tmpBenchRepo(), job.benchChash());
-        } catch (Exception e) {
-            lines.addInternal("Error while fetching or cloning repo, resetting ...");
-            lines.addInternal("If you force-pushed since issuing your command,"
-                    + " this error may be due to radar not being able to find the original commit."
-                    + " In that case, issuing a new command should fix the issue.");
-            FsUtil.removeDirRecursively(repoDir);
-            throw e;
         }
+    }
+
+    private void resetBenchRepo(OutputLines lines, JsonJob job) throws Exception {
+        Path repoDir = dirs.bareBenchRepo(job.repo());
+        lines.addInternal("Error while fetching or cloning bench repo, resetting...");
+        FsUtil.removeDirRecursively(repoDir);
     }
 
     private void readResultFile(OutputLines lines, MeasurementCollector entries) throws Exception {
