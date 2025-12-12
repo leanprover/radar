@@ -279,7 +279,7 @@ public record GithubBotDb(Repo repo, RepoGh repoGh) {
     public void replyDisappeared(long commandId) {
         repo.db().writeTransaction(ctx -> ctx.dsl()
                 .deleteFrom(GITHUB_COMMAND)
-                .where(condRunningOwnerRepoId(commandId))
+                .where(condOwnerRepoId(commandId))
                 .execute());
     }
 }
