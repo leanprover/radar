@@ -3,8 +3,6 @@ import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
-import ruptures as rpt
 
 
 def compute_mean(values: list[float]) -> float:
@@ -100,20 +98,55 @@ def main():
         if len(values) < 10:
             continue
 
-        algo = rpt.Pelt(model="rbf").fit(np.array(values))
-        result = algo.predict(pen=10)
+        deltas = differentiate(values)
+        abs_deltas = list(abs(d) for d in deltas)
+        abs_q = compute_quantile(sorted(abs_deltas), 0.95)
+        abs_limit_minor = abs_q * 3
+        abs_limit_major = abs_q * 6
 
-        plt.figure(figsize=(16, 8))
+        w, h = 2, 1
+        plt.figure(figsize=(w * 8, h * 8))
+        plt.suptitle(metric)
+
+        plt.subplot(h, w, 1)
         plt.title("values")
-        plt.grid(True)
         plt.plot(range(len(values)), values, linestyle="-")
-        for cp in result:
-            plt.axvline(cp, color="red", linestyle="--")
+        plt.grid(True)
+        plt.ylim(0, None)
+        for di, d in enumerate(deltas):
+            if abs(d) > abs_limit_major:
+                plt.axvline(di + 1, color="red", linestyle="--", alpha=0.5)
+            elif abs(d) > abs_limit_minor:
+                plt.axvline(di + 1, color="orange", linestyle="--", alpha=0.5)
+
+        plt.subplot(h, w, 2)
+        plt.title("deltas")
+        plt.scatter(
+            range(len(deltas)),
+            deltas,
+            c=[
+                "red"
+                if abs(d) > abs_limit_major
+                else "orange"
+                if abs(d) > abs_limit_minor
+                else "blue"
+                for d in deltas
+            ],
+        )
+        plt.axhline(abs_q, color="green", linestyle="--")
+        plt.axhline(-abs_q, color="green", linestyle="--")
+        plt.axhline(abs_limit_minor, color="orange", linestyle="--")
+        plt.axhline(-abs_limit_minor, color="orange", linestyle="--")
+        plt.axhline(abs_limit_major, color="red", linestyle="--")
+        plt.axhline(-abs_limit_major, color="red", linestyle="--")
+        plt.grid(True)
 
         p.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(p)
         plt.close()
-        print(f"[{i:{w}}/{len(metrics)}] {metric} to {p}")
+        width = len(str(len(metrics)))
+        percent = 100 * i / len(metrics)
+        print(f"[{i:{width}}/{len(metrics)},{percent:5.1f}%] {metric} to {p}")
 
 
 if __name__ == "__main__":
