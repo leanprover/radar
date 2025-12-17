@@ -44,7 +44,7 @@ public final class Busser implements Managed {
 
         // Infrequently perform more aggressive cleanup
         ExecutorUtil.scheduleAtMidnight(
-                executor, "Maintaining repos", this::doMaintainAll, Constants.RUNNER_MAINTENANCE_DELAY);
+                executor, "Maintaining repos", this::doMaintainAll, Constants.BUSSER_MAINTENANCE_DELAY);
     }
 
     @Override
