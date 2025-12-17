@@ -104,6 +104,7 @@ public final class Busser implements Managed {
         new RepoDataUpdater(repo).update();
         if (githubBotUpdater != null) githubBotUpdater.update();
         new QueueUpdater(repo, queue).update();
+        new QuantileUpdater(repo).update(); // Before significance updater
         new SignificanceUpdater(repo).update();
         if (zulipBotUpdater != null) zulipBotUpdater.update();
     }

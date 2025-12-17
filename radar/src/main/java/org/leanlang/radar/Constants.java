@@ -56,6 +56,11 @@ public final class Constants {
     public static final Duration BUSSER_MAINTENANCE_DELAY = Duration.ZERO;
 
     /**
+     * Time after which a repo's quantiles are considered out of date and should be updated.
+     */
+    public static final Duration BUSSER_QUANTILE_LIFETIME = Duration.ofHours(24);
+
+    /**
      * Queue priority of commits added because they newly appeared on one of the tracked branches.
      */
     public static final int PRIORITY_NEW_COMMIT = 0;
