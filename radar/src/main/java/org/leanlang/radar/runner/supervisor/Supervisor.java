@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -141,13 +140,13 @@ public final class Supervisor {
 
         entries.add(new JsonRunResultEntry(
                 "radar/run/" + job.name() + "//time",
-                (float) (Duration.between(startTime, endTime).toMillis() / 1000.0),
+                (float) (startTime.until(endTime).toMillis() / 1000.0),
                 Optional.of("s")));
 
         if (scriptStartTime != null && scriptEndTime != null)
             entries.add(new JsonRunResultEntry(
                     "radar/run/" + job.name() + "/script//time",
-                    (float) (Duration.between(scriptStartTime, scriptEndTime).toMillis() / 1000.0),
+                    (float) (scriptStartTime.until(scriptEndTime).toMillis() / 1000.0),
                     Optional.of("s")));
 
         JsonRunResult result = new JsonRunResult(
