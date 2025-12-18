@@ -2,8 +2,8 @@
 import { useCommitRun } from "@/api/commitRun.ts";
 import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
-import CSection from "@/components/CSection.vue";
 import CLogs from "@/components/CLogs.vue";
+import CSection from "@/components/CSection.vue";
 import CTimeDurationBetween from "@/components/format/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/format/CTimeRange.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";

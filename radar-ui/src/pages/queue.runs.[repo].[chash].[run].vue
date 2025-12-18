@@ -2,8 +2,8 @@
 import { useQueueRun } from "@/api/queueRun.ts";
 import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
-import CSection from "@/components/CSection.vue";
 import CLogs from "@/components/CLogs.vue";
+import CSection from "@/components/CSection.vue";
 import CTimeDurationSince from "@/components/format/CTimeDurationSince.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
 import CLinkRepo from "@/components/link/CLinkRepo.vue";
