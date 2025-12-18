@@ -1,6 +1,8 @@
 package org.leanlang.radar.server.compare;
 
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
+import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
+import static org.leanlang.radar.codegen.jooq.Tables.QUANTILE;
 import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
@@ -11,12 +13,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.codegen.jooq.Tables;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
-import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
+import org.leanlang.radar.server.config.ServerConfigRepoMetricFilter;
 import org.leanlang.radar.server.repos.Repo;
-import org.leanlang.radar.server.repos.RepoMetricMetadata;
 
 public final class CommitComparer {
     private CommitComparer() {}
@@ -29,35 +29,47 @@ public final class CommitComparer {
     public static JsonCommitComparison compareCommits(
             Repo repo, Configuration ctx, @Nullable String chashFirst, @Nullable String chashSecond) {
 
-        List<MetricsRecord> metrics = fetchMetrics(ctx);
+        List<MetricInfo> metrics = fetchMetrics(ctx);
         Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
         Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
         List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
-        boolean firstInQueue = fetchInQueue(ctx, chashFirst);
-        boolean secondInQueue = fetchInQueue(ctx, chashSecond);
+
+        // TODO Get rid of all old comparison logic
+        if (repo.useOldSignificance()) return OldCommitComparer.compareCommits(repo, ctx, chashFirst, chashSecond);
 
         List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond, !repo.significantRunFailures());
-        List<JsonMetricComparison> measurementComparisons =
-                compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond, firstInQueue, secondInQueue);
+        List<JsonMetricComparison> metricComparisons =
+                compareMetrics(repo, metrics, measurementsFirst, measurementsSecond);
 
-        JsonCommitComparison comparison = new JsonCommitComparison(false, runAnalyses, measurementComparisons);
-        long significantRuns = comparison.runSignificances().count();
-        long significantMajorMetrics =
-                comparison.metricSignificances().filter(JsonSignificance::major).count();
-        long significantMinorMetrics =
-                comparison.metricSignificances().filter(it -> !it.major()).count();
-        boolean significant = (significantRuns > 0)
-                || (significantMajorMetrics >= repo.significantMajorMetrics())
-                || (significantMinorMetrics >= repo.significantMinorMetrics());
+        // Large changes also count as medium and small changes.
+        // Medium changes also count as small changes.
+        int smallChanges = 0;
+        int mediumChanges = 0;
+        int largeChanges = 0;
+        JsonCommitComparison tmpComparison = new JsonCommitComparison(false, runAnalyses, metricComparisons);
+        for (JsonSignificance significance : tmpComparison.significances().toList()) {
+            if (significance.importance() >= JsonSignificance.IMPORTANCE_SMALL) smallChanges++;
+            if (significance.importance() >= JsonSignificance.IMPORTANCE_MEDIUM) mediumChanges++;
+            if (significance.importance() >= JsonSignificance.IMPORTANCE_LARGE) largeChanges++;
+        }
 
-        return new JsonCommitComparison(significant, comparison.runs(), comparison.metrics());
+        boolean significant = (smallChanges >= repo.significantSmallChanges())
+                || (mediumChanges >= repo.significantMediumChanges())
+                || (largeChanges >= repo.significantLargeChanges());
+
+        return new JsonCommitComparison(significant, runAnalyses, metricComparisons);
     }
 
-    private static List<MetricsRecord> fetchMetrics(Configuration ctx) {
-        return ctx.dsl()
-                .selectFrom(Tables.METRICS)
-                .orderBy(Tables.METRICS.METRIC.asc())
-                .fetch();
+    private static List<MetricInfo> fetchMetrics(Configuration ctx) {
+        return ctx
+                .dsl()
+                .select(METRICS.METRIC, METRICS.UNIT, QUANTILE.VALUE)
+                .from(METRICS.leftJoin(QUANTILE).onKey())
+                .orderBy(METRICS.METRIC.asc())
+                .stream()
+                .map(it ->
+                        new MetricInfo(it.value1(), Optional.ofNullable(it.value2()), Optional.ofNullable(it.value3())))
+                .toList();
     }
 
     private static Map<String, MeasurementsRecord> fetchMeasurements(Configuration ctx, @Nullable String chash) {
@@ -90,222 +102,53 @@ public final class CommitComparer {
     public static Optional<JsonSignificance> analyzeRun(String name, int exitCode, boolean ignoreFailedRuns) {
         if (ignoreFailedRuns) return Optional.empty();
         if (exitCode == 0) return Optional.empty();
-        return msg(
-                true,
-                false,
-                new MessageBuilder(JsonMessageGoodness.BAD)
-                        .addRun(name)
-                        .addText(" exited with code ")
-                        .addExitCode(exitCode)
-                        .build());
+        return new SignificanceBuilder(JsonSignificance.IMPORTANCE_LARGE)
+                .setGoodness(JsonSignificance.GOODNESS_BAD)
+                .addRun(name)
+                .addText(" exited with code ")
+                .addExitCode(exitCode)
+                .buildOpt();
     }
 
-    private static String baseMetric(String metric, String baseCategory) {
-        return ParsedMetric.parse(metric).withCategory(baseCategory).format();
-    }
-
-    private static List<JsonMetricComparison> compareMeasurements(
+    private static List<JsonMetricComparison> compareMetrics(
             Repo repo,
-            List<MetricsRecord> metrics,
+            List<MetricInfo> metrics,
             Map<String, MeasurementsRecord> measurementsFirst,
-            Map<String, MeasurementsRecord> measurementsSecond,
-            boolean ignoreAppearances,
-            boolean ignoreDisappearances) {
+            Map<String, MeasurementsRecord> measurementsSecond) {
 
         List<JsonMetricComparison> result = new ArrayList<>();
-        for (MetricsRecord metricRecord : metrics) {
-            String metric = metricRecord.getMetric();
-            Optional<String> unit = Optional.ofNullable(metricRecord.getUnit());
-            RepoMetricMetadata metadata = repo.metricMetadata(metric);
-            Optional<MeasurementsRecord> firstRecord = Optional.ofNullable(measurementsFirst.get(metric));
-            Optional<MeasurementsRecord> secondRecord = Optional.ofNullable(measurementsSecond.get(metric));
-            if (firstRecord.isEmpty() && secondRecord.isEmpty()) continue;
-            Optional<Float> first = firstRecord.map(MeasurementsRecord::getValue);
-            Optional<Float> second = secondRecord.map(MeasurementsRecord::getValue);
-            Optional<String> firstSrc = firstRecord.flatMap(it -> Optional.ofNullable(it.getSource()));
-            Optional<String> secondSrc = secondRecord.flatMap(it -> Optional.ofNullable(it.getSource()));
-
-            // Base metric
-            Optional<String> baseMetric = metadata.baseCategory().map(it -> baseMetric(metric, it));
-            Optional<Float> baseFirst = Optional.empty();
-            Optional<Float> baseSecond = Optional.empty();
-            if (baseMetric.isPresent()) {
-                baseFirst = Optional.ofNullable(measurementsFirst.get(baseMetric.get()))
-                        .map(MeasurementsRecord::getValue);
-                baseSecond = Optional.ofNullable(measurementsSecond.get(baseMetric.get()))
-                        .map(MeasurementsRecord::getValue);
-            }
-
-            Optional<JsonSignificance> significance = compareMetric(
-                    metadata,
-                    metric,
-                    unit.orElse(null),
-                    first.orElse(null),
-                    second.orElse(null),
-                    baseFirst.orElse(null),
-                    baseSecond.orElse(null),
-                    ignoreAppearances,
-                    ignoreDisappearances);
-
-            result.add(new JsonMetricComparison(
-                    metric, first, second, firstSrc, secondSrc, unit, metadata.direction(), significance));
+        for (MetricInfo metricInfo : metrics) {
+            JsonMetricComparison comparison = compareMetric(repo, metricInfo, measurementsFirst, measurementsSecond);
+            if (comparison == null) continue;
+            result.add(comparison);
         }
-
         return result;
     }
 
-    public static Optional<JsonSignificance> compareMetric(
-            RepoMetricMetadata metadata,
-            String metric,
-            @Nullable String unit,
-            @Nullable Float first,
-            @Nullable Float second,
-            @Nullable Float baseFirst,
-            @Nullable Float baseSecond,
-            boolean ignoreAppearances,
-            boolean ignoreDisappearances) {
+    private static @Nullable JsonMetricComparison compareMetric(
+            Repo repo,
+            MetricInfo metricInfo,
+            Map<String, MeasurementsRecord> measurementsFirst,
+            Map<String, MeasurementsRecord> measurementsSecond) {
 
-        if (first == null && second == null)
-            throw new IllegalArgumentException("first and second must not both be null");
+        String metric = metricInfo.name();
+        ServerConfigRepoMetricFilter metricFilter = repo.metricFilter(metric);
 
-        // majorAppear, minorAppear
-        if (first == null) {
-            if (ignoreAppearances) return Optional.empty();
-            return msg(
-                    metadata.majorAppear(),
-                    metadata.minorAppear(),
-                    new MessageBuilder(JsonMessageGoodness.NEUTRAL)
-                            .addMetric(metric)
-                            .addText(": appeared")
-                            .build());
-        }
+        Optional<MeasurementsRecord> mFirst = Optional.ofNullable(measurementsFirst.get(metric));
+        Optional<MeasurementsRecord> mSecond = Optional.ofNullable(measurementsSecond.get(metric));
+        if (mFirst.isEmpty() && mSecond.isEmpty()) return null;
 
-        // majorDisappear, minorDisappear
-        if (second == null) {
-            if (ignoreDisappearances) return Optional.empty();
-            return msg(
-                    metadata.majorDisappear(),
-                    metadata.minorDisappear(),
-                    new MessageBuilder(JsonMessageGoodness.NEUTRAL)
-                            .addMetric(metric)
-                            .addText(": disappeared")
-                            .build());
-        }
+        Optional<JsonSignificance> significance = MetricComparer.compare(
+                repo.metricFilter(metricInfo.name()), metricInfo, measurementsFirst, measurementsSecond);
 
-        // lowerThresholdAmount, upperThresholdAmount
-        if (second < metadata.lowerThreshold() || second > metadata.upperThreshold()) {
-            return Optional.empty();
-        }
-
-        // majorAnyDelta, minorAnyDelta
-        if (!first.equals(second) && (metadata.majorAnyDelta() || metadata.minorAnyDelta()))
-            return msg(
-                    metadata.majorAnyDelta(),
-                    metadata.minorAnyDelta(),
-                    new MessageBuilder(JsonMessageGoodness.fromDelta(second - first, metadata.direction()))
-                            .addMetric(metric)
-                            .addText(": ")
-                            .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
-                            .build());
-
-        if (baseFirst != null && baseSecond != null) {
-            return compareMetricWithValuesAndBase(metadata, metric, unit, first, second, baseFirst, baseSecond);
-        } else {
-            return compareMetricWithValues(metadata, metric, unit, first, second);
-        }
-    }
-
-    private static Optional<JsonSignificance> compareMetricWithValues(
-            RepoMetricMetadata metadata, String metric, @Nullable String unit, float first, float second) {
-
-        // majorDeltaAmount, minorDeltaAmount
-        float deltaAmount = second - first;
-        boolean majorDeltaAmount = Math.abs(deltaAmount) > metadata.majorDeltaAmount();
-        boolean minorDeltaAmount = Math.abs(deltaAmount) > metadata.minorDeltaAmount();
-        if (majorDeltaAmount || minorDeltaAmount)
-            return msg(
-                    majorDeltaAmount,
-                    minorDeltaAmount,
-                    new MessageBuilder(JsonMessageGoodness.fromDelta(deltaAmount, metadata.direction()))
-                            .addMetric(metric)
-                            .addText(": ")
-                            .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
-                            .build());
-
-        // majorDeltaFactor, minorDeltaFactor
-        if (first != 0) {
-            float deltaFactor = (second - first) / first;
-            boolean majorDeltaFactor = Math.abs(deltaFactor) > metadata.majorDeltaFactor();
-            boolean minorDeltaFactor = Math.abs(deltaFactor) > metadata.minorDeltaFactor();
-            if (majorDeltaFactor || minorDeltaFactor)
-                return msg(
-                        majorDeltaFactor,
-                        minorDeltaFactor,
-                        new MessageBuilder(JsonMessageGoodness.fromDelta(deltaFactor, metadata.direction()))
-                                .addMetric(metric)
-                                .addText(": ")
-                                .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
-                                .build());
-        }
-
-        return Optional.empty();
-    }
-
-    private static Optional<JsonSignificance> compareMetricWithValuesAndBase(
-            RepoMetricMetadata metadata,
-            String metric,
-            @Nullable String unit,
-            float first,
-            float second,
-            float baseFirst,
-            float baseSecond) {
-
-        if (baseFirst == 0 || baseFirst == baseSecond)
-            return compareMetricWithValues(metadata, metric, unit, first, second);
-        float expectedSecond = first / baseFirst * baseSecond;
-
-        // majorDeltaAmount, minorDeltaAmount
-        float deltaAmountFromExpected = second - expectedSecond;
-        boolean majorDeltaAmount = Math.abs(deltaAmountFromExpected) > metadata.majorDeltaAmount();
-        boolean minorDeltaAmount = Math.abs(deltaAmountFromExpected) > metadata.minorDeltaAmount();
-        if (majorDeltaAmount || minorDeltaAmount)
-            return msg(
-                    majorDeltaAmount,
-                    minorDeltaAmount,
-                    new MessageBuilder(JsonMessageGoodness.fromDelta(deltaAmountFromExpected, metadata.direction()))
-                            .addMetric(metric)
-                            .addText(": ")
-                            .addDeltaAndDeltaPercent(expectedSecond, second, unit, metadata.direction())
-                            .addText(" from estimate, ")
-                            .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
-                            .addText(" from previous value")
-                            .build());
-
-        // majorDeltaFactor, minorDeltaFactor
-        if (first != 0 && expectedSecond != 0) {
-            float deltaFactorFromExpected = (second - expectedSecond) / expectedSecond;
-            boolean majorDeltaFactor = Math.abs(deltaFactorFromExpected) > metadata.majorDeltaFactor();
-            boolean minorDeltaFactor = Math.abs(deltaFactorFromExpected) > metadata.minorDeltaFactor();
-            if (majorDeltaFactor || minorDeltaFactor)
-                return msg(
-                        majorDeltaFactor,
-                        minorDeltaFactor,
-                        new MessageBuilder(JsonMessageGoodness.fromDelta(deltaAmountFromExpected, metadata.direction()))
-                                .addMetric(metric)
-                                .addText(": ")
-                                .addDeltaAndDeltaPercent(expectedSecond, second, unit, metadata.direction())
-                                .addText(" from estimate, ")
-                                .addDeltaAndDeltaPercent(first, second, unit, metadata.direction())
-                                .addText(" from previous value")
-                                .build());
-        }
-
-        return Optional.empty();
-    }
-
-    private static Optional<JsonSignificance> msg(boolean major, boolean minor, JsonMessage message) {
-        if (major) return Optional.of(new JsonSignificance(true, message));
-        if (minor) return Optional.of(new JsonSignificance(false, message));
-        return Optional.empty();
+        return new JsonMetricComparison(
+                metric,
+                mFirst.map(MeasurementsRecord::getValue),
+                mSecond.map(MeasurementsRecord::getValue),
+                mFirst.map(MeasurementsRecord::getSource),
+                mSecond.map(MeasurementsRecord::getSource),
+                metricInfo.unit(),
+                metricFilter.direction,
+                significance);
     }
 }

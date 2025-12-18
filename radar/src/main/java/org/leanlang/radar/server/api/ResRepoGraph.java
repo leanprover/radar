@@ -39,9 +39,9 @@ public record ResRepoGraph(Repos repos) {
         if (metrics.size() > METRICS_LIMIT) throw new BadRequestException("too many metrics");
         if (n > COMMITS_LIMIT) throw new BadRequestException("n too large");
 
-        return repo.db().readTransactionResult(ctx -> {
-            List<JsonCommit> commits =
-                    ctx
+        return repo.db()
+                .readTransactionResult(ctx -> {
+                    List<JsonCommit> commits = ctx
                             .dsl()
                             .selectFrom(HISTORY.join(COMMITS).onKey())
                             .orderBy(HISTORY.POSITION.desc())
@@ -52,29 +52,32 @@ public record ResRepoGraph(Repos repos) {
                             .toList()
                             .reversed();
 
-            List<JsonMetric> jsonMetrics = metrics.stream()
-                    .sorted()
-                    .map(it -> {
-                        List<Float> measurements = ctx.dsl()
-                                .select(HISTORY.POSITION, MEASUREMENTS.VALUE)
-                                .from(HISTORY.naturalJoin(MEASUREMENTS))
-                                .where(MEASUREMENTS.METRIC.eq(it))
-                                .union(DSL.select(HISTORY.POSITION, DSL.inline((Float) null))
-                                        .from(HISTORY)
-                                        .whereNotExists(DSL.selectOne()
-                                                .from(MEASUREMENTS)
-                                                .where(MEASUREMENTS.CHASH.eq(HISTORY.CHASH))
-                                                .and(MEASUREMENTS.METRIC.eq(it))))
-                                .orderBy(HISTORY.POSITION.desc())
-                                .limit(n)
-                                .fetch(MEASUREMENTS.VALUE)
-                                .reversed();
+                    List<JsonMetric> jsonMetrics = metrics.stream()
+                            .sorted()
+                            .map(it -> {
+                                List<Float> measurements = ctx.dsl()
+                                        .select(HISTORY.POSITION, MEASUREMENTS.VALUE)
+                                        .from(HISTORY.naturalJoin(MEASUREMENTS))
+                                        .where(MEASUREMENTS.METRIC.eq(it))
+                                        .union(DSL.select(HISTORY.POSITION, DSL.inline((Float) null))
+                                                .from(HISTORY)
+                                                .whereNotExists(DSL.selectOne()
+                                                        .from(MEASUREMENTS)
+                                                        .where(MEASUREMENTS.CHASH.eq(HISTORY.CHASH))
+                                                        .and(MEASUREMENTS.METRIC.eq(it))))
+                                        .orderBy(HISTORY.POSITION.desc())
+                                        .limit(n)
+                                        .fetch(MEASUREMENTS.VALUE)
+                                        .reversed();
 
-                        return new JsonMetric(it, repo.metricMetadata(it).direction(), measurements);
-                    })
-                    .toList();
+                                int direction = repo.useOldSignificance()
+                                        ? repo.oldMetricMetadata(it).direction()
+                                        : repo.metricFilter(it).direction;
+                                return new JsonMetric(it, direction, measurements);
+                            })
+                            .toList();
 
-            return new JsonGet(commits, jsonMetrics);
-        });
+                    return new JsonGet(commits, jsonMetrics);
+                });
     }
 }

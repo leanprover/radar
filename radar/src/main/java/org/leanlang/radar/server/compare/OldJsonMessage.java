@@ -3,6 +3,7 @@ package org.leanlang.radar.server.compare;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
-public record JsonMessage(
-        @JsonProperty(required = true) JsonMessageGoodness goodness,
+// TODO Remove once old significance computation is obsolete
+public record OldJsonMessage(
+        @JsonProperty(required = true) OldMessageGoodness goodness,
         @JsonProperty(required = true) List<JsonMessageSegment> segments) {}

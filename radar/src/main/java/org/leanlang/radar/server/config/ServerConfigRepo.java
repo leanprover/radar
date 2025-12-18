@@ -26,10 +26,16 @@ public class ServerConfigRepo {
     public @Valid @NotEmpty @RepoRunNamesUnique @JsonProperty(required = true) List<ServerConfigRepoRun> benchRuns;
 
     // Significance
-    public @Valid @Nullable List<ServerConfigRepoMetric> metrics;
-    public int significantMajorMetrics = 1;
-    public int significantMinorMetrics = Integer.MAX_VALUE;
+    public int significantLargeChanges = 1;
+    public int significantMediumChanges = 5;
+    public int significantSmallChanges = 20;
     public boolean significantRunFailures = true;
+    public @Valid @Nullable List<ServerConfigRepoMetricFilter> significantMetrics;
+
+    // TODO Remove once old significance computation is obsolete
+    public @Valid @Nullable List<ServerConfigRepoMetricOld> oldMetrics;
+    public int oldSignificantMajorMetrics = 1;
+    public int oldSignificantMinorMetrics = Integer.MAX_VALUE;
 
     // Other platforms
     public @Valid ServerConfigRepoGithub github = new ServerConfigRepoGithub();

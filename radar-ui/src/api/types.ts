@@ -82,22 +82,15 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
 ]);
 
-export interface JsonMessage {
-  goodness: JsonMessageGoodness;
+export interface JsonSignificance {
+  importance: 0 | 1 | 2;
+  goodness: -1 | 0 | 1;
   segments: JsonMessageSegment[];
 }
-export const JsonMessage = z.object({
-  goodness: JsonMessageGoodness,
-  segments: JsonMessageSegment.array(),
-});
-
-export interface JsonSignificance {
-  major: boolean;
-  message: JsonMessage;
-}
 export const JsonSignificance = z.object({
-  major: z.boolean(),
-  message: JsonMessage,
+  importance: z.union([z.literal(0), z.literal(1), z.literal(2)]),
+  goodness: z.union([z.literal(-1), z.literal(0), z.literal(1)]),
+  segments: JsonMessageSegment.array(),
 });
 
 export interface JsonRunAnalysis {

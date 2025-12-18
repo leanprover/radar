@@ -35,16 +35,11 @@ repos:
       - name: main
         script: main.py
         runner: testrunner
-    metrics:
+    significantMetrics:
       - direction: -1
-        minorAppear: true
-        minorDisappear: true
-        minorDeltaAmount: 5
-        majorDeltaAmount: 10
-        minorDeltaFactor: 0.1
-        majorDeltaFactor: 0.2
-    significantMajorMetrics: 1
-    significantMinorMetrics: 5
+        checkQuantileFactorSmall: 3
+        checkQuantileFactorMedium: 6
+        checkQuantileFactorLarge: 9
     github:
       blockingLabels:
         - duplicate
@@ -73,16 +68,11 @@ repos:
       - name: main
         script: main.py
         runner: testrunner
-    metrics:
+    significantMetrics:
       - direction: -1
-        majorAppear: true
-        majorDisappear: true
-      - match: //time$
-        minorDeltaFactor: 0.3
-        majorDeltaFactor: 0.6
-      - match: //loc$
-        minorDeltaAmount: 200
-        majorDeltaAmount: 500
+        checkQuantileFactorSmall: 3
+        checkQuantileFactorMedium: 6
+        checkQuantileFactorLarge: 9
     zulip:
       feedChannel: test
       feedTopic: Significant commits to lean4

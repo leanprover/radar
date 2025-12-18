@@ -2,7 +2,8 @@ package org.leanlang.radar.server.config;
 
 import org.jspecify.annotations.Nullable;
 
-public final class ServerConfigRepoMetric {
+// TODO Remove once old significance computation is obsolete
+public final class ServerConfigRepoMetricOld {
     public String match = "";
 
     public @Nullable Integer direction = null;

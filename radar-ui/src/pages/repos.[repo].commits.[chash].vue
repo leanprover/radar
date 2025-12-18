@@ -138,31 +138,39 @@ watchEffect(() => {
 
   <CSection title="Significant results" collapsible start-open>
     <CLoading v-if="!compare.isSuccess" :error="compare.error" />
-    <div v-else-if="details.major === 0 && details.minor === 0">No significant results.</div>
+    <div v-else-if="details.large === 0 && details.medium === 0 && details.small === 0">No significant results.</div>
     <template v-else>
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
         title="Runs"
-        :messages="details.runs"
-        open
+        :significances="details.runs"
+        :open="details.runs.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
-        title="Major changes"
-        :messages="details.metricsMajor"
-        open
+        title="Large changes"
+        :significances="details.metricsLarge"
+        :open="details.metricsLarge.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
-        title="Minor changes"
-        :messages="details.metricsMinor"
-        open
+        title="Medium changes"
+        :significances="details.metricsMedium"
+        :open="details.metricsMedium.length <= 10"
+      />
+      <PDetailsSection
+        :repo="route.params.repo"
+        :chash="route.params.chash"
+        :reference="queryReference"
+        title="Small changes"
+        :significances="details.metricsSmall"
+        :open="details.metricsSmall.length <= 10"
       />
     </template>
   </CSection>

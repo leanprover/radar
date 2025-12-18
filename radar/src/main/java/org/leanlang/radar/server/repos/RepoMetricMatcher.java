@@ -2,7 +2,7 @@ package org.leanlang.radar.server.repos;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.leanlang.radar.server.config.ServerConfigRepoMetric;
+import org.leanlang.radar.server.config.ServerConfigRepoMetricOld;
 
 public record RepoMetricMatcher(
         Pattern match,
@@ -21,7 +21,7 @@ public record RepoMetricMatcher(
         Optional<Float> minorDeltaFactor,
         Optional<Float> majorDeltaFactor) {
 
-    public RepoMetricMatcher(ServerConfigRepoMetric config) {
+    public RepoMetricMatcher(ServerConfigRepoMetricOld config) {
         this(
                 Pattern.compile(config.match),
                 Optional.ofNullable(config.direction),

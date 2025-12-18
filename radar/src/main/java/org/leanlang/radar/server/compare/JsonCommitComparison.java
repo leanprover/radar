@@ -16,4 +16,8 @@ public record JsonCommitComparison(
     public Stream<JsonSignificance> metricSignificances() {
         return metrics.stream().flatMap(it -> it.significance().stream());
     }
+
+    public Stream<JsonSignificance> significances() {
+        return Stream.concat(runSignificances(), metricSignificances());
+    }
 }

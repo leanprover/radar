@@ -30,7 +30,22 @@ public record QuantileUpdater(Repo repo) {
             List<String> metrics =
                     ctx.dsl().selectFrom(METRICS).orderBy(METRICS.METRIC).fetch(METRICS.METRIC);
             deleteQuantiles(ctx);
-            for (String metric : metrics) updateQuantileForMetric(ctx, metric);
+
+            Instant start = Instant.now();
+            int n = metrics.size();
+            int i = 0;
+
+            for (String metric : metrics) {
+                updateQuantileForMetric(ctx, metric);
+
+                i++;
+                if (i % 1000 != 0) continue;
+                long msPerMetric = start.until(Instant.now()).toMillis() / i;
+                log.debug("Quantile {}/{}, on average {} ms/metric", i, n, msPerMetric);
+            }
+
+            Duration total = start.until(Instant.now());
+            log.debug("{} quantiles in {} s, on average {} ms/metric", n, total.toSeconds(), total.toMillis() / n);
         });
 
         setLastUpdated(now);

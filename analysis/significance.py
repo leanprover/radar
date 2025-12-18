@@ -305,10 +305,11 @@ def main():
     print("Computing quantiles... ", end="", flush=True)
     quantiles = {}
     for m, v in values.items():
-        if len(v) < 10:
+        deltas = compute_deltas(v)
+        if len(deltas) < 10:
             print(f"  Skipping metric {m} (not enough data)")
             continue
-        quantiles[m] = compute_delta_quantile(compute_deltas(v), 0.9)
+        quantiles[m] = compute_delta_quantile(deltas, 0.9)
     print(f"Got {len(quantiles)} quantiles.")
 
     # Select commits to analyze

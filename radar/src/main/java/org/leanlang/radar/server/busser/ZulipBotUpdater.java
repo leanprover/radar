@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
-import org.leanlang.radar.server.compare.JsonMessage;
+import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoZulip;
 import org.leanlang.radar.util.RadarLinker;
@@ -112,13 +112,18 @@ public record ZulipBotUpdater(
         formatTitle(sb, childChash, childTitle);
         sb.append("**");
 
-        List<JsonMessage> significantRuns = GithubBotMessages.getSignificantRuns(comparison);
-        List<JsonMessage> significantMajorMetrics = GithubBotMessages.getSignificantMajorMetrics(comparison);
-        List<JsonMessage> significantMinorMetrics = GithubBotMessages.getSignificantMinorMetrics(comparison);
+        List<JsonSignificance> significantRuns = GithubBotMessages.getSignificantRuns(comparison);
+        List<JsonSignificance> significantLargeMetrics =
+                GithubBotMessages.getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_LARGE);
+        List<JsonSignificance> significantMediumMetrics =
+                GithubBotMessages.getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_MEDIUM);
+        List<JsonSignificance> significantSmallMetrics =
+                GithubBotMessages.getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_SMALL);
 
         formatSignificanceSection(sb, "Runs", significantRuns);
-        formatSignificanceSection(sb, "Major changes", significantMajorMetrics);
-        formatSignificanceSection(sb, "Minor changes", significantMinorMetrics);
+        formatSignificanceSection(sb, "Large changes", significantLargeMetrics);
+        formatSignificanceSection(sb, "Medium changes", significantMediumMetrics);
+        formatSignificanceSection(sb, "Small changes", significantSmallMetrics);
 
         return sb.toString();
     }
@@ -156,13 +161,13 @@ public record ZulipBotUpdater(
                     .append(")");
     }
 
-    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonMessage> messages) {
+    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> messages) {
         if (messages.isEmpty()) return;
         sb.append("\n");
 
         sb.append("**").append(name).append("** (").append(messages.size()).append(")\n\n");
 
-        for (JsonMessage message : messages) {
+        for (JsonSignificance message : messages) {
             sb.append("- ");
             GithubBotMessages.formatMessage(sb, message);
             sb.append("\n");

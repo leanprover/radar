@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
-import org.leanlang.radar.server.compare.JsonMessage;
-import org.leanlang.radar.server.compare.JsonMessageGoodness;
 import org.leanlang.radar.server.compare.JsonMessageSegment;
 import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.repos.Repo;
@@ -117,83 +115,79 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 .sorted()
                 .forEach(it -> sb.append(" @").append(it));
 
-        List<JsonMessage> significantRuns = getSignificantRuns(comparison);
-        List<JsonMessage> significantMajorMetrics = getSignificantMajorMetrics(comparison);
-        List<JsonMessage> significantMinorMetrics = getSignificantMinorMetrics(comparison);
+        List<JsonSignificance> significantRuns = getSignificantRuns(comparison);
+        List<JsonSignificance> significantLargeMetrics =
+                getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_LARGE);
+        List<JsonSignificance> significantMediumMetrics =
+                getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_MEDIUM);
+        List<JsonSignificance> significantSmallMetrics =
+                getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_SMALL);
 
         formatSignificanceSection(sb, "Runs", significantRuns);
-        formatSignificanceSection(sb, "Major changes", significantMajorMetrics);
-        formatSignificanceSection(sb, "Minor changes", significantMinorMetrics);
+        formatSignificanceSection(sb, "Large changes", significantLargeMetrics);
+        formatSignificanceSection(sb, "Medium changes", significantMediumMetrics);
+        formatSignificanceSection(sb, "Small changes", significantSmallMetrics);
 
-        if (significantRuns.isEmpty() && significantMajorMetrics.isEmpty() && significantMinorMetrics.isEmpty()) {
+        if (significantRuns.isEmpty()
+                && significantLargeMetrics.isEmpty()
+                && significantMediumMetrics.isEmpty()
+                && significantSmallMetrics.isEmpty()) {
             sb.append("\n\nNo significant changes detected.");
         }
 
         return sb.toString();
     }
 
-    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonMessage> messages) {
-        if (messages.isEmpty()) return;
+    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> significances) {
+        if (significances.isEmpty()) return;
 
-        sb.append("\n<details open>\n");
+        if (significances.size() > 10) sb.append("\n<details>\n");
+        else sb.append("\n<details open>\n");
 
         sb.append("<summary>")
                 .append(name)
                 .append(" (")
-                .append(messages.size())
+                .append(significances.size())
                 .append(")")
                 .append("</summary>\n");
 
         // If there's no empty line between the <summary> and the list, GitHub won't render it correctly.
         sb.append("\n");
 
-        for (JsonMessage message : messages) {
+        for (JsonSignificance significance : significances) {
             sb.append("- ");
-            formatMessage(sb, message);
+            formatMessage(sb, significance);
             sb.append("\n");
         }
 
         sb.append("</details>");
     }
 
-    public static List<JsonMessage> getSignificantRuns(JsonCommitComparison comparison) {
-        return comparison.runSignificances().map(JsonSignificance::message).toList();
+    public static List<JsonSignificance> getSignificantRuns(JsonCommitComparison comparison) {
+        return comparison.runSignificances().toList();
     }
 
-    public static List<JsonMessage> getSignificantMajorMetrics(JsonCommitComparison comparison) {
+    public static List<JsonSignificance> getSignificantMetrics(JsonCommitComparison comparison, int importance) {
         return comparison
                 .metricSignificances()
-                .filter(JsonSignificance::major)
-                .map(JsonSignificance::message)
+                .filter(it -> it.importance() == importance)
                 .toList();
     }
 
-    public static List<JsonMessage> getSignificantMinorMetrics(JsonCommitComparison comparison) {
-        return comparison
-                .metricSignificances()
-                .filter(it -> !it.major())
-                .map(JsonSignificance::message)
-                .toList();
-    }
-
-    public static void formatMessage(StringBuilder sb, JsonMessage message) {
+    public static void formatMessage(StringBuilder sb, JsonSignificance message) {
         formatMessageGoodness(sb, message.goodness(), true);
         for (JsonMessageSegment segment : message.segments()) {
             formatMessageSegment(sb, segment);
         }
     }
 
-    private static void formatMessageGoodness(StringBuilder sb, JsonMessageGoodness goodness, boolean trailingSpace) {
-        switch (goodness) {
-            case JsonMessageGoodness.GOOD -> {
-                sb.append("✅");
-                if (trailingSpace) sb.append(" ");
-            }
-            case JsonMessageGoodness.BAD -> {
-                sb.append("\uD83D\uDFE5");
-                if (trailingSpace) sb.append(" ");
-            }
-            case JsonMessageGoodness.NEUTRAL -> {}
+    private static void formatMessageGoodness(StringBuilder sb, int goodness, boolean trailingSpace) {
+        if (goodness < 0) {
+            sb.append("\uD83D\uDFE5");
+            if (trailingSpace) sb.append(" ");
+        } else if (goodness > 0) {
+            sb.append("✅");
+            if (trailingSpace) sb.append(" ");
         }
     }
 

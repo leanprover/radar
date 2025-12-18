@@ -16,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
 import org.leanlang.radar.server.config.ServerConfigRepo;
+import org.leanlang.radar.server.config.ServerConfigRepoMetricFilter;
 import org.leanlang.radar.server.config.ServerConfigRepoRun;
 import org.leanlang.radar.server.config.credentials.GithubCredentials;
 import org.leanlang.radar.server.config.credentials.ZulipCredentials;
@@ -30,7 +31,8 @@ public final class Repo implements AutoCloseable {
 
     private final RepoSource source;
     private final RepoSource benchSource;
-    private final List<RepoMetricMatcher> metricMatchers;
+    private final List<ServerConfigRepoMetricFilter> metricFilters;
+    private final List<RepoMetricMatcher> oldMetricMatchers;
 
     private final RepoDb db;
     private final RepoGit git;
@@ -53,7 +55,9 @@ public final class Repo implements AutoCloseable {
 
         this.source = RepoSource.parse(config.url);
         this.benchSource = RepoSource.parse(config.benchUrl);
-        this.metricMatchers = Optional.ofNullable(config.metrics).stream()
+        this.metricFilters = Optional.ofNullable(config.significantMetrics).orElse(List.of()).stream()
+                .toList();
+        this.oldMetricMatchers = Optional.ofNullable(config.oldMetrics).stream()
                 .flatMap(Collection::stream)
                 .map(RepoMetricMatcher::new)
                 .toList();
@@ -153,9 +157,38 @@ public final class Repo implements AutoCloseable {
         return Optional.ofNullable(zulip);
     }
 
-    public RepoMetricMetadata metricMetadata(String name) {
+    public ServerConfigRepoMetricFilter metricFilter(String metric) {
+        for (ServerConfigRepoMetricFilter filter : metricFilters) {
+            if (filter.match.matcher(metric).find()) {
+                return filter;
+            }
+        }
+        return new ServerConfigRepoMetricFilter();
+    }
+
+    public int significantLargeChanges() {
+        return config.significantLargeChanges;
+    }
+
+    public int significantMediumChanges() {
+        return config.significantMediumChanges;
+    }
+
+    public int significantSmallChanges() {
+        return config.significantSmallChanges;
+    }
+
+    public boolean significantRunFailures() {
+        return config.significantRunFailures;
+    }
+
+    public boolean useOldSignificance() {
+        return config.significantMetrics == null;
+    }
+
+    public RepoMetricMetadata oldMetricMetadata(String name) {
         RepoMetricMetadata result = new RepoMetricMetadata();
-        for (RepoMetricMatcher matcher : metricMatchers) {
+        for (RepoMetricMatcher matcher : oldMetricMatchers) {
             if (matcher.matches(name)) {
                 result = matcher.update(result);
             }
@@ -163,16 +196,12 @@ public final class Repo implements AutoCloseable {
         return result;
     }
 
-    public int significantMajorMetrics() {
-        return config.significantMajorMetrics;
+    public int oldSignificantMajorMetrics() {
+        return config.oldSignificantMajorMetrics;
     }
 
-    public int significantMinorMetrics() {
-        return config.significantMinorMetrics;
-    }
-
-    public boolean significantRunFailures() {
-        return config.significantRunFailures;
+    public int oldSignificantMinorMetrics() {
+        return config.oldSignificantMinorMetrics;
     }
 
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
