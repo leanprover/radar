@@ -73,6 +73,10 @@ setSelectedToRoute();
       <CNavbarButton :selected="route.name === '/queue'">Queue</CNavbarButton>
     </RouterLink>
 
+    <RouterLink :to="{ name: '/about' }">
+      <CNavbarButton :selected="route.name === '/about'">About</CNavbarButton>
+    </RouterLink>
+
     <div class="flex grow justify-end">
       <CNavbarColorMode />
     </div>
