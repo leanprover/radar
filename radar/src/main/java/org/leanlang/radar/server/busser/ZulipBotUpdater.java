@@ -161,13 +161,15 @@ public record ZulipBotUpdater(
                     .append(")");
     }
 
-    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> messages) {
-        if (messages.isEmpty()) return;
+    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> significances) {
+        if (significances.isEmpty()) return;
         sb.append("\n");
 
-        sb.append("**").append(name).append("** (").append(messages.size()).append(")\n\n");
+        sb.append("**").append(name).append("** (");
+        GithubBotMessages.formatSectionCounters(sb, significances);
+        sb.append(")\n\n");
 
-        for (JsonSignificance message : messages) {
+        for (JsonSignificance message : significances) {
             sb.append("- ");
             GithubBotMessages.formatMessage(sb, message);
             sb.append("\n");

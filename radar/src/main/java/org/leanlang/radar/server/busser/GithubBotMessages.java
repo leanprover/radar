@@ -144,12 +144,9 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         if (significances.size() > 10) sb.append("\n<details>\n");
         else sb.append("\n<details open>\n");
 
-        sb.append("<summary>")
-                .append(name)
-                .append(" (")
-                .append(significances.size())
-                .append(")")
-                .append("</summary>\n");
+        sb.append("<summary>").append(name).append(" (");
+        formatSectionCounters(sb, significances);
+        sb.append(")").append("</summary>\n");
 
         // If there's no empty line between the <summary> and the list, GitHub won't render it correctly.
         sb.append("\n");
@@ -161,6 +158,29 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         }
 
         sb.append("</details>");
+    }
+
+    public static void formatSectionCounters(StringBuilder sb, List<JsonSignificance> significances) {
+        long good = significances.stream().filter(it -> it.goodness() > 0).count();
+        long bad = significances.stream().filter(it -> it.goodness() < 0).count();
+        long neutral = significances.stream().filter(it -> it.goodness() == 0).count();
+
+        boolean atLeastOneElement = false;
+        if (good > 0) {
+            sb.append(good);
+            formatGoodness(sb, 1, false);
+            atLeastOneElement = true;
+        }
+        if (bad > 0) {
+            if (atLeastOneElement) sb.append(", ");
+            sb.append(bad);
+            formatGoodness(sb, -1, false);
+            atLeastOneElement = true;
+        }
+        if (neutral > 0) {
+            if (atLeastOneElement) sb.append(", ");
+            sb.append(neutral);
+        }
     }
 
     public static List<JsonSignificance> getSignificantRuns(JsonCommitComparison comparison) {
@@ -175,13 +195,13 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
     }
 
     public static void formatMessage(StringBuilder sb, JsonSignificance message) {
-        formatMessageGoodness(sb, message.goodness(), true);
+        formatGoodness(sb, message.goodness(), true);
         for (JsonMessageSegment segment : message.segments()) {
             formatMessageSegment(sb, segment);
         }
     }
 
-    private static void formatMessageGoodness(StringBuilder sb, int goodness, boolean trailingSpace) {
+    private static void formatGoodness(StringBuilder sb, int goodness, boolean trailingSpace) {
         if (goodness < 0) {
             sb.append("\uD83D\uDFE5");
             if (trailingSpace) sb.append(" ");
