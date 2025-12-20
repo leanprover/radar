@@ -169,6 +169,7 @@ public record ZulipBotUpdater(
         GithubBotMessages.formatSectionCounters(sb, significances);
         sb.append(")\n\n");
 
+        if (significances.size() > 10) return;
         for (JsonSignificance message : significances) {
             sb.append("- ");
             GithubBotMessages.formatMessage(sb, message);
