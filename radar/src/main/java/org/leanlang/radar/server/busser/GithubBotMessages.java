@@ -151,10 +151,14 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         // If there's no empty line between the <summary> and the list, GitHub won't render it correctly.
         sb.append("\n");
 
-        for (JsonSignificance significance : significances) {
-            sb.append("- ");
-            formatMessage(sb, significance);
-            sb.append("\n");
+        if (significances.size() > 20) {
+            sb.append("Too many entries to display here. View the full report on radar instead.\n");
+        } else {
+            for (JsonSignificance significance : significances) {
+                sb.append("- ");
+                formatMessage(sb, significance);
+                sb.append("\n");
+            }
         }
 
         sb.append("</details>");
