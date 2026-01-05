@@ -22,19 +22,20 @@
     <dropwizard.version>5.0.0</dropwizard.version>
     <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
     <!-- https://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine -->
-    <flyway.version>11.18.0</flyway.version>
+    <flyway.version>11.20.0</flyway.version>
     <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
     <hikaricp.version>7.0.2</hikaricp.version>
     <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
-    <jgit.version>7.4.0.202509020913-r</jgit.version>
+    <!-- https://projects.eclipse.org/projects/technology.jgit/governance -->
+    <jgit.version>7.5.0.202512021534-r</jgit.version>
     <!-- https://mvnrepository.com/artifact/org.jooq/jooq -->
     <!-- https://www.jooq.org/notes -->
-    <jooq.version>3.20.9</jooq.version>
+    <jooq.version>3.20.10</jooq.version>
     <!-- https://mvnrepository.com/artifact/info.picocli/picocli -->
     <picocli.version>4.7.7</picocli.version>
     <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
     <!-- https://github.com/xerial/sqlite-jdbc/releases -->
-    <sqlite-jdbc.version>3.51.0.0</sqlite-jdbc.version>
+    <sqlite-jdbc.version>3.51.1.0</sqlite-jdbc.version>
 
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-antrun-plugin -->
     <maven-plugin-antrun.version>3.2.0</maven-plugin-antrun.version>

@@ -39,6 +39,9 @@ export default defineConfig([
       // https://eslint.org/docs/latest/rules/
       eqeqeq: "error",
 
+      // https://typescript-eslint.io/rules/
+      "@typescript-eslint/no-useless-default-assignment": "off", // Collides with vue/require-default-prop
+
       // https://eslint.vuejs.org/rules/
       "vue/block-lang": ["error", { script: { lang: "ts" } }],
       "vue/block-order": ["error", { order: ["script", "template", "style"] }],
