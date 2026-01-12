@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -183,6 +184,8 @@ public final class CommitComparer {
 
             RunsRecord runFirst = byNameFirst.get(name);
             RunsRecord runSecond = byNameSecond.get(name);
+            if (!Objects.equals(runFirst.getSystemConfigurationId(), runSecond.getSystemConfigurationId()))
+                warnings.add("Runner for run " + name + " has different system configurations between commits.");
             if (!runFirst.getRunner().equals(runSecond.getRunner()))
                 warnings.add("Runners for run " + name + "differ between commits.");
             if (!runFirst.getScript().equals(runSecond.getScript()))

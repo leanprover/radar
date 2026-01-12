@@ -17,6 +17,7 @@ public record JsonRunResult(
         Optional<Instant> scriptStartTime,
         Optional<Instant> scriptEndTime,
         @JsonProperty(required = true) int exitCode,
+        Optional<String> systemConfigurationId,
         @JsonProperty(required = true) List<JsonRunResultEntry> entries,
         @JsonProperty(required = true) List<JsonOutputLine> lines) {
 
@@ -27,6 +28,7 @@ public record JsonRunResult(
             @Nullable Instant scriptStartTime,
             @Nullable Instant scriptEndTime,
             int exitCode,
+            @Nullable String systemConfigurationId,
             List<JsonRunResultEntry> entries,
             List<JsonOutputLine> lines) {
         this(
@@ -40,6 +42,7 @@ public record JsonRunResult(
                 Optional.ofNullable(scriptStartTime),
                 Optional.ofNullable(scriptEndTime),
                 exitCode,
+                Optional.ofNullable(systemConfigurationId),
                 entries,
                 lines);
     }

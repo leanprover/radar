@@ -150,7 +150,15 @@ public final class Supervisor {
                     Optional.of("s")));
 
         JsonRunResult result = new JsonRunResult(
-                job, startTime, endTime, scriptStartTime, scriptEndTime, exitCode, entries.entries(), lines.getAll());
+                job,
+                startTime,
+                endTime,
+                scriptStartTime,
+                scriptEndTime,
+                exitCode,
+                config.systemConfigurationId,
+                entries.entries(),
+                lines.getAll());
 
         while (true) {
             try {

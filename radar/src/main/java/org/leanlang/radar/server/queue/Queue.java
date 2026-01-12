@@ -332,17 +332,18 @@ public record Queue(Repos repos, Runners runners) {
     }
 
     private void addRun(Configuration ctx, String runnerName, JsonRunResult runResult) {
-        RunsRecord record = new RunsRecord();
-        record.setChash(runResult.chash());
-        record.setName(runResult.name());
-        record.setScript(runResult.script());
-        record.setRunner(runnerName);
-        record.setChashBench(runResult.benchChash());
-        record.setStartTime(runResult.startTime());
-        record.setEndTime(runResult.endTime());
-        record.setScriptStartTime(runResult.scriptStartTime().orElse(null));
-        record.setScriptEndTime(runResult.scriptEndTime().orElse(null));
-        record.setExitCode(runResult.exitCode());
+        RunsRecord record = new RunsRecord(
+                runResult.chash(),
+                runResult.name(),
+                runResult.script(),
+                runnerName,
+                runResult.benchChash(),
+                runResult.startTime(),
+                runResult.endTime(),
+                runResult.scriptStartTime().orElse(null),
+                runResult.scriptEndTime().orElse(null),
+                runResult.exitCode(),
+                runResult.systemConfigurationId().orElse(null));
         ctx.dsl().batchInsert(record).execute();
     }
 

@@ -23,6 +23,9 @@ public final class RunnerConfig {
     @JsonProperty(required = true)
     public String token;
 
+    @Nullable
+    public String systemConfigurationId;
+
     @Valid
     @JsonProperty(required = true)
     public RunnerConfigDirs dirs = new RunnerConfigDirs();
