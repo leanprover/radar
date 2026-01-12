@@ -18,6 +18,10 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
     private static final String EDIT_POSSIBLE =
             "\n\n<sub>You can edit the original message until the command succeeds.</sub>";
 
+    public static final String WARNINGS_EXPLANATION =
+            "These warnings may indicate that the benchmark results are not directly comparable,"
+                    + " for example due to changes in the runner configuration or hardware.";
+
     public String notInPr() {
         return "This command can only be used in pull requests.";
     }
@@ -122,6 +126,7 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         List<JsonSignificance> significantSmallMetrics =
                 getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_SMALL);
 
+        formatWarningSection(sb, comparison.warnings());
         formatSignificanceSection(sb, "Runs", significantRuns);
         formatSignificanceSection(sb, "Large changes", significantLargeMetrics);
         formatSignificanceSection(sb, "Medium changes", significantMediumMetrics);
@@ -135,6 +140,21 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         }
 
         return sb.toString();
+    }
+
+    private void formatWarningSection(StringBuilder sb, List<String> warnings) {
+        if (warnings.isEmpty()) return;
+
+        sb.append("\n<details open>\n");
+        sb.append("<summary>Warnings (").append(warnings.size()).append(")</summary>\n\n");
+
+        sb.append(WARNINGS_EXPLANATION).append("\n\n");
+
+        for (String warning : warnings) {
+            sb.append("- ").append(warning).append("\n");
+        }
+
+        sb.append("</details>");
     }
 
     private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> significances) {

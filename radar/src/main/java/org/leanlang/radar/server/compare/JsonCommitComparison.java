@@ -7,7 +7,8 @@ import java.util.stream.Stream;
 public record JsonCommitComparison(
         @JsonProperty(required = true) boolean significant,
         @JsonProperty(required = true) List<JsonRunAnalysis> runs,
-        @JsonProperty(required = true) List<JsonMetricComparison> metrics) {
+        @JsonProperty(required = true) List<JsonMetricComparison> metrics,
+        @JsonProperty(required = true) List<String> warnings) {
 
     public Stream<JsonSignificance> runSignificances() {
         return runs.stream().flatMap(it -> it.significance().stream());

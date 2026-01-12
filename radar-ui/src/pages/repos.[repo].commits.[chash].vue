@@ -136,6 +136,22 @@ watchEffect(() => {
     </CList>
   </CSection>
 
+  <CSection
+    v-if="compare.isSuccess && compare.data.comparison.warnings.length > 0"
+    class="text-red"
+    title="Warnings"
+    collapsible
+    start-open
+  >
+    <p class="w-[80ch]">
+      These warnings may indicate that the benchmark results are not directly comparable, for example due to changes in
+      the runner configuration or hardware.
+    </p>
+    <CList>
+      <CListItem v-for="(warning, i) in compare.data.comparison.warnings" :key="i">{{ warning }}</CListItem>
+    </CList>
+  </CSection>
+
   <CSection title="Significant results" collapsible start-open>
     <CLoading v-if="!compare.isSuccess" :error="compare.error" />
     <div v-else-if="details.large === 0 && details.medium === 0 && details.small === 0">No significant results.</div>

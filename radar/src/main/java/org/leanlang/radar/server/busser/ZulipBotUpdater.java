@@ -120,6 +120,7 @@ public record ZulipBotUpdater(
         List<JsonSignificance> significantSmallMetrics =
                 GithubBotMessages.getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_SMALL);
 
+        formatWarningSection(sb, comparison.warnings());
         formatSignificanceSection(sb, "Runs", significantRuns);
         formatSignificanceSection(sb, "Large changes", significantLargeMetrics);
         formatSignificanceSection(sb, "Medium changes", significantMediumMetrics);
@@ -159,6 +160,19 @@ public record ZulipBotUpdater(
                     .append("](")
                     .append(url)
                     .append(")");
+    }
+
+    private void formatWarningSection(StringBuilder sb, List<String> warnings) {
+        if (warnings.isEmpty()) return;
+        sb.append("\n");
+
+        sb.append("**Warnings** (").append(warnings.size()).append(")\n\n");
+
+        sb.append(GithubBotMessages.WARNINGS_EXPLANATION).append("\n\n");
+
+        for (String warning : warnings) {
+            sb.append("- ").append(warning).append("\n");
+        }
     }
 
     private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> significances) {

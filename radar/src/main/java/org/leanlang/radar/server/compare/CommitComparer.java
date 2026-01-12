@@ -7,9 +7,11 @@ import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jspecify.annotations.Nullable;
@@ -32,6 +34,7 @@ public final class CommitComparer {
         List<MetricInfo> metrics = fetchMetrics(ctx);
         Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
         Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
+        List<RunsRecord> runsFirst = fetchRuns(ctx, chashFirst);
         List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
 
         // TODO Get rid of all old comparison logic
@@ -40,13 +43,14 @@ public final class CommitComparer {
         List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond, !repo.significantRunFailures());
         List<JsonMetricComparison> metricComparisons =
                 compareMetrics(repo, metrics, measurementsFirst, measurementsSecond);
+        List<String> warnings = findWarnings(runsFirst, runsSecond);
 
         // Large changes also count as medium and small changes.
         // Medium changes also count as small changes.
         int smallChanges = 0;
         int mediumChanges = 0;
         int largeChanges = 0;
-        JsonCommitComparison tmpComparison = new JsonCommitComparison(false, runAnalyses, metricComparisons);
+        JsonCommitComparison tmpComparison = new JsonCommitComparison(false, runAnalyses, metricComparisons, warnings);
         for (JsonSignificance significance : tmpComparison.significances().toList()) {
             if (significance.importance() >= JsonSignificance.IMPORTANCE_SMALL) smallChanges++;
             if (significance.importance() >= JsonSignificance.IMPORTANCE_MEDIUM) mediumChanges++;
@@ -57,7 +61,7 @@ public final class CommitComparer {
                 || (mediumChanges >= repo.significantMediumChanges())
                 || (largeChanges >= repo.significantLargeChanges());
 
-        return new JsonCommitComparison(significant, runAnalyses, metricComparisons);
+        return new JsonCommitComparison(significant, runAnalyses, metricComparisons, warnings);
     }
 
     private static List<MetricInfo> fetchMetrics(Configuration ctx) {
@@ -150,5 +154,43 @@ public final class CommitComparer {
                 metricInfo.unit(),
                 metricFilter.direction,
                 significance);
+    }
+
+    // TODO Make private once OldCommitComparer is removed
+    public static List<String> findWarnings(List<RunsRecord> runsFirst, List<RunsRecord> runsSecond) {
+        List<String> warnings = new ArrayList<>();
+
+        Map<String, RunsRecord> byNameFirst =
+                runsFirst.stream().collect(Collectors.toMap(RunsRecord::getName, it -> it));
+        Map<String, RunsRecord> byNameSecond =
+                runsSecond.stream().collect(Collectors.toMap(RunsRecord::getName, it -> it));
+
+        Set<String> namesSet = new HashSet<>();
+        namesSet.addAll(byNameFirst.keySet());
+        namesSet.addAll(byNameSecond.keySet());
+
+        List<String> names = namesSet.stream().sorted().toList();
+        for (String name : names) {
+            if (!byNameFirst.containsKey(name)) {
+                warnings.add("Run " + name + " is only present in the second (current) commit.");
+                continue;
+            }
+
+            if (!byNameSecond.containsKey(name)) {
+                warnings.add("Run " + name + " is only present in the first (reference) commit.");
+                continue;
+            }
+
+            RunsRecord runFirst = byNameFirst.get(name);
+            RunsRecord runSecond = byNameSecond.get(name);
+            if (!runFirst.getRunner().equals(runSecond.getRunner()))
+                warnings.add("Runners for run " + name + "differ between commits.");
+            if (!runFirst.getScript().equals(runSecond.getScript()))
+                warnings.add("Scripts for run " + name + " differ between commits.");
+            if (!runFirst.getChashBench().equals(runSecond.getChashBench()))
+                warnings.add("Bench repo commit hashes for run " + name + " differ between commits.");
+        }
+
+        return warnings;
     }
 }

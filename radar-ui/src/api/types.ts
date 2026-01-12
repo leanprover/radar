@@ -148,9 +148,11 @@ export interface JsonCommitComparison {
   significant: boolean;
   runs: JsonRunAnalysis[];
   metrics: JsonMetricComparison[];
+  warnings: string[];
 }
 export const JsonCommitComparison = z.object({
   significant: z.boolean(),
   runs: JsonRunAnalysis.array(),
   metrics: JsonMetricComparison.array(),
+  warnings: z.string().array(),
 });

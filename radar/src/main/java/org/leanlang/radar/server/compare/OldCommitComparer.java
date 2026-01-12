@@ -33,6 +33,7 @@ public final class OldCommitComparer {
         List<MetricsRecord> metrics = fetchMetrics(ctx);
         Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
         Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
+        List<RunsRecord> runsFirst = fetchRuns(ctx, chashFirst);
         List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
         boolean firstInQueue = fetchInQueue(ctx, chashFirst);
         boolean secondInQueue = fetchInQueue(ctx, chashSecond);
@@ -40,8 +41,10 @@ public final class OldCommitComparer {
         List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond, !repo.significantRunFailures());
         List<JsonMetricComparison> measurementComparisons =
                 compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond, firstInQueue, secondInQueue);
+        List<String> warnings = CommitComparer.findWarnings(runsFirst, runsSecond);
 
-        JsonCommitComparison comparison = new JsonCommitComparison(false, runAnalyses, measurementComparisons);
+        JsonCommitComparison comparison =
+                new JsonCommitComparison(false, runAnalyses, measurementComparisons, warnings);
         long significantRuns = comparison.runSignificances().count();
         long significantMajorMetrics = comparison
                 .metricSignificances()
@@ -55,7 +58,7 @@ public final class OldCommitComparer {
                 || (significantMajorMetrics >= repo.oldSignificantMajorMetrics())
                 || (significantMinorMetrics >= repo.oldSignificantMinorMetrics());
 
-        return new JsonCommitComparison(significant, comparison.runs(), comparison.metrics());
+        return new JsonCommitComparison(significant, comparison.runs(), comparison.metrics(), comparison.warnings());
     }
 
     private static List<MetricsRecord> fetchMetrics(Configuration ctx) {
