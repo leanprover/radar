@@ -83,10 +83,9 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
     public String inProgress(Repo repo, boolean repoForeign, String chashFirst, String chashSecond) {
         return "Benchmarking "
                 + linkToChash(repoForeign ? repo : null, chashSecond)
-                + " ([status](" + radarLinker.commit(repo.name(), chashSecond) + "))"
                 + " against "
                 + linkToChash(repoForeign ? repo : null, chashFirst)
-                + " ([status](" + radarLinker.commit(repo.name(), chashFirst) + "))"
+                + " ([preliminary results](" + radarLinker.comparison(repo.name(), chashFirst, chashSecond) + "))"
                 + ".\n\n"
                 + "<sub>React with :eyes: to be notified when the results are in."
                 + " The command author is always notified.</sub>";
