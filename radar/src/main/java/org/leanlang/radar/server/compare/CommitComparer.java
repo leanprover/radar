@@ -187,7 +187,7 @@ public final class CommitComparer {
             if (!Objects.equals(runFirst.getSystemConfigurationId(), runSecond.getSystemConfigurationId()))
                 warnings.add("Runner for run " + name + " has different system configurations between commits.");
             if (!runFirst.getRunner().equals(runSecond.getRunner()))
-                warnings.add("Runners for run " + name + "differ between commits.");
+                warnings.add("Runners for run " + name + " differ between commits.");
             if (!runFirst.getScript().equals(runSecond.getScript()))
                 warnings.add("Scripts for run " + name + " differ between commits.");
             if (!runFirst.getChashBench().equals(runSecond.getChashBench()))
