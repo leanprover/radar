@@ -199,7 +199,7 @@ watchEffect(() => {
       </div>
 
       <CLoading v-if="!graph.isSuccess" :error="graph.error" />
-      <CBrutzelBox v-show="graph.isSuccess" class="min-h-0" @click.middle="openCurrentCommitInNewTab()">
+      <CBrutzelBox v-show="graph.isSuccess" class="min-h-0" :shadow="true" @click.middle="openCurrentCommitInNewTab()">
         <PUplot v-model:hover-idx="hoverIdx" :series :data :start-at-zero="queryZero" class="overflow-y-scroll" />
       </CBrutzelBox>
 
@@ -209,7 +209,6 @@ watchEffect(() => {
         :repo-url="repo?.url"
         :commit="hoverCommit"
         :query-s="queryS"
-        class="border-t pt-1 dark:border-none"
       />
     </div>
 
