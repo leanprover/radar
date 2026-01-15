@@ -11,15 +11,15 @@ public sealed interface JsonMessageSegment {
     record Delta(
             float amount,
             Optional<String> unit,
-            @JsonProperty(required = true) OldMessageGoodness goodness) implements JsonMessageSegment {}
+            @JsonProperty(required = true) MessageGoodness goodness) implements JsonMessageSegment {}
 
     @JsonTypeName("deltaPercent")
     record DeltaPercent(
-            float factor, @JsonProperty(required = true) OldMessageGoodness goodness) implements JsonMessageSegment {}
+            float factor, @JsonProperty(required = true) MessageGoodness goodness) implements JsonMessageSegment {}
 
     @JsonTypeName("exitCode")
     record ExitCode(
-            int exitCode, @JsonProperty(required = true) OldMessageGoodness goodness) implements JsonMessageSegment {}
+            int exitCode, @JsonProperty(required = true) MessageGoodness goodness) implements JsonMessageSegment {}
 
     @JsonTypeName("metric")
     record Metric(String metric) implements JsonMessageSegment {}

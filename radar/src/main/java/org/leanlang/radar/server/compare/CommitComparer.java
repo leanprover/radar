@@ -3,7 +3,6 @@ package org.leanlang.radar.server.compare;
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
 import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
 import static org.leanlang.radar.codegen.jooq.Tables.QUANTILE;
-import static org.leanlang.radar.codegen.jooq.Tables.QUEUE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
 import java.util.ArrayList;
@@ -37,9 +36,6 @@ public final class CommitComparer {
         Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
         List<RunsRecord> runsFirst = fetchRuns(ctx, chashFirst);
         List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
-
-        // TODO Get rid of all old comparison logic
-        if (repo.useOldSignificance()) return OldCommitComparer.compareCommits(repo, ctx, chashFirst, chashSecond);
 
         List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond, !repo.significantRunFailures());
         List<JsonMetricComparison> metricComparisons =
@@ -86,11 +82,6 @@ public final class CommitComparer {
     private static List<RunsRecord> fetchRuns(Configuration ctx, @Nullable String chash) {
         if (chash == null) return List.of();
         return ctx.dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).fetch();
-    }
-
-    private static boolean fetchInQueue(Configuration ctx, @Nullable String chash) {
-        if (chash == null) return false;
-        return ctx.dsl().fetchExists(QUEUE, QUEUE.CHASH.eq(chash));
     }
 
     private static List<JsonRunAnalysis> analyzeRuns(List<RunsRecord> runs, boolean ignoreFailedRuns) {

@@ -1,12 +1,12 @@
 package org.leanlang.radar.server.compare;
 
 // TODO Remove once old significance computation is obsolete
-public enum OldMessageGoodness {
+public enum MessageGoodness {
     GOOD,
     NEUTRAL,
     BAD;
 
-    public static OldMessageGoodness fromDelta(float delta, int direction) {
+    public static MessageGoodness fromDelta(float delta, int direction) {
         if (delta == 0 || direction == 0) return NEUTRAL;
         if ((delta > 0) == (direction > 0)) return GOOD;
         return BAD;

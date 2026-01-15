@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -32,7 +31,6 @@ public final class Repo implements AutoCloseable {
     private final RepoSource source;
     private final RepoSource benchSource;
     private final List<ServerConfigRepoMetricFilter> metricFilters;
-    private final List<RepoMetricMatcher> oldMetricMatchers;
 
     private final RepoDb db;
     private final RepoGit git;
@@ -56,10 +54,6 @@ public final class Repo implements AutoCloseable {
         this.source = RepoSource.parse(config.url);
         this.benchSource = RepoSource.parse(config.benchUrl);
         this.metricFilters = Optional.ofNullable(config.significantMetrics).orElse(List.of()).stream()
-                .toList();
-        this.oldMetricMatchers = Optional.ofNullable(config.oldMetrics).stream()
-                .flatMap(Collection::stream)
-                .map(RepoMetricMatcher::new)
                 .toList();
 
         this.db = new RepoDb(name(), dirs.repoDb(name()));
@@ -180,28 +174,6 @@ public final class Repo implements AutoCloseable {
 
     public boolean significantRunFailures() {
         return config.significantRunFailures;
-    }
-
-    public boolean useOldSignificance() {
-        return config.significantMetrics == null;
-    }
-
-    public RepoMetricMetadata oldMetricMetadata(String name) {
-        RepoMetricMetadata result = new RepoMetricMetadata();
-        for (RepoMetricMatcher matcher : oldMetricMatchers) {
-            if (matcher.matches(name)) {
-                result = matcher.update(result);
-            }
-        }
-        return result;
-    }
-
-    public int oldSignificantMajorMetrics() {
-        return config.oldSignificantMajorMetrics;
-    }
-
-    public int oldSignificantMinorMetrics() {
-        return config.oldSignificantMinorMetrics;
     }
 
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {

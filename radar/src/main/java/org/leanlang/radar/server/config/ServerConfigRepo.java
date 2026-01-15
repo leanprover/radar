@@ -32,11 +32,6 @@ public class ServerConfigRepo {
     public boolean significantRunFailures = true;
     public @Valid @Nullable List<ServerConfigRepoMetricFilter> significantMetrics;
 
-    // TODO Remove once old significance computation is obsolete
-    public @Valid @Nullable List<ServerConfigRepoMetricOld> oldMetrics;
-    public int oldSignificantMajorMetrics = 1;
-    public int oldSignificantMinorMetrics = Integer.MAX_VALUE;
-
     // Other platforms
     public @Valid ServerConfigRepoGithub github = new ServerConfigRepoGithub();
     public @Valid ServerConfigRepoZulip zulip = new ServerConfigRepoZulip();

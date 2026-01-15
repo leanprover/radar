@@ -70,9 +70,7 @@ public record ResRepoGraph(Repos repos) {
                                         .fetch(MEASUREMENTS.VALUE)
                                         .reversed();
 
-                                int direction = repo.useOldSignificance()
-                                        ? repo.oldMetricMetadata(it).direction()
-                                        : repo.metricFilter(it).direction;
+                                int direction = repo.metricFilter(it).direction;
                                 return new JsonMetric(it, direction, measurements);
                             })
                             .toList();

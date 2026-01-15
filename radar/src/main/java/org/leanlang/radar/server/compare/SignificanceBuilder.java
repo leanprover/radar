@@ -45,20 +45,20 @@ public final class SignificanceBuilder {
         return this;
     }
 
-    public SignificanceBuilder addDelta(float amount, @Nullable String unit, OldMessageGoodness goodness) {
+    public SignificanceBuilder addDelta(float amount, @Nullable String unit, MessageGoodness goodness) {
         return add(new JsonMessageSegment.Delta(amount, Optional.ofNullable(unit), goodness));
     }
 
     public SignificanceBuilder addDelta(float amount, @Nullable String unit, int direction) {
-        return addDelta(amount, unit, OldMessageGoodness.fromDelta(amount, direction));
+        return addDelta(amount, unit, MessageGoodness.fromDelta(amount, direction));
     }
 
-    public SignificanceBuilder addDeltaPercent(float factor, OldMessageGoodness goodness) {
+    public SignificanceBuilder addDeltaPercent(float factor, MessageGoodness goodness) {
         return add(new JsonMessageSegment.DeltaPercent(factor, goodness));
     }
 
     public SignificanceBuilder addDeltaPercent(float factor, int direction) {
-        return addDeltaPercent(factor, OldMessageGoodness.fromDelta(factor, direction));
+        return addDeltaPercent(factor, MessageGoodness.fromDelta(factor, direction));
     }
 
     public SignificanceBuilder addDeltaAndDeltaPercent(
@@ -75,8 +75,8 @@ public final class SignificanceBuilder {
     }
 
     public SignificanceBuilder addExitCode(int exitCode) {
-        return add(new JsonMessageSegment.ExitCode(
-                exitCode, exitCode == 0 ? OldMessageGoodness.GOOD : OldMessageGoodness.BAD));
+        return add(
+                new JsonMessageSegment.ExitCode(exitCode, exitCode == 0 ? MessageGoodness.GOOD : MessageGoodness.BAD));
     }
 
     public SignificanceBuilder addMetric(String metric) {
