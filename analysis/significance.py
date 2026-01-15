@@ -29,30 +29,13 @@ def link_radar_graph(repo: str, metric: str) -> str:
     return f"{RADAR_URL}/repos/{repo}/graph?m={metric}"
 
 
-def compute_deltas(values: list[float | None]) -> list[float]:
-    return [
-        b - a for a, b in zip(values, values[1:]) if a is not None and b is not None
-    ]
+##########
+## Misc ##
+##########
 
-
-def compute_delta_quantile(values: list[float], q: float) -> float | None:
-    assert values
-    assert 0 <= q <= 1
-
-    # q=0 corresponds exactly to values[0]
-    # q=1 corresponds exactly to values[-1]
-    # Linearly interpolate between the two closest values
-
-    asc = sorted(abs(v) for v in values)
-    top = len(values) - 1
-
-    x = q * top
-    index = int(x)
-    if index >= top:
-        return asc[-1]
-
-    weight = x - index
-    return asc[index] * (1 - weight) + asc[index + 1] * weight
+IMPORTANCE_SMALL = 0
+IMPORTANCE_MEDIUM = 1
+IMPORTANCE_LARGE = 2
 
 
 @dataclass
@@ -106,6 +89,111 @@ class MetricSignificance:
 class MetricComparison:
     metric: str
     result: MetricSignificance | None
+
+
+#######################
+## MetricFilter.java ##
+#######################
+
+
+@dataclass
+class MetricFilter:
+    match: str = ""
+    direction: int = 0
+
+    check_delta_percent_small: float | None = None
+    check_delta_percent_medium: float | None = None
+    check_delta_percent_large: float | None = None
+
+    check_quantile_factor_small: float | None = None
+    check_quantile_factor_medium: float | None = None
+    check_quantile_factor_large: float | None = None
+
+    reduce_expected_direction_reference_category: str | None = None
+
+    reduce_absolute_limits_small: float | None = None
+    reduce_absolute_limits_medium: float | None = None
+
+
+##########################
+## QuantileUpdater.java ##
+##########################
+
+
+def compute_deltas(values: list[float | None]) -> list[float]:
+    deltas = []
+    for i in range(len(values) - 1):
+        first = values[i]
+        second = values[i + 1]
+        if first is None or second is None:
+            continue
+        deltas.append(second - first)
+    return deltas
+
+
+def compute_abs_quantile(deltas: list[float], quantile: float) -> float | None:
+    if len(deltas) < 10:
+        return None
+    quantile = max(0.0, min(1.0, quantile))
+
+    values: list[float] = list(sorted(abs(d) for d in deltas))
+    top: int = len(values) - 1
+
+    x: float = quantile * top
+    index: int = round(x)
+    if index >= top:
+        return values[top]
+
+    weight: float = x - index
+    return values[index] * (1 - weight) + values[index + 1] * weight
+
+
+def compute_quantile_for_metric(values: list[float | None]) -> float | None:
+    deltas = compute_deltas(values)
+    return compute_abs_quantile(deltas, 0.9)
+
+
+#########################
+## MetricComparer.java ##
+#########################
+
+
+class MetricComparer:
+    def __init__(self, metric_filter: MetricFilter) -> None:
+        self.metric_filter = metric_filter
+
+        self.significance: MetricSignificance | None = None
+
+    def check_delta_percent(self, v_first: float, v_second: float) -> None:
+        large_delta = self.metric_filter.check_delta_percent_large
+        medium_delta = self.metric_filter.check_delta_percent_medium
+        small_delta = self.metric_filter.check_delta_percent_small
+        if large_delta is None and medium_delta is None and small_delta is None:
+            return
+
+        if v_first == 0:
+            return
+        delta_percent = (v_second - v_first) / v_first * 100
+        delta_percent_abs = abs(delta_percent)
+
+        is_large = large_delta is not None and delta_percent_abs
+        is_medium = medium_delta is not None and delta_percent_abs
+        is_small = small_delta is not None and delta_percent_abs
+
+        importance: int
+        if is_large:
+            importance = IMPORTANCE_LARGE
+        elif is_medium:
+            importance = IMPORTANCE_MEDIUM
+        elif is_small:
+            importance = IMPORTANCE_SMALL
+        else:
+            return
+
+
+#####################
+## Remaining logic ##
+#####################
 
 
 type Step = Callable[[Context, MetricComparison], None]
@@ -219,10 +307,6 @@ def steps_for_metric(repo: str, metric: str) -> list[Step]:
             ]
         if re.search(r"", metric):
             return []
-            return [
-                check_quantile_factor(3, 3 * 2, 3 * 3),
-                reduce_expected_direction("lines"),
-            ]
 
     elif repo == "mathlib4":
         if re.search(r"^build/module/.*//instructions$", metric):
@@ -305,11 +389,9 @@ def main():
     print("Computing quantiles... ", end="", flush=True)
     quantiles = {}
     for m, v in values.items():
-        deltas = compute_deltas(v)
-        if len(deltas) < 10:
-            print(f"  Skipping metric {m} (not enough data)")
-            continue
-        quantiles[m] = compute_delta_quantile(deltas, 0.9)
+        quantile = compute_quantile_for_metric(v)
+        if quantile is not None:
+            quantiles[m] = quantile
     print(f"Got {len(quantiles)} quantiles.")
 
     # Select commits to analyze
