@@ -217,14 +217,8 @@ def steps_for_metric(repo: str, metric: str) -> list[Step]:
                 check_delta_percent(10, 20, 50),
                 reduce_expected_direction("lines"),
             ]
-        if re.search(r"", metric):
-            return []
-            return [
-                check_quantile_factor(3, 3 * 2, 3 * 3),
-                reduce_expected_direction("lines"),
-            ]
 
-    elif repo == "mathlib4":
+    elif repo in {"mathlib4", "cslib"}:
         if re.search(r"^build/module/.*//instructions$", metric):
             return [
                 check_quantile_factor(10, 10 * 3, 10 * 3 * 3),
@@ -239,6 +233,16 @@ def steps_for_metric(repo: str, metric: str) -> list[Step]:
         if re.search(r"//wall-clock$", metric):
             return [
                 check_quantile_factor(3, 3 * 2, 3 * 3),
+            ]
+
+    elif repo == "verso":
+        if re.search(r"//.*time$", metric):
+            return [
+                check_quantile_factor(5, 5 * 3, 5 * 3 * 3),
+            ]
+        if re.search(r"\.total//generated ", metric):
+            return [
+                check_delta_percent(1, 2, 5),
             ]
 
     return []
