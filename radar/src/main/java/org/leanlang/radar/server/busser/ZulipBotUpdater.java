@@ -6,7 +6,6 @@ import static org.leanlang.radar.codegen.jooq.Tables.SIGNIFICANCE_FEED;
 import static org.leanlang.radar.codegen.jooq.Tables.ZULIP_FEED;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,7 +16,7 @@ import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
-import org.leanlang.radar.server.compare.JsonSignificance;
+import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoZulip;
 import org.leanlang.radar.util.RadarLinker;
@@ -25,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public record ZulipBotUpdater(
+        Queue queue,
         RadarLinker radarLinker,
         Repo repo,
         RepoZulip repoZulip,
@@ -84,7 +84,7 @@ public record ZulipBotUpdater(
     }
 
     private void sendMessageForCommit(@Nullable String parentChash, String childChash, String childTitle) {
-        JsonCommitComparison comparison = CommitComparer.compareCommits(repo, parentChash, childChash);
+        JsonCommitComparison comparison = CommitComparer.compareCommits(queue, repo, parentChash, childChash);
 
         if (comparison.significant()) {
             String content = messageContent(childChash, childTitle, comparison);
@@ -112,19 +112,7 @@ public record ZulipBotUpdater(
         formatTitle(sb, childChash, childTitle);
         sb.append("**");
 
-        List<JsonSignificance> significantRuns = GithubBotMessages.getSignificantRuns(comparison);
-        List<JsonSignificance> significantLargeMetrics =
-                GithubBotMessages.getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_LARGE);
-        List<JsonSignificance> significantMediumMetrics =
-                GithubBotMessages.getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_MEDIUM);
-        List<JsonSignificance> significantSmallMetrics =
-                GithubBotMessages.getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_SMALL);
-
-        formatWarningSection(sb, comparison.warnings());
-        formatSignificanceSection(sb, "Runs", significantRuns);
-        formatSignificanceSection(sb, "Large changes", significantLargeMetrics);
-        formatSignificanceSection(sb, "Medium changes", significantMediumMetrics);
-        formatSignificanceSection(sb, "Small changes", significantSmallMetrics);
+        GithubBotMessages.formatBody(sb, comparison);
 
         return sb.toString();
     }
@@ -160,34 +148,5 @@ public record ZulipBotUpdater(
                     .append("](")
                     .append(url)
                     .append(")");
-    }
-
-    private void formatWarningSection(StringBuilder sb, List<String> warnings) {
-        if (warnings.isEmpty()) return;
-        sb.append("\n");
-
-        sb.append("**Warnings** (").append(warnings.size()).append(")\n\n");
-
-        sb.append(GithubBotMessages.WARNINGS_EXPLANATION).append("\n\n");
-
-        for (String warning : warnings) {
-            sb.append("- ").append(warning).append("\n");
-        }
-    }
-
-    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> significances) {
-        if (significances.isEmpty()) return;
-        sb.append("\n");
-
-        sb.append("**").append(name).append("** (");
-        GithubBotMessages.formatSectionCounters(sb, significances);
-        sb.append(")\n\n");
-
-        if (significances.size() > 10) return;
-        for (JsonSignificance message : significances) {
-            sb.append("- ");
-            GithubBotMessages.formatMessage(sb, message);
-            sb.append("\n");
-        }
     }
 }

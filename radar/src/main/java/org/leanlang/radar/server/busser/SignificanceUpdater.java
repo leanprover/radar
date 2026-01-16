@@ -12,11 +12,12 @@ import org.jooq.impl.DSL;
 import org.leanlang.radar.codegen.jooq.tables.records.HistoryRecord;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
+import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record SignificanceUpdater(Repo repo) {
+public record SignificanceUpdater(Queue queue, Repo repo) {
     private static final Logger log = LoggerFactory.getLogger(SignificanceUpdater.class);
 
     public void clearAll() {
@@ -105,7 +106,7 @@ public record SignificanceUpdater(Repo repo) {
             String prevHash = null;
             if (i > 0) prevHash = commits.get(i - 1).value1();
 
-            JsonCommitComparison comparison = CommitComparer.compareCommits(repo, prevHash, curHash);
+            JsonCommitComparison comparison = CommitComparer.compareCommits(queue, repo, prevHash, curHash);
             boolean significant = comparison.significant();
             log.info("Adding commit {} to feed as {}", curHash, significant ? "significant" : "insignificant");
             repo.db().writeTransaction(ctx -> ctx.dsl()

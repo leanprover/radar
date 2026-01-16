@@ -91,7 +91,7 @@ public final class GithubBotUpdater {
         if (pull == null) {
             // We don't need to accept edits, so STATUS_SUCCEEDED, not STATUS_FAILED.
             log.debug("Command is not in a PR.");
-            db.setCommandSucceeded(commandId, msgs.notInPr());
+            db.setCommandSucceeded(commandId, msgs.msgNotInPr());
             return;
         }
 
@@ -99,7 +99,7 @@ public final class GithubBotUpdater {
         if (comment == null) {
             // The original comment is gone, so there's no need to accept edits.
             log.debug("Command is deleted.");
-            db.setCommandSucceeded(commandId, msgs.deleted());
+            db.setCommandSucceeded(commandId, msgs.msgDeleted());
             return;
         }
 
@@ -109,12 +109,12 @@ public final class GithubBotUpdater {
         GithubBotCommand parsed = GithubBotCommand.parse(comment.body()).orElse(null);
         if (parsed == null) {
             log.debug("Message contains no command.");
-            db.setCommandFailed(commandId, msgs.noLongerACommand());
+            db.setCommandFailed(commandId, msgs.msgNoLongerACommand());
             return;
         }
 
         switch (parsed) {
-            case GithubBotCommand.TooManyCommands p -> db.setCommandFailed(commandId, msgs.tooManyCommands());
+            case GithubBotCommand.TooManyCommands p -> db.setCommandFailed(commandId, msgs.msgTooManyCommands());
             case GithubBotCommand.Bench p -> startBenchCommand(command, pull);
             case GithubBotCommand.BenchMathlib p -> startMathlibBenchCommand(command, pull);
         }
@@ -157,7 +157,7 @@ public final class GithubBotUpdater {
         List<String> superfluousLabels = superfluousLabels(pull);
         if (!superfluousLabels.isEmpty()) {
             log.info("Bench command is blocked by labels {}", superfluousLabels);
-            db.setCommandWaiting(commandId, msgs.labelMismatch(superfluousLabels, List.of()));
+            db.setCommandWaiting(commandId, msgs.msgLabelMismatch(superfluousLabels, List.of()));
             return;
         }
 
@@ -166,13 +166,13 @@ public final class GithubBotUpdater {
                 .orElse(null);
         if (commits == null) {
             log.info("Failed to find appropriate commits for comparison");
-            db.setCommandFailed(commandId, msgs.failedToFindMergeBase());
+            db.setCommandFailed(commandId, msgs.msgFailedToFindMergeBase());
             return;
         }
 
         db.setCommandRunningStarted(
                 commandId,
-                msgs.inProgress(repo, false, commits.left(), commits.right()),
+                msgs.msgInProgress(repo, false, commits.left(), commits.right()),
                 null,
                 commits.left(),
                 commits.right());
@@ -195,16 +195,16 @@ public final class GithubBotUpdater {
         boolean secondInQueue = queue.enqueueSoft(inRepo.name(), chashSecond, Constants.PRIORITY_GITHUB_COMMAND);
         if (firstInQueue || secondInQueue) {
             db.setCommandRunningUpdate(
-                    commandId, msgs.inProgress(inRepo, !inRepo.name().equals(repo.name()), chashFirst, chashSecond));
+                    commandId, msgs.msgInProgress(inRepo, !inRepo.name().equals(repo.name()), chashFirst, chashSecond));
             return;
         }
 
         List<String> usersThatReactedWithEye = getUsersThatReactedWithEyes(command);
-        JsonCommitComparison comparison = CommitComparer.compareCommits(inRepo, chashFirst, chashSecond);
+        JsonCommitComparison comparison = CommitComparer.compareCommits(queue, inRepo, chashFirst, chashSecond);
 
         db.setCommandRunningFinished(
                 commandId,
-                msgs.finished(
+                msgs.msgFinished(
                         inRepo,
                         !inRepo.name().equals(repo.name()),
                         chashFirst,
@@ -281,7 +281,7 @@ public final class GithubBotUpdater {
                     "Mathlib bench command is blocked by labels superfluous={} missing={}",
                     superfluousLabels,
                     missingLabels);
-            db.setCommandWaiting(commandId, msgs.labelMismatch(superfluousLabels, missingLabels));
+            db.setCommandWaiting(commandId, msgs.msgLabelMismatch(superfluousLabels, missingLabels));
             return;
         }
 
@@ -291,13 +291,13 @@ public final class GithubBotUpdater {
                 findComparisonCommits(repoMathlib, base, head).orElse(null);
         if (commits == null) {
             log.info("Failed to find appropriate commits for comparison in {}", repoMathlib.name());
-            db.setCommandFailed(commandId, msgs.failedToFindMergeBase());
+            db.setCommandFailed(commandId, msgs.msgFailedToFindMergeBase());
             return;
         }
 
         db.setCommandRunningStarted(
                 commandId,
-                msgs.inProgress(repoMathlib, true, commits.left(), commits.right()),
+                msgs.msgInProgress(repoMathlib, true, commits.left(), commits.right()),
                 repoMathlib.name(),
                 commits.left(),
                 commits.right());

@@ -105,7 +105,7 @@ public final class Busser implements Managed {
         if (githubBotUpdater != null) githubBotUpdater.update();
         new QueueUpdater(repo, queue).update();
         new QuantileUpdater(repo).update(); // Before significance updater
-        new SignificanceUpdater(repo).update();
+        new SignificanceUpdater(queue, repo).update();
         if (zulipBotUpdater != null) zulipBotUpdater.update();
     }
 
@@ -123,7 +123,7 @@ public final class Busser implements Managed {
         String linkifier = repoZulip.config().linkifier;
         if (channel == null) return null;
         if (topic == null) return null;
-        return new ZulipBotUpdater(radarLinker, repo, repoZulip, channel, topic, Optional.ofNullable(linkifier));
+        return new ZulipBotUpdater(queue, radarLinker, repo, repoZulip, channel, topic, Optional.ofNullable(linkifier));
     }
 
     private synchronized void doUpdateGhReplies(Repo repo) {
@@ -143,7 +143,7 @@ public final class Busser implements Managed {
     }
 
     private synchronized void doRecomputeSignificance(Repo repo) {
-        SignificanceUpdater significanceUpdater = new SignificanceUpdater(repo);
+        SignificanceUpdater significanceUpdater = new SignificanceUpdater(queue, repo);
         significanceUpdater.clearAll();
         significanceUpdater.update();
     }

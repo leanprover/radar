@@ -6,8 +6,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
+import org.leanlang.radar.server.compare.JsonMessage;
+import org.leanlang.radar.server.compare.JsonMessageGoodness;
 import org.leanlang.radar.server.compare.JsonMessageSegment;
-import org.leanlang.radar.server.compare.JsonSignificance;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.source.RepoSourceGithub;
 import org.leanlang.radar.util.Formatter;
@@ -22,24 +23,27 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
             "These warnings may indicate that the benchmark results are not directly comparable,"
                     + " for example due to changes in the runner configuration or hardware.";
 
-    public String notInPr() {
+    public static final String EMOJI_GOOD = "✅";
+    public static final String EMOJI_BAD = "\uD83D\uDFE5";
+
+    public String msgNotInPr() {
         return "This command can only be used in pull requests.";
     }
 
-    public String deleted() {
+    public String msgDeleted() {
         return "The original message has been deleted.";
     }
 
-    public String noLongerACommand() {
+    public String msgNoLongerACommand() {
         return "The original message no longer contains a command." + EDIT_POSSIBLE;
     }
 
-    public String tooManyCommands() {
+    public String msgTooManyCommands() {
         return "The original message contains multiple commands. Please only use one command at a time."
                 + EDIT_POSSIBLE;
     }
 
-    public String labelMismatch(List<String> superfluousLabels, List<String> missingLabels) {
+    public String msgLabelMismatch(List<String> superfluousLabels, List<String> missingLabels) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Waiting until ");
@@ -73,18 +77,18 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         return sb.toString();
     }
 
-    public String failedToFindMergeBase() {
+    public String msgFailedToFindMergeBase() {
         return "Failed to find a commit to compare against." + EDIT_POSSIBLE;
     }
 
-    public String linkToChash(@Nullable Repo repo, String chash) {
+    private String linkToChash(@Nullable Repo repo, String chash) {
         if (repo == null) return chash;
         if (repo.source() instanceof RepoSourceGithub(String ghOwner, String ghRepo))
             return new GithubLinker(ghOwner, ghRepo).commit(chash).toString();
         return chash;
     }
 
-    public String inProgress(Repo repo, boolean repoForeign, String chashFirst, String chashSecond) {
+    public String msgInProgress(Repo repo, boolean repoForeign, String chashFirst, String chashSecond) {
         return "Benchmarking "
                 + linkToChash(repoForeign ? repo : null, chashSecond)
                 + " against "
@@ -95,7 +99,7 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 + " The command author is always notified.</sub>";
     }
 
-    public String finished(
+    public String msgFinished(
             Repo repo,
             boolean repoForeign,
             String chashFirst,
@@ -118,86 +122,91 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 .sorted()
                 .forEach(it -> sb.append(" @").append(it));
 
-        List<JsonSignificance> significantRuns = getSignificantRuns(comparison);
-        List<JsonSignificance> significantLargeMetrics =
-                getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_LARGE);
-        List<JsonSignificance> significantMediumMetrics =
-                getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_MEDIUM);
-        List<JsonSignificance> significantSmallMetrics =
-                getSignificantMetrics(comparison, JsonSignificance.IMPORTANCE_SMALL);
-
-        formatWarningSection(sb, comparison.warnings());
-        formatSignificanceSection(sb, "Runs", significantRuns);
-        formatSignificanceSection(sb, "Large changes", significantLargeMetrics);
-        formatSignificanceSection(sb, "Medium changes", significantMediumMetrics);
-        formatSignificanceSection(sb, "Small changes", significantSmallMetrics);
-
-        if (significantRuns.isEmpty()
-                && significantLargeMetrics.isEmpty()
-                && significantMediumMetrics.isEmpty()
-                && significantSmallMetrics.isEmpty()) {
-            sb.append("\n\nNo significant changes detected.");
-        }
+        formatBody(sb, comparison);
 
         return sb.toString();
     }
 
-    private void formatWarningSection(StringBuilder sb, List<String> warnings) {
+    public static void formatBody(StringBuilder sb, JsonCommitComparison comparison) {
+        formatWarningSection(sb, comparison.warnings());
+        formatMessageSection(sb, "Notes", comparison.notes());
+
+        formatMessageSection(sb, "Large changes", comparison.largeChanges());
+        formatMessageSection(sb, "Medium changes", comparison.mediumChanges());
+        formatMessageSection(sb, "Small changes", comparison.smallChanges());
+
+        if (comparison.largeChanges().isEmpty()
+                && comparison.mediumChanges().isEmpty()
+                && comparison.smallChanges().isEmpty()) {
+            sb.append("\n\nNo significant changes detected.");
+        }
+    }
+
+    private static void formatWarningSection(StringBuilder sb, List<String> warnings) {
         if (warnings.isEmpty()) return;
 
-        sb.append("\n<details open>\n");
-        sb.append("<summary>Warnings (").append(warnings.size()).append(")</summary>\n\n");
+        // Heading
+        sb.append("\n\n**Warnings**\n\n").append(WARNINGS_EXPLANATION);
 
-        sb.append(WARNINGS_EXPLANATION).append("\n\n");
-
-        for (String warning : warnings) {
-            sb.append("- ").append(warning).append("\n");
-        }
-
-        sb.append("</details>");
-    }
-
-    private void formatSignificanceSection(StringBuilder sb, String name, List<JsonSignificance> significances) {
-        if (significances.isEmpty()) return;
-
-        if (significances.size() > 10) sb.append("\n<details>\n");
-        else sb.append("\n<details open>\n");
-
-        sb.append("<summary>").append(name).append(" (");
-        formatSectionCounters(sb, significances);
-        sb.append(")").append("</summary>\n");
-
-        // If there's no empty line between the <summary> and the list, GitHub won't render it correctly.
+        // List
         sb.append("\n");
-
-        if (significances.size() > 20) {
-            sb.append("Too many entries to display here. View the full report on radar instead.\n");
-        } else {
-            for (JsonSignificance significance : significances) {
-                sb.append("- ");
-                formatMessage(sb, significance);
-                sb.append("\n");
-            }
-        }
-
-        sb.append("</details>");
+        for (String warning : warnings) sb.append("\n- ").append(warning);
     }
 
-    public static void formatSectionCounters(StringBuilder sb, List<JsonSignificance> significances) {
-        long good = significances.stream().filter(it -> it.goodness() > 0).count();
-        long bad = significances.stream().filter(it -> it.goodness() < 0).count();
-        long neutral = significances.stream().filter(it -> it.goodness() == 0).count();
+    private static void formatMessageSection(StringBuilder sb, String title, List<JsonMessage> messages) {
+        if (messages.isEmpty()) return;
+
+        // Heading
+        sb.append("\n\n**").append(title).append(" (");
+        formatMessageCounters(sb, messages);
+        sb.append(")**");
+
+        // List
+        if (messages.isEmpty()) return;
+        if (messages.size() > 20) {
+            sb.append("\n\nToo many entries to display here. View the full report on radar instead.");
+            return;
+        }
+        sb.append("\n");
+        for (JsonMessage message : messages) {
+            sb.append("\n- ");
+            formatMessage(sb, message);
+        }
+    }
+
+    private static void formatGoodness(StringBuilder sb, JsonMessageGoodness goodness, boolean trailingSpace) {
+        switch (goodness) {
+            case BAD -> {
+                sb.append(EMOJI_BAD);
+                if (trailingSpace) sb.append(" ");
+            }
+            case GOOD -> {
+                sb.append(EMOJI_GOOD);
+                if (trailingSpace) sb.append(" ");
+            }
+            case NEUTRAL -> {}
+        }
+    }
+
+    private static void formatMessageCounters(StringBuilder sb, List<JsonMessage> messages) {
+        long good = messages.stream()
+                .filter(it -> it.goodness() == JsonMessageGoodness.GOOD)
+                .count();
+        long bad = messages.stream()
+                .filter(it -> it.goodness() == JsonMessageGoodness.BAD)
+                .count();
+        long neutral = messages.size() - good - bad;
 
         boolean atLeastOneElement = false;
         if (good > 0) {
             sb.append(good);
-            formatGoodness(sb, 1, false);
+            formatGoodness(sb, JsonMessageGoodness.GOOD, false);
             atLeastOneElement = true;
         }
         if (bad > 0) {
             if (atLeastOneElement) sb.append(", ");
             sb.append(bad);
-            formatGoodness(sb, -1, false);
+            formatGoodness(sb, JsonMessageGoodness.BAD, false);
             atLeastOneElement = true;
         }
         if (neutral > 0) {
@@ -206,35 +215,14 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         }
     }
 
-    public static List<JsonSignificance> getSignificantRuns(JsonCommitComparison comparison) {
-        return comparison.runSignificances().toList();
-    }
-
-    public static List<JsonSignificance> getSignificantMetrics(JsonCommitComparison comparison, int importance) {
-        return comparison
-                .metricSignificances()
-                .filter(it -> it.importance() == importance)
-                .toList();
-    }
-
-    public static void formatMessage(StringBuilder sb, JsonSignificance message) {
+    private static void formatMessage(StringBuilder sb, JsonMessage message) {
         formatGoodness(sb, message.goodness(), true);
         for (JsonMessageSegment segment : message.segments()) {
             formatMessageSegment(sb, segment);
         }
     }
 
-    private static void formatGoodness(StringBuilder sb, int goodness, boolean trailingSpace) {
-        if (goodness < 0) {
-            sb.append("\uD83D\uDFE5");
-            if (trailingSpace) sb.append(" ");
-        } else if (goodness > 0) {
-            sb.append("✅");
-            if (trailingSpace) sb.append(" ");
-        }
-    }
-
-    public static void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
+    private static void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
         Formatter fmt = new Formatter().withSign(true);
         switch (segment) {
             case JsonMessageSegment.Delta it:

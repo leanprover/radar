@@ -13,11 +13,12 @@ import org.jooq.Configuration;
 import org.leanlang.radar.codegen.jooq.tables.History;
 import org.leanlang.radar.server.compare.CommitComparer;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
+import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.Repos;
 
 @Path("/compare/{repo}/{first}/{second}/")
-public record ResCompare(Repos repos) {
+public record ResCompare(Queue queue, Repos repos) {
 
     public record JsonGet(
             Optional<String> chashFirst,
@@ -38,7 +39,7 @@ public record ResCompare(Repos repos) {
             Optional<String> chashSecond = resolveRelativeTo(ctx, paramSecond, paramFirst);
 
             JsonCommitComparison comparison =
-                    CommitComparer.compareCommits(repo, ctx, chashFirst.orElse(null), chashSecond.orElse(null));
+                    CommitComparer.compareCommits(queue, repo, ctx, chashFirst.orElse(null), chashSecond.orElse(null));
 
             return new JsonGet(chashFirst, chashSecond, comparison);
         });

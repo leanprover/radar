@@ -238,6 +238,17 @@ public record Queue(Repos repos, Runners runners) {
         }
     }
 
+    public boolean isEnqueued(String repoName, String chash) {
+        Repo repo = repos.repo(repoName);
+        QueueRecord record = repo.db()
+                .read()
+                .dsl()
+                .selectFrom(QUEUE)
+                .where(QUEUE.CHASH.eq(chash))
+                .fetchOne();
+        return record != null;
+    }
+
     private JsonJob makeJob(Task task, Run run) throws IOException {
         Repo repo = task.repo();
 

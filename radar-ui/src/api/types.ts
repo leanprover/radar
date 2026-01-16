@@ -82,30 +82,13 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
 ]);
 
-export interface JsonSignificance {
-  importance: 0 | 1 | 2;
-  goodness: -1 | 0 | 1;
+export interface JsonMessage {
+  goodness: JsonMessageGoodness;
   segments: JsonMessageSegment[];
 }
-export const JsonSignificance = z.object({
-  importance: z.union([z.literal(0), z.literal(1), z.literal(2)]),
-  goodness: z.union([z.literal(-1), z.literal(0), z.literal(1)]),
+export const JsonMessage = z.object({
+  goodness: JsonMessageGoodness,
   segments: JsonMessageSegment.array(),
-});
-
-export interface JsonRunAnalysis {
-  name: string;
-  script: string;
-  runner: string;
-  exitCode: number;
-  significance?: JsonSignificance;
-}
-export const JsonRunAnalysis = z.object({
-  name: z.string(),
-  script: z.string(),
-  runner: z.string(),
-  exitCode: z.int(),
-  significance: JsonSignificance.nullish().transform((it) => it ?? undefined),
 });
 
 export interface JsonMetricComparison {
@@ -116,7 +99,6 @@ export interface JsonMetricComparison {
   secondSource?: string;
   unit?: string;
   direction: Direction;
-  significance?: JsonSignificance;
 }
 export const JsonMetricComparison = z.object({
   metric: z.string(),
@@ -141,18 +123,27 @@ export const JsonMetricComparison = z.object({
     .nullish()
     .transform((it) => it ?? undefined),
   direction: Direction,
-  significance: JsonSignificance.nullish().transform((it) => it ?? undefined),
 });
 
 export interface JsonCommitComparison {
   significant: boolean;
-  runs: JsonRunAnalysis[];
-  metrics: JsonMetricComparison[];
+
   warnings: string[];
+  notes: JsonMessage[];
+  largeChanges: JsonMessage[];
+  mediumChanges: JsonMessage[];
+  smallChanges: JsonMessage[];
+
+  measurements: JsonMetricComparison[];
 }
 export const JsonCommitComparison = z.object({
   significant: z.boolean(),
-  runs: JsonRunAnalysis.array(),
-  metrics: JsonMetricComparison.array(),
+
   warnings: z.string().array(),
+  notes: JsonMessage.array(),
+  largeChanges: JsonMessage.array(),
+  mediumChanges: JsonMessage.array(),
+  smallChanges: JsonMessage.array(),
+
+  measurements: JsonMetricComparison.array(),
 });

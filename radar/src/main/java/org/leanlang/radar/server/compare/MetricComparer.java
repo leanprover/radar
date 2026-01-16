@@ -3,167 +3,127 @@ package org.leanlang.radar.server.compare;
 import java.util.Map;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
-import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
 import org.leanlang.radar.server.config.ServerConfigRepoMetricFilter;
 
-public class MetricComparer {
-    private final ServerConfigRepoMetricFilter metricFilter;
-    private final MetricInfo metricInfo;
-    private final Map<String, MeasurementsRecord> measurementsFirst;
-    private final Map<String, MeasurementsRecord> measurementsSecond;
+public record MetricComparer(
+        Map<String, JsonMetricComparison> metricComparisons,
+        ServerConfigRepoMetricFilter metricFilter,
+        MetricInfo metricInfo) {
 
-    private @Nullable SignificanceBuilder significance;
-
-    private MetricComparer(
-            ServerConfigRepoMetricFilter metricFilter,
-            MetricInfo metricInfo,
-            Map<String, MeasurementsRecord> measurementsFirst,
-            Map<String, MeasurementsRecord> measurementsSecond) {
-        this.metricFilter = metricFilter;
-        this.metricInfo = metricInfo;
-        this.measurementsFirst = measurementsFirst;
-        this.measurementsSecond = measurementsSecond;
-    }
-
-    private String metric() {
-        return metricInfo.name();
-    }
-
-    private @Nullable MeasurementsRecord firstMeasurement() {
-        return measurementsFirst.get(metric());
-    }
-
-    private @Nullable MeasurementsRecord secondMeasurement() {
-        return measurementsSecond.get(metric());
-    }
-
-    private SignificanceBuilder builderDelta(int importance, float vFirst, float vSecond) {
-        return new SignificanceBuilder(importance)
-                .addMetric(metric())
-                .addText(": ")
-                .addDeltaAndDeltaPercent(vFirst, vSecond, metricInfo.unit().orElse(null), metricFilter.direction);
-    }
-
-    private void checkDeltaPercent(float vFirst, float vSecond) {
+    private @Nullable MetricComparisonSignificance checkDeltaPercent(float vFirst, float vSecond) {
         Float largeDelta = metricFilter.checkDeltaPercentLarge;
         Float mediumDelta = metricFilter.checkDeltaPercentMedium;
         Float smallDelta = metricFilter.checkDeltaPercentSmall;
-        if (largeDelta == null && mediumDelta == null && smallDelta == null) return;
+        if (largeDelta == null && mediumDelta == null && smallDelta == null) return null;
 
-        if (vFirst == 0) return;
+        if (vFirst == 0) return null;
         float deltaPercent = (vSecond - vFirst) / vFirst * 100;
         float deltaPercentAbs = Math.abs(deltaPercent);
 
         boolean isLarge = largeDelta != null && deltaPercentAbs >= largeDelta;
         boolean isMedium = mediumDelta != null && deltaPercentAbs >= mediumDelta;
         boolean isSmall = smallDelta != null && deltaPercentAbs >= smallDelta;
-
-        int importance;
-        if (isLarge) importance = JsonSignificance.IMPORTANCE_LARGE;
-        else if (isMedium) importance = JsonSignificance.IMPORTANCE_MEDIUM;
-        else if (isSmall) importance = JsonSignificance.IMPORTANCE_SMALL;
-        else return;
-
-        significance = builderDelta(importance, vFirst, vSecond)
-                .setGoodnessWithDirection(metricFilter.direction, vSecond - vFirst);
+        return MetricComparisonSignificance.fromLargeMediumSmall(isLarge, isMedium, isSmall);
     }
 
-    private void checkQuantileFactor(float vFirst, float vSecond) {
+    private MetricComparisonSignificance checkQuantileFactor(float vFirst, float vSecond) {
         Float largeFactor = metricFilter.checkQuantileFactorLarge;
         Float mediumFactor = metricFilter.checkQuantileFactorMedium;
         Float smallFactor = metricFilter.checkQuantileFactorSmall;
-        if (largeFactor == null && mediumFactor == null && smallFactor == null) return;
+        if (largeFactor == null && mediumFactor == null && smallFactor == null) return null;
 
-        if (metricInfo.quantile().isEmpty()) return;
+        if (metricInfo.quantile().isEmpty()) return null;
         float qf = metricInfo.quantile().get();
-        if (vFirst == vSecond) return; // Prevent 0.0/0.0
+        if (vFirst == vSecond) return null; // Prevent 0.0/0.0
         float f = Math.abs(vSecond - vFirst) / qf; // May be infinity
 
         boolean isLarge = largeFactor != null && f >= largeFactor;
         boolean isMedium = mediumFactor != null && f >= mediumFactor;
         boolean isSmall = smallFactor != null && f >= smallFactor;
-
-        int importance;
-        if (isLarge) importance = JsonSignificance.IMPORTANCE_LARGE;
-        else if (isMedium) importance = JsonSignificance.IMPORTANCE_MEDIUM;
-        else if (isSmall) importance = JsonSignificance.IMPORTANCE_SMALL;
-        else return;
-
-        significance = builderDelta(importance, vFirst, vSecond)
-                .setGoodnessWithDirection(metricFilter.direction, vSecond - vFirst);
+        return MetricComparisonSignificance.fromLargeMediumSmall(isLarge, isMedium, isSmall);
     }
 
-    private void reduceExpectedDirection(float vFirst, float vSecond) {
-        if (significance == null) return;
+    private MetricComparisonSignificance reduceExpectedDirection(
+            float vFirst, float vSecond, MetricComparisonSignificance significance, JsonMessageBuilder message) {
 
         String referenceCategory = metricFilter.reduceExpectedDirectionReferenceCategory;
-        if (referenceCategory == null) return;
+        if (referenceCategory == null) return significance;
 
         String referenceMetric = ParsedMetric.parse(metricInfo.name())
                 .withCategory(referenceCategory)
                 .format();
 
-        MeasurementsRecord rFirst = measurementsFirst.get(referenceMetric);
-        MeasurementsRecord rSecond = measurementsSecond.get(referenceMetric);
-        if (rFirst == null || rSecond == null) return;
+        JsonMetricComparison referenceComparison = metricComparisons.get(referenceMetric);
+        if (referenceComparison == null
+                || referenceComparison.first().isEmpty()
+                || referenceComparison.second().isEmpty()) return significance;
+        float rvFirst = referenceComparison.first().get();
+        float rvSecond = referenceComparison.second().get();
 
         float mDelta = vSecond - vFirst;
-        float rDelta = rSecond.getValue() - rFirst.getValue();
+        float rDelta = rvSecond - rvFirst;
         boolean expected = (rDelta > 0 && mDelta > 0) || (rDelta < 0 && mDelta < 0);
-        if (!expected) return;
+        if (!expected) return significance;
 
-        int importance = significance.importance();
-        if (importance <= JsonSignificance.IMPORTANCE_SMALL) return;
+        if (significance != MetricComparisonSignificance.SMALL)
+            message.addText(" (reduced significance based on *//" + referenceCategory + ")");
 
-        significance
-                .setImportance(JsonSignificance.IMPORTANCE_SMALL)
-                .addText(" (reduced significance based on *//" + referenceCategory + ")");
+        return MetricComparisonSignificance.SMALL;
     }
 
-    private void reduceAbsoluteLimits(float vFirst, float vSecond) {
-        if (significance == null) return;
+    private MetricComparisonSignificance reduceAbsoluteLimits(
+            float vFirst, float vSecond, MetricComparisonSignificance significance, JsonMessageBuilder message) {
 
         Float smallLimit = metricFilter.reduceAbsoluteLimitsSmall;
         Float mediumLimit = metricFilter.reduceAbsoluteLimitsMedium;
-        if (smallLimit == null && mediumLimit == null) return;
+        if (smallLimit == null && mediumLimit == null) return significance;
 
         float delta = Math.abs(vSecond - vFirst);
 
         boolean shouldBeSmall = smallLimit != null && delta < smallLimit;
         boolean shouldBeMedium = mediumLimit != null && delta < mediumLimit;
 
-        int importance = significance.importance();
-        if (shouldBeSmall && importance > JsonSignificance.IMPORTANCE_SMALL)
-            significance
-                    .setImportance(JsonSignificance.IMPORTANCE_SMALL)
-                    .addText(" (reduced significance based on absolute threshold)");
-        else if (shouldBeMedium && importance > JsonSignificance.IMPORTANCE_MEDIUM)
-            significance
-                    .setImportance(JsonSignificance.IMPORTANCE_MEDIUM)
-                    .addText(" (reduced significance based on absolute threshold)");
+        if (shouldBeSmall && significance.compareTo(MetricComparisonSignificance.SMALL) > 0) {
+            message.addText(" (reduced significance based on absolute threshold)");
+            return MetricComparisonSignificance.SMALL;
+        }
+
+        if (shouldBeMedium && significance.compareTo(MetricComparisonSignificance.MEDIUM) > 0) {
+            message.addText(" (reduced significance based on absolute threshold)");
+            return MetricComparisonSignificance.MEDIUM;
+        }
+
+        return significance;
     }
 
-    private void compare() {
-        MeasurementsRecord mFirst = firstMeasurement();
-        MeasurementsRecord mSecond = secondMeasurement();
-        if (mFirst == null || mSecond == null) return;
-        float vFirst = mFirst.getValue();
-        float vSecond = mSecond.getValue();
+    private Optional<MetricComparison> compare() {
+        JsonMetricComparison comparison = metricComparisons.get(metricInfo.name());
+        if (comparison == null) return Optional.empty();
+        if (comparison.first().isEmpty() || comparison.second().isEmpty()) return Optional.empty();
 
-        checkDeltaPercent(vFirst, vSecond);
-        checkQuantileFactor(vFirst, vSecond);
-        reduceExpectedDirection(vFirst, vSecond);
-        reduceAbsoluteLimits(vFirst, vSecond);
+        float vFirst = comparison.first().get();
+        float vSecond = comparison.second().get();
+
+        JsonMessageBuilder message = new JsonMessageBuilder()
+                .addMetric(metricInfo.name())
+                .addText(": ")
+                .addDeltaAndDeltaPercent(vFirst, vSecond, comparison.unit().orElse(null), metricFilter.direction)
+                .setGoodness(JsonMessageGoodness.fromDelta(vSecond - vFirst, metricFilter.direction));
+
+        MetricComparisonSignificance sigDelta = checkDeltaPercent(vFirst, vSecond);
+        MetricComparisonSignificance sigQuantile = checkQuantileFactor(vFirst, vSecond);
+        MetricComparisonSignificance significance = MetricComparisonSignificance.maxNullable(sigDelta, sigQuantile);
+        if (significance != null) significance = reduceExpectedDirection(vFirst, vSecond, significance, message);
+        if (significance != null) significance = reduceAbsoluteLimits(vFirst, vSecond, significance, message);
+
+        if (significance == null) return Optional.empty();
+        return Optional.of(new MetricComparison(significance, message.build()));
     }
 
-    public static Optional<JsonSignificance> compare(
+    public static Optional<MetricComparison> compare(
+            Map<String, JsonMetricComparison> metricComparisons,
             ServerConfigRepoMetricFilter metricFilter,
-            MetricInfo metricInfo,
-            Map<String, MeasurementsRecord> measurementsFirst,
-            Map<String, MeasurementsRecord> measurementsSecond) {
-
-        MetricComparer comparer = new MetricComparer(metricFilter, metricInfo, measurementsFirst, measurementsSecond);
-        comparer.compare();
-        return Optional.ofNullable(comparer.significance).map(SignificanceBuilder::build);
+            MetricInfo metricInfo) {
+        return new MetricComparer(metricComparisons, metricFilter, metricInfo).compare();
     }
 }

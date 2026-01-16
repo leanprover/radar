@@ -15,7 +15,6 @@ import PFormEnqueue from "@/components/pages/commit/PFormEnqueue.vue";
 import PGraphScatter from "@/components/pages/commit/PGraphScatter.vue";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
 import PReference from "@/components/pages/commit/PReference.vue";
-import { comparisonSignificance } from "@/components/pages/commit/significance.ts";
 import { useQueryParamAsString } from "@/lib/query.ts";
 import { escapeMetrics, metricFilterMatches, setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
@@ -49,12 +48,10 @@ const compare = reactive(
 
 const measurements = computed<JsonMetricComparison[]>(() => {
   if (!compare.isSuccess) return [];
-  return compare.data.comparison.metrics
+  return compare.data.comparison.measurements
     .filter((it) => it.second !== undefined)
     .filter((it) => metricFilterMatches(filterDebounced.value, it.metric));
 });
-
-const details = computed(() => comparisonSignificance(compare.data?.comparison));
 
 const referenceChash = computed(() => {
   if (compare.isSuccess) return compare.data.chashFirst;
@@ -154,39 +151,49 @@ watchEffect(() => {
 
   <CSection title="Significant results" collapsible start-open>
     <CLoading v-if="!compare.isSuccess" :error="compare.error" />
-    <div v-else-if="details.large === 0 && details.medium === 0 && details.small === 0">No significant results.</div>
+    <div
+      v-else-if="
+        compare.data.comparison.notes.length +
+          compare.data.comparison.largeChanges.length +
+          compare.data.comparison.mediumChanges.length +
+          compare.data.comparison.smallChanges.length ===
+        0
+      "
+    >
+      No significant results.
+    </div>
     <template v-else>
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
-        title="Runs"
-        :significances="details.runs"
-        :open="details.runs.length <= 10"
+        title="Notes"
+        :messages="compare.data.comparison.notes"
+        :open="compare.data.comparison.notes.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
         title="Large changes"
-        :significances="details.metricsLarge"
-        :open="details.metricsLarge.length <= 10"
+        :messages="compare.data.comparison.largeChanges"
+        :open="compare.data.comparison.largeChanges.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
         title="Medium changes"
-        :significances="details.metricsMedium"
-        :open="details.metricsMedium.length <= 10"
+        :messages="compare.data.comparison.mediumChanges"
+        :open="compare.data.comparison.mediumChanges.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
         title="Small changes"
-        :significances="details.metricsSmall"
-        :open="details.metricsSmall.length <= 10"
+        :messages="compare.data.comparison.smallChanges"
+        :open="compare.data.comparison.smallChanges.length <= 10"
       />
     </template>
   </CSection>

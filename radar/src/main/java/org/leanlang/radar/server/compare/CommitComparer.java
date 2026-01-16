@@ -6,6 +6,7 @@ import static org.leanlang.radar.codegen.jooq.Tables.QUANTILE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,52 +14,52 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.jooq.Configuration;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 import org.leanlang.radar.server.config.ServerConfigRepoMetricFilter;
+import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 
 public final class CommitComparer {
-    private CommitComparer() {}
+    Repo repo;
 
-    public static JsonCommitComparison compareCommits(
-            Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
-        return repo.db().readTransactionResult(ctx -> compareCommits(repo, ctx, chashFirst, chashSecond));
-    }
+    private final List<RunsRecord> runsFirst;
+    private final List<RunsRecord> runsSecond;
+    private final boolean enqueuedFirst;
+    private final boolean enqueuedSecond;
 
-    public static JsonCommitComparison compareCommits(
-            Repo repo, Configuration ctx, @Nullable String chashFirst, @Nullable String chashSecond) {
+    private final List<MetricInfo> metrics;
+    private final Map<String, JsonMetricComparison> metricComparisons;
 
-        List<MetricInfo> metrics = fetchMetrics(ctx);
+    private final List<String> warnings = new ArrayList<>();
+    private final List<JsonMessage> notes = new ArrayList<>();
+    private final List<JsonMessage> fatalNotes = new ArrayList<>();
+    private final List<JsonMessage> largeChanges = new ArrayList<>();
+    private final List<JsonMessage> mediumChanges = new ArrayList<>();
+    private final List<JsonMessage> smallChanges = new ArrayList<>();
+
+    private CommitComparer(
+            Queue queue, Repo repo, Configuration ctx, @Nullable String chashFirst, @Nullable String chashSecond) {
+
+        this.repo = repo;
+
+        runsFirst = fetchRuns(ctx, chashFirst);
+        runsSecond = fetchRuns(ctx, chashSecond);
+        enqueuedFirst = fetchInQueue(queue, repo, chashFirst);
+        enqueuedSecond = fetchInQueue(queue, repo, chashSecond);
+
+        metrics = fetchMetrics(ctx);
         Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
         Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
-        List<RunsRecord> runsFirst = fetchRuns(ctx, chashFirst);
-        List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
+        metricComparisons = compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond);
 
-        List<JsonRunAnalysis> runAnalyses = analyzeRuns(runsSecond, !repo.significantRunFailures());
-        List<JsonMetricComparison> metricComparisons =
-                compareMetrics(repo, metrics, measurementsFirst, measurementsSecond);
-        List<String> warnings = findWarnings(runsFirst, runsSecond);
-
-        // Large changes also count as medium and small changes.
-        // Medium changes also count as small changes.
-        int smallChanges = 0;
-        int mediumChanges = 0;
-        int largeChanges = 0;
-        JsonCommitComparison tmpComparison = new JsonCommitComparison(false, runAnalyses, metricComparisons, warnings);
-        for (JsonSignificance significance : tmpComparison.significances().toList()) {
-            if (significance.importance() >= JsonSignificance.IMPORTANCE_SMALL) smallChanges++;
-            if (significance.importance() >= JsonSignificance.IMPORTANCE_MEDIUM) mediumChanges++;
-            if (significance.importance() >= JsonSignificance.IMPORTANCE_LARGE) largeChanges++;
-        }
-
-        boolean significant = (smallChanges >= repo.significantSmallChanges())
-                || (mediumChanges >= repo.significantMediumChanges())
-                || (largeChanges >= repo.significantLargeChanges());
-
-        return new JsonCommitComparison(significant, runAnalyses, metricComparisons, warnings);
+        analyzeRunsForWarnings();
+        analyzeRunsForNotes();
+        analyzeMeasurements();
+        // TODO Notable metrics
     }
 
     private static List<MetricInfo> fetchMetrics(Configuration ctx) {
@@ -73,10 +74,9 @@ public final class CommitComparer {
                 .toList();
     }
 
-    private static Map<String, MeasurementsRecord> fetchMeasurements(Configuration ctx, @Nullable String chash) {
-        if (chash == null) return Map.of();
-        return ctx.dsl().selectFrom(MEASUREMENTS).where(MEASUREMENTS.CHASH.eq(chash)).stream()
-                .collect(Collectors.toMap(MeasurementsRecord::getMetric, it -> it));
+    private static boolean fetchInQueue(Queue queue, Repo repo, @Nullable String chash) {
+        if (chash == null) return false;
+        return queue.isEnqueued(repo.name(), chash);
     }
 
     private static List<RunsRecord> fetchRuns(Configuration ctx, @Nullable String chash) {
@@ -84,73 +84,43 @@ public final class CommitComparer {
         return ctx.dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).fetch();
     }
 
-    private static List<JsonRunAnalysis> analyzeRuns(List<RunsRecord> runs, boolean ignoreFailedRuns) {
-        return runs.stream()
-                .map(run -> new JsonRunAnalysis(
-                        run.getName(),
-                        run.getScript(),
-                        run.getRunner(),
-                        run.getExitCode(),
-                        analyzeRun(run.getName(), run.getExitCode(), ignoreFailedRuns)))
-                .toList();
+    private static Map<String, MeasurementsRecord> fetchMeasurements(Configuration ctx, @Nullable String chash) {
+        if (chash == null) return Map.of();
+        return ctx.dsl().selectFrom(MEASUREMENTS).where(MEASUREMENTS.CHASH.eq(chash)).stream()
+                .collect(Collectors.toMap(MeasurementsRecord::getMetric, it -> it));
     }
 
-    public static Optional<JsonSignificance> analyzeRun(String name, int exitCode, boolean ignoreFailedRuns) {
-        if (ignoreFailedRuns) return Optional.empty();
-        if (exitCode == 0) return Optional.empty();
-        return new SignificanceBuilder(JsonSignificance.IMPORTANCE_LARGE)
-                .setGoodness(JsonSignificance.GOODNESS_BAD)
-                .addRun(name)
-                .addText(" exited with code ")
-                .addExitCode(exitCode)
-                .buildOpt();
-    }
-
-    private static List<JsonMetricComparison> compareMetrics(
+    private static Map<String, JsonMetricComparison> compareMeasurements(
             Repo repo,
             List<MetricInfo> metrics,
             Map<String, MeasurementsRecord> measurementsFirst,
             Map<String, MeasurementsRecord> measurementsSecond) {
 
-        List<JsonMetricComparison> result = new ArrayList<>();
-        for (MetricInfo metricInfo : metrics) {
-            JsonMetricComparison comparison = compareMetric(repo, metricInfo, measurementsFirst, measurementsSecond);
-            if (comparison == null) continue;
-            result.add(comparison);
+        Map<String, JsonMetricComparison> result = new HashMap<>();
+        for (MetricInfo metric : metrics) {
+            Optional<MeasurementsRecord> first = Optional.ofNullable(measurementsFirst.get(metric.name()));
+            Optional<MeasurementsRecord> second = Optional.ofNullable(measurementsSecond.get(metric.name()));
+            if (first.isEmpty() && second.isEmpty()) continue;
+            JsonMetricComparison comparison = new JsonMetricComparison(
+                    metric.name(),
+                    first.map(MeasurementsRecord::getValue),
+                    second.map(MeasurementsRecord::getValue),
+                    first.map(MeasurementsRecord::getSource),
+                    second.map(MeasurementsRecord::getSource),
+                    metric.unit(),
+                    repo.metricFilter(metric.name()).direction);
+            result.put(comparison.metric(), comparison);
         }
         return result;
     }
 
-    private static @Nullable JsonMetricComparison compareMetric(
-            Repo repo,
-            MetricInfo metricInfo,
-            Map<String, MeasurementsRecord> measurementsFirst,
-            Map<String, MeasurementsRecord> measurementsSecond) {
+    private void analyzeRunsForWarnings() {
+        if (enqueuedSecond) return;
 
-        String metric = metricInfo.name();
-        ServerConfigRepoMetricFilter metricFilter = repo.metricFilter(metric);
-
-        Optional<MeasurementsRecord> mFirst = Optional.ofNullable(measurementsFirst.get(metric));
-        Optional<MeasurementsRecord> mSecond = Optional.ofNullable(measurementsSecond.get(metric));
-        if (mFirst.isEmpty() && mSecond.isEmpty()) return null;
-
-        Optional<JsonSignificance> significance = MetricComparer.compare(
-                repo.metricFilter(metricInfo.name()), metricInfo, measurementsFirst, measurementsSecond);
-
-        return new JsonMetricComparison(
-                metric,
-                mFirst.map(MeasurementsRecord::getValue),
-                mSecond.map(MeasurementsRecord::getValue),
-                mFirst.map(MeasurementsRecord::getSource),
-                mSecond.map(MeasurementsRecord::getSource),
-                metricInfo.unit(),
-                metricFilter.direction,
-                significance);
-    }
-
-    // TODO Make private once OldCommitComparer is removed
-    public static List<String> findWarnings(List<RunsRecord> runsFirst, List<RunsRecord> runsSecond) {
-        List<String> warnings = new ArrayList<>();
+        if (enqueuedFirst) {
+            warnings.add("The reference commit has not finished benchmarking yet.");
+            return;
+        }
 
         Map<String, RunsRecord> byNameFirst =
                 runsFirst.stream().collect(Collectors.toMap(RunsRecord::getName, it -> it));
@@ -175,16 +145,75 @@ public final class CommitComparer {
 
             RunsRecord runFirst = byNameFirst.get(name);
             RunsRecord runSecond = byNameSecond.get(name);
-            if (!Objects.equals(runFirst.getSystemConfigurationId(), runSecond.getSystemConfigurationId()))
-                warnings.add("Runner for run " + name + " has different system configurations between commits.");
             if (!runFirst.getRunner().equals(runSecond.getRunner()))
                 warnings.add("Runners for run " + name + " differ between commits.");
             if (!runFirst.getScript().equals(runSecond.getScript()))
                 warnings.add("Scripts for run " + name + " differ between commits.");
             if (!runFirst.getChashBench().equals(runSecond.getChashBench()))
                 warnings.add("Bench repo commit hashes for run " + name + " differ between commits.");
+            if (!Objects.equals(runFirst.getSystemConfigurationId(), runSecond.getSystemConfigurationId()))
+                warnings.add("Runner for run " + name + " has different system configurations between commits.");
         }
+    }
 
-        return warnings;
+    private void analyzeRunsForNotes() {
+        if (!repo.significantRunFailures()) return;
+
+        for (RunsRecord run : runsSecond) {
+            if (run.getExitCode() == 0) continue;
+            fatalNotes.add(new JsonMessageBuilder()
+                    .setGoodness(JsonMessageGoodness.BAD)
+                    .addRun(run.getName())
+                    .addText(" exited with code ")
+                    .addExitCode(run.getExitCode())
+                    .build());
+        }
+    }
+
+    private void analyzeMeasurements() {
+        for (MetricInfo metric : metrics) {
+            ServerConfigRepoMetricFilter metricFilter = repo.metricFilter(metric.name());
+            MetricComparison comparison = MetricComparer.compare(metricComparisons, metricFilter, metric)
+                    .orElse(null);
+            if (comparison == null) continue;
+
+            switch (comparison.significance()) {
+                case SMALL -> smallChanges.add(comparison.message());
+                case MEDIUM -> mediumChanges.add(comparison.message());
+                case LARGE -> largeChanges.add(comparison.message());
+            }
+        }
+    }
+
+    private JsonCommitComparison comparison() {
+        int largeChangesAmount = largeChanges.size();
+        int mediumChangesAmount = largeChangesAmount + mediumChanges.size();
+        int smallChangesAmount = mediumChangesAmount + smallChanges.size();
+
+        boolean significant = !fatalNotes.isEmpty()
+                || largeChangesAmount >= repo.significantLargeChanges()
+                || mediumChangesAmount >= repo.significantMediumChanges()
+                || smallChangesAmount >= repo.significantSmallChanges();
+
+        List<JsonMessage> allNotes =
+                Stream.concat(notes.stream(), fatalNotes.stream()).toList();
+
+        List<JsonMetricComparison> measurements = metrics.stream()
+                .map(it -> metricComparisons.get(it.name()))
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new JsonCommitComparison(
+                significant, warnings, allNotes, largeChanges, mediumChanges, smallChanges, measurements);
+    }
+
+    public static JsonCommitComparison compareCommits(
+            Queue queue, Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
+        return repo.db().readTransactionResult(ctx -> compareCommits(queue, repo, ctx, chashFirst, chashSecond));
+    }
+
+    public static JsonCommitComparison compareCommits(
+            Queue queue, Repo repo, Configuration ctx, @Nullable String chashFirst, @Nullable String chashSecond) {
+        return new CommitComparer(queue, repo, ctx, chashFirst, chashSecond).comparison();
     }
 }

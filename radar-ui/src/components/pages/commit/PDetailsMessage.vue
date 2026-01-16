@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { JsonSignificance } from "@/api/types.ts";
+import type { JsonMessage } from "@/api/types.ts";
 import PDetailsMessageSegment from "@/components/pages/commit/PDetailsMessageSegment.vue";
 
-const { repo, chash, reference, significance } = defineProps<{
+const { repo, chash, reference, message } = defineProps<{
   repo: string;
   chash: string;
   reference: string;
-  significance: JsonSignificance;
+  message: JsonMessage;
 }>();
 </script>
 
 <template>
   <div>
     <PDetailsMessageSegment
-      v-for="(segment, i) in significance.segments"
+      v-for="(segment, i) in message.segments"
       :key="i"
       :repo
       :chash

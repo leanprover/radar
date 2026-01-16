@@ -109,7 +109,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().register(new ResAdminRepoMetricsRename(repos));
         environment.jersey().register(new ResCommit(repos, queue));
         environment.jersey().register(new ResCommitRun(repos, queue));
-        environment.jersey().register(new ResCompare(repos));
+        environment.jersey().register(new ResCompare(queue, repos));
         environment.jersey().register(new ResMetricsProm(repos, queue));
         environment.jersey().register(new ResQueue(repos, runners, queue));
         environment.jersey().register(new ResQueueRun(queue));
