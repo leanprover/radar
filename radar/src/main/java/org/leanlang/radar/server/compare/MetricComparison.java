@@ -1,3 +1,3 @@
 package org.leanlang.radar.server.compare;
 
-public record MetricComparison(MetricComparisonSignificance significance, JsonMessage message) {}
+public record MetricComparison(MetricComparisonSignificance significance, JsonMessageBuilder message) {}

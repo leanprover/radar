@@ -6,8 +6,14 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public final class JsonMessageBuilder {
+    private boolean hidden = false;
     private JsonMessageGoodness goodness = JsonMessageGoodness.NEUTRAL;
     private final List<JsonMessageSegment> segments = new ArrayList<>();
+
+    public JsonMessageBuilder setHidden(boolean hidden) {
+        this.hidden = hidden;
+        return this;
+    }
 
     public JsonMessageBuilder setGoodness(JsonMessageGoodness goodness) {
         this.goodness = goodness;
@@ -74,6 +80,6 @@ public final class JsonMessageBuilder {
     }
 
     public JsonMessage build() {
-        return new JsonMessage(goodness, segments.stream().toList());
+        return new JsonMessage(hidden, goodness, segments.stream().toList());
     }
 }

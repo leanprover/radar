@@ -114,7 +114,7 @@ public record MetricComparer(
         if (significance != null) significance = reduceAbsoluteLimits(vFirst, vSecond, significance, message);
 
         if (significance == null) return Optional.empty();
-        return Optional.of(new MetricComparison(significance, message.build()));
+        return Optional.of(new MetricComparison(significance, message));
     }
 
     public static Optional<MetricComparison> compare(

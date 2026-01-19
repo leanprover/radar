@@ -36,6 +36,9 @@ const counters = computed(() => {
   if (neutral > 0) elements.push({ text: neutral.toFixed(), cls: color("NEUTRAL") });
   return elements;
 });
+
+const visible = computed(() => messages.filter((it) => !it.hidden));
+const hidden = computed(() => messages.filter((it) => it.hidden));
 </script>
 
 <template>
@@ -46,9 +49,10 @@ const counters = computed(() => {
         ><template v-if="index > 0">, </template><span :class="counter.cls">{{ counter.text }}</span></template
       >)
     </div>
+
     <CList>
       <CListItem
-        v-for="(message, i) in messages"
+        v-for="(message, i) in visible"
         :key="i"
         :marker="marker(message.goodness)"
         :class="color(message.goodness)"
@@ -56,5 +60,20 @@ const counters = computed(() => {
         <PDetailsMessage :repo :chash :reference :message />
       </CListItem>
     </CList>
+
+    <details v-if="hidden.length > 0">
+      <summary class="cursor-pointer select-none">and {{ hidden.length }} hidden</summary>
+
+      <CList>
+        <CListItem
+          v-for="(message, i) in hidden"
+          :key="i"
+          :marker="marker(message.goodness)"
+          :class="color(message.goodness)"
+        >
+          <PDetailsMessage :repo :chash :reference :message />
+        </CListItem>
+      </CList>
+    </details>
   </template>
 </template>

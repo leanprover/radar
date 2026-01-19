@@ -83,10 +83,12 @@ export const JsonMessageSegment = z.discriminatedUnion("type", [
 ]);
 
 export interface JsonMessage {
+  hidden: boolean;
   goodness: JsonMessageGoodness;
   segments: JsonMessageSegment[];
 }
 export const JsonMessage = z.object({
+  hidden: z.boolean(),
   goodness: JsonMessageGoodness,
   segments: JsonMessageSegment.array(),
 });

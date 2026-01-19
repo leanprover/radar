@@ -166,15 +166,26 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         sb.append(")**");
 
         // List
+        List<JsonMessage> visible = messages.stream().filter(it -> !it.hidden()).toList();
+        int hidden = messages.size() - visible.size();
+
         if (messages.isEmpty()) return;
-        if (messages.size() > 20) {
+        if (visible.size() > 20) {
             sb.append("\n\nToo many entries to display here. View the full report on radar instead.");
             return;
         }
+        if (visible.isEmpty()) {
+            sb.append("\n\n").append(hidden).append(" hidden");
+            return;
+        }
+
         sb.append("\n");
         for (JsonMessage message : messages) {
             sb.append("\n- ");
             formatMessage(sb, message);
+        }
+        if (hidden > 0) {
+            sb.append("\n\n+ ").append(hidden).append(" hidden");
         }
     }
 

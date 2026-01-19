@@ -32,6 +32,7 @@ public final class CommitComparer {
     private final boolean enqueuedSecond;
 
     private final List<MetricInfo> metrics;
+    private final Set<String> notableMetricsSet;
     private final Map<String, ServerConfigRepoMetricFilter> metricFilters;
     private final Map<String, JsonMetricComparison> metricComparisons;
 
@@ -53,6 +54,7 @@ public final class CommitComparer {
         enqueuedSecond = fetchInQueue(queue, repo, chashSecond);
 
         metrics = fetchMetrics(ctx);
+        notableMetricsSet = repo.notableMetrics().stream().collect(Collectors.toUnmodifiableSet());
         metricFilters =
                 metrics.stream().collect(Collectors.toMap(MetricInfo::name, it -> repo.metricFilter(it.name())));
         Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
@@ -198,10 +200,15 @@ public final class CommitComparer {
                     .orElse(null);
             if (comparison == null) continue;
 
+            final JsonMessage message = comparison
+                    .message()
+                    .setHidden(notableMetricsSet.contains(metric.name()))
+                    .build();
+
             switch (comparison.significance()) {
-                case SMALL -> smallChanges.add(comparison.message());
-                case MEDIUM -> mediumChanges.add(comparison.message());
-                case LARGE -> largeChanges.add(comparison.message());
+                case SMALL -> smallChanges.add(message);
+                case MEDIUM -> mediumChanges.add(message);
+                case LARGE -> largeChanges.add(message);
             }
         }
     }
