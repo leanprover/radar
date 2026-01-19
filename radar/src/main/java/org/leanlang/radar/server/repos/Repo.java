@@ -30,7 +30,6 @@ public final class Repo implements AutoCloseable {
 
     private final RepoSource source;
     private final RepoSource benchSource;
-    private final List<ServerConfigRepoMetricFilter> metricFilters;
 
     private final RepoDb db;
     private final RepoGit git;
@@ -53,8 +52,6 @@ public final class Repo implements AutoCloseable {
 
         this.source = RepoSource.parse(config.url);
         this.benchSource = RepoSource.parse(config.benchUrl);
-        this.metricFilters = Optional.ofNullable(config.significantMetrics).orElse(List.of()).stream()
-                .toList();
 
         this.db = new RepoDb(name(), dirs.repoDb(name()));
         this.git = new RepoGit(dirs.repoGit(name()), this.source.gitUrl());
@@ -148,7 +145,7 @@ public final class Repo implements AutoCloseable {
     }
 
     public ServerConfigRepoMetricFilter metricFilter(String metric) {
-        for (ServerConfigRepoMetricFilter filter : metricFilters) {
+        for (ServerConfigRepoMetricFilter filter : config.significantMetrics) {
             if (filter.match.matcher(metric).find()) {
                 return filter;
             }

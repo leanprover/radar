@@ -30,7 +30,7 @@ public class ServerConfigRepo {
     public int significantMediumChanges = 5;
     public int significantSmallChanges = 20;
     public boolean significantRunFailures = true;
-    public @Valid @Nullable List<ServerConfigRepoMetricFilter> significantMetrics;
+    public @Valid List<ServerConfigRepoMetricFilter> significantMetrics = List.of();
 
     // Other platforms
     public @Valid ServerConfigRepoGithub github = new ServerConfigRepoGithub();
