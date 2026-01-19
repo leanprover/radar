@@ -5,11 +5,17 @@ import CListItem from "@/components/CListItem.vue";
 import PDetailsMessage from "@/components/pages/commit/PDetailsMessage.vue";
 import { computed } from "vue";
 
-const { repo, chash, reference, title, messages } = defineProps<{
+const {
+  repo,
+  chash,
+  reference,
+  title = undefined,
+  messages,
+} = defineProps<{
   repo: string;
   chash: string;
   reference: string;
-  title: string;
+  title?: string;
   messages: JsonMessage[];
 }>();
 
@@ -43,11 +49,11 @@ const hidden = computed(() => messages.filter((it) => it.hidden));
 
 <template>
   <template v-if="messages.length > 0">
-    <div>
+    <div v-if="title">
       {{ title }}
       (<template v-for="(counter, index) in counters" :key="index"
         ><template v-if="index > 0">, </template><span :class="counter.cls">{{ counter.text }}</span></template
-      >)
+      >):
     </div>
 
     <CList>
@@ -61,7 +67,7 @@ const hidden = computed(() => messages.filter((it) => it.hidden));
       </CListItem>
     </CList>
 
-    <details v-if="hidden.length > 0">
+    <details v-if="hidden.length > 0" class="-mt-2">
       <summary class="cursor-pointer select-none">and {{ hidden.length }} hidden</summary>
 
       <CList>

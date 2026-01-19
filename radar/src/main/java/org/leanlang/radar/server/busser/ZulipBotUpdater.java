@@ -112,6 +112,7 @@ public record ZulipBotUpdater(
         formatTitle(sb, childChash, childTitle);
         sb.append("**");
 
+        formatWarnings(sb, comparison);
         GithubBotMessages.formatBody(sb, comparison);
 
         return sb.toString();
@@ -148,5 +149,17 @@ public record ZulipBotUpdater(
                     .append("](")
                     .append(url)
                     .append(")");
+    }
+
+    private static void formatWarnings(StringBuilder sb, JsonCommitComparison comparison) {
+        if (comparison.warnings().isEmpty()) return;
+
+        sb.append("\n")
+                .append("\n> :warning: Warning")
+                .append("\n>")
+                .append("\n> " + GithubBotMessages.WARNINGS_EXPLANATION)
+                .append("\n>");
+
+        for (String warning : comparison.warnings()) sb.append("\n> - ").append(warning);
     }
 }

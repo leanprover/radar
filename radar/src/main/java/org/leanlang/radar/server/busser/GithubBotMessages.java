@@ -126,15 +126,25 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 .sorted()
                 .forEach(it -> sb.append(" @").append(it));
 
+        formatWarnings(sb, comparison);
         formatBody(sb, comparison);
 
         return sb.toString();
     }
 
-    public static void formatBody(StringBuilder sb, JsonCommitComparison comparison) {
-        formatWarningSection(sb, comparison.warnings());
-        formatMessageSection(sb, "Notes", comparison.notes());
+    public static void formatWarnings(StringBuilder sb, JsonCommitComparison comparison) {
+        if (comparison.warnings().isEmpty()) return;
 
+        sb.append("\n")
+                .append("\n> [!WARNING]")
+                .append("\n> " + WARNINGS_EXPLANATION)
+                .append("\n>");
+
+        for (String warning : comparison.warnings()) sb.append("\n> - ").append(warning);
+    }
+
+    public static void formatBody(StringBuilder sb, JsonCommitComparison comparison) {
+        formatMessageSection(sb, null, comparison.notes());
         formatMessageSection(sb, "Large changes", comparison.largeChanges());
         formatMessageSection(sb, "Medium changes", comparison.mediumChanges());
         formatMessageSection(sb, "Small changes", comparison.smallChanges());
@@ -146,24 +156,15 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         }
     }
 
-    private static void formatWarningSection(StringBuilder sb, List<String> warnings) {
-        if (warnings.isEmpty()) return;
-
-        // Heading
-        sb.append("\n\n**Warnings**\n\n").append(WARNINGS_EXPLANATION);
-
-        // List
-        sb.append("\n");
-        for (String warning : warnings) sb.append("\n- ").append(warning);
-    }
-
-    private static void formatMessageSection(StringBuilder sb, String title, List<JsonMessage> messages) {
+    private static void formatMessageSection(StringBuilder sb, @Nullable String title, List<JsonMessage> messages) {
         if (messages.isEmpty()) return;
 
         // Heading
-        sb.append("\n\n**").append(title).append(" (");
-        formatMessageCounters(sb, messages);
-        sb.append(")**");
+        if (title != null && !title.isBlank()) {
+            sb.append("\n\n**").append(title).append(" (");
+            formatMessageCounters(sb, messages);
+            sb.append(")**");
+        }
 
         // List
         List<JsonMessage> visible = messages.stream().filter(it -> !it.hidden()).toList();
@@ -185,7 +186,7 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
             formatMessage(sb, message);
         }
         if (hidden > 0) {
-            sb.append("\n\n+ ").append(hidden).append(" hidden");
+            sb.append("\n\nand ").append(hidden).append(" hidden");
         }
     }
 

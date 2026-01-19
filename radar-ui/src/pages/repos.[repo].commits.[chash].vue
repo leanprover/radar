@@ -149,7 +149,7 @@ watchEffect(() => {
     </CList>
   </CSection>
 
-  <CSection title="Significant results" collapsible start-open>
+  <CSection title="Notable results" collapsible start-open>
     <CLoading v-if="!compare.isSuccess" :error="compare.error" />
     <div
       v-else-if="
@@ -160,14 +160,13 @@ watchEffect(() => {
         0
       "
     >
-      No significant results.
+      No notable results.
     </div>
     <template v-else>
       <PDetailsSection
         :repo="route.params.repo"
         :chash="route.params.chash"
         :reference="queryReference"
-        title="Notes"
         :messages="compare.data.comparison.notes"
         :open="compare.data.comparison.notes.length <= 10"
       />
