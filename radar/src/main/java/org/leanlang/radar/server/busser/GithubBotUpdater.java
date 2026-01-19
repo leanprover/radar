@@ -259,6 +259,12 @@ public final class GithubBotUpdater {
     // Hack territory
 
     private void startMathlibBenchCommand(GithubCommandRecord command, JsonGhPull pull) {
+        if (!repo.name().equals("mathlib4")) {
+            log.info("Mathlib bench command issued in non-mathlib4 repo {}", repo.name());
+            db.setCommandFailed(command.getCommandIdLong(), msgs.msgRepoIsNotMathlib());
+            return;
+        }
+
         Repo repoMathlib = repos.repo("mathlib4-nightly-testing");
         Long commandId = command.getCommandIdLong();
         log.info("Starting mathlib bench command for comment {} in #{}", commandId, command.getNumber());

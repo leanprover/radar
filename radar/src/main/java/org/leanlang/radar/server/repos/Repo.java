@@ -127,10 +127,6 @@ public final class Repo implements AutoCloseable {
         return config.benchRuns;
     }
 
-    public boolean hackMathlibCommand() {
-        return config.hackMathlibCommand;
-    }
-
     public RepoDb db() {
         return db;
     }

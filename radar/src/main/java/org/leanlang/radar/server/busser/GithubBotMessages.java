@@ -43,6 +43,10 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 + EDIT_POSSIBLE;
     }
 
+    public String msgRepoIsNotMathlib() {
+        return "This command can only be used in the mathlib repository." + EDIT_POSSIBLE;
+    }
+
     public String msgLabelMismatch(List<String> superfluousLabels, List<String> missingLabels) {
         StringBuilder sb = new StringBuilder();
 
