@@ -104,11 +104,8 @@ public record MetricComparer(
         float vFirst = comparison.first().get();
         float vSecond = comparison.second().get();
 
-        JsonMessageBuilder message = new JsonMessageBuilder()
-                .addMetric(metricInfo.name())
-                .addText(": ")
-                .addDeltaAndDeltaPercent(vFirst, vSecond, comparison.unit().orElse(null), metricFilter.direction)
-                .setGoodness(JsonMessageGoodness.fromDelta(vSecond - vFirst, metricFilter.direction));
+        JsonMessageBuilder message = JsonMessageBuilder.metricDeltaDeltaPercentGoodness(
+                metricInfo.name(), vFirst, vSecond, comparison.unit().orElse(null), metricFilter.direction);
 
         MetricComparisonSignificance sigDelta = checkDeltaPercent(vFirst, vSecond);
         MetricComparisonSignificance sigQuantile = checkQuantileFactor(vFirst, vSecond);

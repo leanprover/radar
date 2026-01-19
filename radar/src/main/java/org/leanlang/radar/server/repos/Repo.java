@@ -169,6 +169,10 @@ public final class Repo implements AutoCloseable {
         return config.significantRunFailures;
     }
 
+    public List<String> notableMetrics() {
+        return config.notableMetrics;
+    }
+
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
         Path file = dirs.repoRunLog(name(), chash, run);
         Files.createDirectories(file.getParent());

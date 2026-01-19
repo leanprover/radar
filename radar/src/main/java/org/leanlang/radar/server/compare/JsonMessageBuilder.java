@@ -64,6 +64,15 @@ public final class JsonMessageBuilder {
         return add(new JsonMessageSegment.Text(text));
     }
 
+    public static JsonMessageBuilder metricDeltaDeltaPercentGoodness(
+            String metric, float first, float second, @Nullable String unit, int direction) {
+        return new JsonMessageBuilder()
+                .addMetric(metric)
+                .addText(": ")
+                .addDeltaAndDeltaPercent(first, second, unit, direction)
+                .setGoodness(JsonMessageGoodness.fromDelta(second - first, direction));
+    }
+
     public JsonMessage build() {
         return new JsonMessage(goodness, segments.stream().toList());
     }

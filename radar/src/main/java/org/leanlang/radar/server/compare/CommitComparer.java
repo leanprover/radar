@@ -32,6 +32,7 @@ public final class CommitComparer {
     private final boolean enqueuedSecond;
 
     private final List<MetricInfo> metrics;
+    private final Map<String, ServerConfigRepoMetricFilter> metricFilters;
     private final Map<String, JsonMetricComparison> metricComparisons;
 
     private final List<String> warnings = new ArrayList<>();
@@ -52,14 +53,16 @@ public final class CommitComparer {
         enqueuedSecond = fetchInQueue(queue, repo, chashSecond);
 
         metrics = fetchMetrics(ctx);
+        metricFilters =
+                metrics.stream().collect(Collectors.toMap(MetricInfo::name, it -> repo.metricFilter(it.name())));
         Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
         Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
-        metricComparisons = compareMeasurements(repo, metrics, measurementsFirst, measurementsSecond);
+        metricComparisons = compareMeasurements(metrics, metricFilters, measurementsFirst, measurementsSecond);
 
         analyzeRunsForWarnings();
         analyzeRunsForNotes();
+        noteNotableMetrics();
         analyzeMeasurements();
-        // TODO Notable metrics
     }
 
     private static List<MetricInfo> fetchMetrics(Configuration ctx) {
@@ -91,8 +94,8 @@ public final class CommitComparer {
     }
 
     private static Map<String, JsonMetricComparison> compareMeasurements(
-            Repo repo,
             List<MetricInfo> metrics,
+            Map<String, ServerConfigRepoMetricFilter> metricFilters,
             Map<String, MeasurementsRecord> measurementsFirst,
             Map<String, MeasurementsRecord> measurementsSecond) {
 
@@ -108,7 +111,7 @@ public final class CommitComparer {
                     first.map(MeasurementsRecord::getSource),
                     second.map(MeasurementsRecord::getSource),
                     metric.unit(),
-                    repo.metricFilter(metric.name()).direction);
+                    metricFilters.get(metric.name()).direction);
             result.put(comparison.metric(), comparison);
         }
         return result;
@@ -170,9 +173,27 @@ public final class CommitComparer {
         }
     }
 
+    private void noteNotableMetrics() {
+        for (String metric : repo.notableMetrics()) {
+            JsonMetricComparison comparison = metricComparisons.get(metric);
+            if (comparison == null
+                    || comparison.first().isEmpty()
+                    || comparison.second().isEmpty()) continue;
+            Float vFirst = comparison.first().get();
+            Float vSecond = comparison.second().get();
+            notes.add(JsonMessageBuilder.metricDeltaDeltaPercentGoodness(
+                            metric,
+                            vFirst,
+                            vSecond,
+                            comparison.unit().orElse(null),
+                            metricFilters.get(metric).direction)
+                    .build());
+        }
+    }
+
     private void analyzeMeasurements() {
         for (MetricInfo metric : metrics) {
-            ServerConfigRepoMetricFilter metricFilter = repo.metricFilter(metric.name());
+            ServerConfigRepoMetricFilter metricFilter = metricFilters.get(metric.name());
             MetricComparison comparison = MetricComparer.compare(metricComparisons, metricFilter, metric)
                     .orElse(null);
             if (comparison == null) continue;
