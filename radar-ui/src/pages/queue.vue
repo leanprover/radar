@@ -6,7 +6,11 @@ import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CTimeAgo from "@/components/format/CTimeAgo.vue";
 import PQueue from "@/components/pages/queue/PQueue.vue";
+import { radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
 import { reactive } from "vue";
+
+useTitle(radarTitle("Queue"));
 
 const queue = reactive(useQueue());
 </script>

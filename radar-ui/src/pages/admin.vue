@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import CSection from "@/components/CSection.vue";
 import PFormAdminToken from "@/components/pages/admin/PFormAdminToken.vue";
+import { radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
+
+useTitle(radarTitle("Admin page"));
 </script>
 
 <template>

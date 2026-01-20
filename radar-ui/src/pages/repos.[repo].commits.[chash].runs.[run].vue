@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useCommit } from "@/api/commit.ts";
 import { useCommitRun } from "@/api/commitRun.ts";
 import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
@@ -8,17 +9,33 @@ import CTimeDurationBetween from "@/components/format/CTimeDurationBetween.vue";
 import CTimeRange from "@/components/format/CTimeRange.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
 import CLinkRepo from "@/components/link/CLinkRepo.vue";
+import { radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
 import { reactive } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 
 const repo = useRepo(route.params.repo);
+const commit = reactive(
+  useCommit(
+    () => route.params.repo,
+    () => route.params.chash,
+  ),
+);
 const run = reactive(
   useCommitRun(
     () => route.params.repo,
     () => route.params.chash,
     () => route.params.run,
+  ),
+);
+
+useTitle(() =>
+  radarTitle(
+    `${route.params.run} on ${run.data?.runner ?? "???"}`,
+    commit.data?.commit.title ?? route.params.chash,
+    route.params.repo,
   ),
 );
 </script>

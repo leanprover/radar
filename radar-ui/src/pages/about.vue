@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import CSection from "@/components/CSection.vue";
+import { radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
+
+useTitle(radarTitle("About"));
 </script>
 
 <template>

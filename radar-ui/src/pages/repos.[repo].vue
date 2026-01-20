@@ -5,12 +5,16 @@ import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import PHistory from "@/components/pages/repo/PHistory.vue";
 import PHistoryGithub from "@/components/pages/repo/PHistoryGithub.vue";
+import { radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
 import { computed, reactive } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo]");
 const repos = reactive(useRepos());
 const github = reactive(useRepoGithubBot(() => route.params.repo));
+
+useTitle(() => radarTitle(route.params.repo));
 
 const info = computed(() => repos.data?.repos.find((it) => it.name === route.params.repo));
 </script>

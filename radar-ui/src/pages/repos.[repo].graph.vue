@@ -13,7 +13,8 @@ import {
   useQueryParamAsString,
   useQueryParamAsStringSet,
 } from "@/lib/query.ts";
-import { parseMetric } from "@/lib/utils.ts";
+import { parseMetric, radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
 import type uPlot from "uplot";
 import { computed, reactive, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -48,6 +49,8 @@ const colors = [
 const router = useRouter();
 const route = useRoute("/repos.[repo].graph");
 const repo = useRepo(route.params.repo);
+
+useTitle(() => radarTitle(`Graph of ${route.params.repo}`));
 
 const queryM = useQueryParamAsStringSet("m");
 const queryN = useQueryParamAsInt("n", nDefault, { min: nMin, max: nMax });

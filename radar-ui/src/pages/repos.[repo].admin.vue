@@ -3,11 +3,15 @@ import CSection from "@/components/CSection.vue";
 import PFormMaintain from "@/components/pages/repoAdmin/PFormMaintain.vue";
 import PFormRecomputeSignificance from "@/components/pages/repoAdmin/PFormRecomputeSignificance.vue";
 import PMetricRenamer from "@/components/pages/repoAdmin/PMetricRenamer.vue";
+import { radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute("/repos.[repo].admin");
 const repo = computed(() => route.params.repo);
+
+useTitle(() => radarTitle(`Admin page for ${route.params.repo}`));
 </script>
 
 <template>

@@ -16,9 +16,9 @@ import PGraphScatter from "@/components/pages/commit/PGraphScatter.vue";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
 import PReference from "@/components/pages/commit/PReference.vue";
 import { useQueryParamAsString } from "@/lib/query.ts";
-import { escapeMetrics, metricFilterMatches, setsEqual } from "@/lib/utils.ts";
+import { escapeMetrics, metricFilterMatches, radarTitle, setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
-import { refDebounced, useIntervalFn } from "@vueuse/core";
+import { refDebounced, useIntervalFn, useTitle } from "@vueuse/core";
 import { computed, reactive, watch, watchEffect } from "vue";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 
@@ -45,6 +45,8 @@ const compare = reactive(
     () => route.params.chash,
   ),
 );
+
+useTitle(() => radarTitle(commit.data?.commit.title ?? route.params.chash, route.params.repo));
 
 const measurements = computed<JsonMetricComparison[]>(() => {
   if (!compare.isSuccess) return [];

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useCommit } from "@/api/commit.ts";
 import { useQueueRun } from "@/api/queueRun.ts";
 import { useRepo } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
@@ -7,6 +8,8 @@ import CSection from "@/components/CSection.vue";
 import CTimeDurationSince from "@/components/format/CTimeDurationSince.vue";
 import CLinkCommitHash from "@/components/link/CLinkCommitHash.vue";
 import CLinkRepo from "@/components/link/CLinkRepo.vue";
+import { radarTitle } from "@/lib/utils.ts";
+import { useTitle } from "@vueuse/core";
 import { reactive, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -14,6 +17,12 @@ const router = useRouter();
 const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
 
 const repo = useRepo(route.params.repo);
+const commit = reactive(
+  useCommit(
+    () => route.params.repo,
+    () => route.params.chash,
+  ),
+);
 const run = reactive(
   useQueueRun(
     () => route.params.repo,
@@ -21,6 +30,15 @@ const run = reactive(
     () => route.params.run,
   ),
 );
+
+useTitle(() => {
+  const runner = run.data && run.data !== "not found" ? run.data.runner : "???";
+  return radarTitle(
+    `Queue: ${route.params.run} on ${runner}`,
+    commit.data?.commit.title ?? route.params.chash,
+    route.params.repo,
+  );
+});
 
 // Redirect to finished run page once done
 watch(run, (newValue) => {

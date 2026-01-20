@@ -52,3 +52,8 @@ export function getGrade(delta: number | [number, number], direction: Direction)
   if (sign === -direction) return "bad";
   return "neutral";
 }
+
+export function radarTitle(...parts: string[]): string {
+  parts.push("Radar");
+  return parts.join(" - ");
+}
