@@ -241,26 +241,20 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
     private static void formatMessageSegment(StringBuilder sb, JsonMessageSegment segment) {
         Formatter fmt = new Formatter().withSign(true);
         switch (segment) {
-            case JsonMessageSegment.Delta it:
+            case JsonMessageSegment.Delta it ->
                 sb.append("**")
                         .append(fmt.formatValueWithUnit(it.amount(), it.unit().orElse(null)))
                         .append("**");
-                break;
-            case JsonMessageSegment.DeltaPercent it:
-                sb.append("**").append(fmt.formatValue(it.factor(), "100%")).append("**");
-                break;
-            case JsonMessageSegment.ExitCode it:
+            case JsonMessageSegment.DeltaPercent it ->
+                sb.append("**")
+                        .append(fmt.withPrecision(2).formatValue(it.factor(), "100%"))
+                        .append("**");
+            case JsonMessageSegment.ExitCode it ->
                 sb.append("**").append(it.exitCode()).append("**");
-                break;
-            case JsonMessageSegment.Metric it:
+            case JsonMessageSegment.Metric it ->
                 sb.append("`").append(it.metric()).append("`");
-                break;
-            case JsonMessageSegment.Run it:
-                sb.append("`").append(it.run()).append("`");
-                break;
-            case JsonMessageSegment.Text it:
-                sb.append(it.text());
-                break;
+            case JsonMessageSegment.Run it -> sb.append("`").append(it.run()).append("`");
+            case JsonMessageSegment.Text it -> sb.append(it.text());
         }
     }
 }

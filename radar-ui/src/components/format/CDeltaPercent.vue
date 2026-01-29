@@ -11,6 +11,6 @@ const color = computed(() => colors[goodness]);
 
 <template>
   <span :class="['font-bold', color]" :title="factor.toString()">{{
-    formatValue(factor, "100%", { sign: true })
+    formatValue(factor, "100%", { sign: true, precision: 2 })
   }}</span>
 </template>
