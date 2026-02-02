@@ -19,10 +19,11 @@
     <db.url>jdbc:sqlite:${project.build.directory}/data.db</db.url>
 
     <!-- https://mvnrepository.com/artifact/io.dropwizard/dropwizard-dependencies -->
-    <dropwizard.version>5.0.0</dropwizard.version>
+    <!-- https://github.com/dropwizard/dropwizard/releases -->
+    <dropwizard.version>5.0.1</dropwizard.version>
     <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
     <!-- https://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine -->
-    <flyway.version>11.20.0</flyway.version>
+    <flyway.version>12.0.0</flyway.version>
     <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
     <hikaricp.version>7.0.2</hikaricp.version>
     <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
@@ -30,7 +31,7 @@
     <jgit.version>7.5.0.202512021534-r</jgit.version>
     <!-- https://mvnrepository.com/artifact/org.jooq/jooq -->
     <!-- https://www.jooq.org/notes -->
-    <jooq.version>3.20.10</jooq.version>
+    <jooq.version>3.20.11</jooq.version>
     <!-- https://mvnrepository.com/artifact/info.picocli/picocli -->
     <picocli.version>4.7.7</picocli.version>
     <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
@@ -45,7 +46,7 @@
     <maven-plugin-shade.version>3.6.1</maven-plugin-shade.version>
     <!-- https://mvnrepository.com/artifact/com.diffplug.spotless/spotless-maven-plugin -->
     <!-- https://github.com/diffplug/spotless/releases -->
-    <maven-plugin-spotless.version>3.1.0</maven-plugin-spotless.version>
+    <maven-plugin-spotless.version>3.2.1</maven-plugin-spotless.version>
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin -->
     <maven-plugin-surefire.version>3.5.4</maven-plugin-surefire.version>
   </properties>
