@@ -2,6 +2,7 @@ package org.leanlang.radar.server.api;
 
 import static org.leanlang.radar.codegen.jooq.Tables.MEASUREMENTS;
 import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
+import static org.leanlang.radar.codegen.jooq.Tables.QUANTILE;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.auth.Auth;
@@ -11,8 +12,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
 import java.util.Map;
-import org.jooq.impl.DSL;
-import org.leanlang.radar.codegen.jooq.tables.Measurements;
 import org.leanlang.radar.codegen.jooq.tables.records.MetricsRecord;
 import org.leanlang.radar.server.api.auth.Admin;
 import org.leanlang.radar.server.repos.Repos;
@@ -48,16 +47,18 @@ public record ResAdminRepoMetricsRename(Repos repos) {
                             .execute();
                 }
 
-                // Rename measurements for which there is no naming collision
-                Measurements m2 = MEASUREMENTS.as("m2");
+                // Rename measurements
                 ctx.dsl()
                         .update(MEASUREMENTS)
                         .set(MEASUREMENTS.METRIC, entry.getValue())
                         .where(MEASUREMENTS.METRIC.eq(entry.getKey()))
-                        .andNotExists(DSL.selectOne()
-                                .from(m2)
-                                .where(m2.CHASH.eq(MEASUREMENTS.CHASH))
-                                .and(m2.METRIC.eq(entry.getValue())))
+                        .execute();
+
+                // Move quantile data to new metric
+                ctx.dsl()
+                        .update(QUANTILE)
+                        .set(QUANTILE.METRIC, entry.getValue())
+                        .where(QUANTILE.METRIC.eq(entry.getKey()))
                         .execute();
 
                 // Delete the old metric
