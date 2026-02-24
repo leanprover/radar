@@ -128,7 +128,7 @@ function normalize(values: (number | null)[]): (number | null)[] {
 
 const data = computed<uPlot.AlignedData>(() => {
   if (!graph.data) return [];
-  const indices = graph.data.commits.map((_, i) => i);
+  const indices = graph.data.commits.map((_, i) => i - (graph.data.commits.length - 1));
   const measurements = graph.data.metrics.map((it) => it.measurements).map((it) => normalize(it));
   return [indices, ...measurements];
 });
