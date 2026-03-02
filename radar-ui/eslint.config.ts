@@ -38,6 +38,7 @@ export default defineConfig([
     rules: {
       // https://eslint.org/docs/latest/rules/
       eqeqeq: "error",
+      "no-useless-assignment": "off", // Doesn't seem to handle vue very well
 
       // https://typescript-eslint.io/rules/
       "@typescript-eslint/no-useless-default-assignment": "off", // Collides with vue/require-default-prop

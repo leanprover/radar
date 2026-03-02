@@ -23,7 +23,7 @@
     <dropwizard.version>5.0.1</dropwizard.version>
     <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
     <!-- https://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine -->
-    <flyway.version>12.0.0</flyway.version>
+    <flyway.version>12.0.3</flyway.version>
     <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
     <hikaricp.version>7.0.2</hikaricp.version>
     <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
@@ -36,19 +36,21 @@
     <picocli.version>4.7.7</picocli.version>
     <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
     <!-- https://github.com/xerial/sqlite-jdbc/releases -->
-    <sqlite-jdbc.version>3.51.1.0</sqlite-jdbc.version>
+    <sqlite-jdbc.version>3.51.2.0</sqlite-jdbc.version>
 
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-antrun-plugin -->
     <maven-plugin-antrun.version>3.2.0</maven-plugin-antrun.version>
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
-    <maven-plugin-compiler.version>3.14.1</maven-plugin-compiler.version>
+    <!-- https://github.com/apache/maven-compiler-plugin/releases -->
+    <maven-plugin-compiler.version>3.15.0</maven-plugin-compiler.version>
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
     <maven-plugin-shade.version>3.6.1</maven-plugin-shade.version>
     <!-- https://mvnrepository.com/artifact/com.diffplug.spotless/spotless-maven-plugin -->
     <!-- https://github.com/diffplug/spotless/releases -->
     <maven-plugin-spotless.version>3.2.1</maven-plugin-spotless.version>
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin -->
-    <maven-plugin-surefire.version>3.5.4</maven-plugin-surefire.version>
+    <!-- https://github.com/apache/maven-surefire/releases -->
+    <maven-plugin-surefire.version>3.5.5</maven-plugin-surefire.version>
   </properties>
 
   <dependencyManagement>

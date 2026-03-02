@@ -1,7 +1,6 @@
 import { fetchJson } from "@/api/utils.ts";
 import { useQuery } from "@tanstack/vue-query";
-import type { MaybeRefOrGetter } from "@vueuse/core";
-import { computed, toValue } from "vue";
+import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import * as z from "zod";
 
 const JsonRepo = z.object({
