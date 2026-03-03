@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eux
 
-systemd-run --scope -- echo hi
+systemd-run --user --scope -- echo hi
 
 ## Compute memory limit in bytes
 #mem_total="$(awk '/MemTotal/ { print $2 * 1024 }' /proc/meminfo)"
