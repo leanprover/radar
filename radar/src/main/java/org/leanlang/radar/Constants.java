@@ -33,6 +33,11 @@ public final class Constants {
     public static final int RUNNER_STATUS_UPDATE_LINES = 100;
 
     /**
+     * Maximum number of output lines the runner will keep and send back to the server.
+     */
+    public static final int RUNNER_MAX_OUTPUT_LINES = 30000;
+
+    /**
      * A runner's last status update must be at most this long ago,
      * or else the runner will no longer be considered "connected".
      *

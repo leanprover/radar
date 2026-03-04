@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import org.leanlang.radar.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,7 @@ public final class OutputLines {
 
     private final MeasurementCollector entries;
     private final List<JsonOutputLine> lines;
+    private boolean truncated = false;
 
     public OutputLines(MeasurementCollector entries) {
         this.entries = entries;
@@ -21,6 +23,15 @@ public final class OutputLines {
 
     private synchronized void add(JsonOutputLine line) {
         if (entries.addLineFromOutput(line.line())) line = line.withMeasurement();
+
+        if (lines.size() >= Constants.RUNNER_MAX_OUTPUT_LINES && line.source() != JsonOutputLine.INTERNAL) {
+            if (truncated) return;
+            truncated = true;
+            addInternal("---------- 8< ---------- 8< ---------- 8< ----------");
+            addInternal("Too many output lines. Logs are truncated at this point.");
+            return;
+        }
+
         lines.add(line);
         log.debug("[{}] {}", line.source(), line.line());
     }
