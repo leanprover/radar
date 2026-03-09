@@ -120,7 +120,10 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 .append(linkToChash(repoForeign ? repo : null, chashSecond))
                 .append(" against ")
                 .append(linkToChash(repoForeign ? repo : null, chashFirst))
-                .append(" are in!");
+                .append(" are in.");
+
+        if (comparison.significant()) sb.append(" Significant changes detected!");
+        else sb.append(" There are no significant changes.");
 
         Stream.concat(Stream.of(userLogin), usersThatReactedWithEye.stream()).collect(Collectors.toSet()).stream()
                 .sorted()
