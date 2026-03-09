@@ -19,12 +19,14 @@ import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
 import org.leanlang.radar.server.repos.RepoZulip;
+import org.leanlang.radar.server.repos.Repos;
 import org.leanlang.radar.util.RadarLinker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public record ZulipBotUpdater(
         Queue queue,
+        Repos repos,
         RadarLinker radarLinker,
         Repo repo,
         RepoZulip repoZulip,
@@ -84,7 +86,7 @@ public record ZulipBotUpdater(
     }
 
     private void sendMessageForCommit(@Nullable String parentChash, String childChash, String childTitle) {
-        JsonCommitComparison comparison = CommitComparer.compareCommits(queue, repo, parentChash, childChash);
+        JsonCommitComparison comparison = CommitComparer.compareCommits(queue, repos, repo, parentChash, childChash);
 
         if (comparison.significant()) {
             String content = messageContent(childChash, childTitle, comparison);

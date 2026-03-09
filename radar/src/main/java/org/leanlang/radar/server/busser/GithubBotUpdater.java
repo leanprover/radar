@@ -200,7 +200,7 @@ public final class GithubBotUpdater {
         }
 
         List<String> usersThatReactedWithEye = getUsersThatReactedWithEyes(command);
-        JsonCommitComparison comparison = CommitComparer.compareCommits(queue, inRepo, chashFirst, chashSecond);
+        JsonCommitComparison comparison = CommitComparer.compareCommits(queue, repos, inRepo, chashFirst, chashSecond);
 
         db.setCommandRunningFinished(
                 commandId,

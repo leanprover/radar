@@ -32,6 +32,7 @@ public class ServerConfigRepo {
     public boolean significantRunFailures = true;
     public @Valid List<ServerConfigRepoMetricFilter> significantMetrics = List.of();
     public @Valid List<String> notableMetrics = List.of();
+    public @Nullable String useQuantilesFrom = null;
 
     // Other platforms
     public @Valid ServerConfigRepoGithub github = new ServerConfigRepoGithub();

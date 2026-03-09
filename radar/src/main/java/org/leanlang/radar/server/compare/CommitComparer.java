@@ -13,6 +13,7 @@ import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 import org.leanlang.radar.server.config.ServerConfigRepoMetricFilter;
 import org.leanlang.radar.server.queue.Queue;
 import org.leanlang.radar.server.repos.Repo;
+import org.leanlang.radar.server.repos.Repos;
 
 public final class CommitComparer {
     CommitComparerData data;
@@ -150,9 +151,10 @@ public final class CommitComparer {
     }
 
     public static JsonCommitComparison compareCommits(
-            Queue queue, Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
+            Queue queue, Repos repos, Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
 
-        CommitComparerData data = CommitComparerData.load(queue, repo, chashFirst, chashSecond);
+        Repo quantileRepo = repo.useQuantilesFrom().map(repos::repo).orElse(repo);
+        CommitComparerData data = CommitComparerData.load(queue, repo, quantileRepo, chashFirst, chashSecond);
         return new CommitComparer(data).comparison();
     }
 }

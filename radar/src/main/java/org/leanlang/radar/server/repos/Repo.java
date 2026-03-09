@@ -173,6 +173,10 @@ public final class Repo implements AutoCloseable {
         return config.notableMetrics;
     }
 
+    public Optional<String> useQuantilesFrom() {
+        return Optional.ofNullable(config.useQuantilesFrom);
+    }
+
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {
         Path file = dirs.repoRunLog(name(), chash, run);
         Files.createDirectories(file.getParent());

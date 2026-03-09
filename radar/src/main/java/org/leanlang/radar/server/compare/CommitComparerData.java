@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.codegen.jooq.tables.records.MeasurementsRecord;
+import org.leanlang.radar.codegen.jooq.tables.records.QuantileRecord;
 import org.leanlang.radar.codegen.jooq.tables.records.RunsRecord;
 import org.leanlang.radar.server.config.ServerConfigRepoMetricFilter;
 import org.leanlang.radar.server.queue.Queue;
@@ -38,7 +39,9 @@ public record CommitComparerData(
         Map<String, JsonMetricComparison> metricComparisons) {
 
     public static CommitComparerData load(
-            Queue queue, Repo repo, @Nullable String chashFirst, @Nullable String chashSecond) {
+            Queue queue, Repo repo, Repo quantileRepo, @Nullable String chashFirst, @Nullable String chashSecond) {
+
+        Map<String, Float> quantiles = fetchQuantiles(quantileRepo);
 
         return repo.db().readTransactionResult(ctx -> {
             List<RunsRecord> runsFirst = fetchRuns(ctx, chashFirst);
@@ -46,7 +49,7 @@ public record CommitComparerData(
             boolean enqueuedFirst = fetchInQueue(queue, repo, chashFirst);
             boolean enqueuedSecond = fetchInQueue(queue, repo, chashSecond);
 
-            List<MetricInfo> metrics = fetchMetrics(ctx);
+            List<MetricInfo> metrics = fetchMetrics(ctx, quantiles);
             List<String> notableMetrics = repo.notableMetrics();
             Set<String> notableMetricsSet = repo.notableMetrics().stream().collect(Collectors.toUnmodifiableSet());
 
@@ -90,15 +93,17 @@ public record CommitComparerData(
         return queue.isEnqueued(repo.name(), chash);
     }
 
-    private static List<MetricInfo> fetchMetrics(Configuration ctx) {
-        return ctx
-                .dsl()
-                .select(METRICS.METRIC, METRICS.UNIT, QUANTILE.VALUE)
-                .from(METRICS.leftJoin(QUANTILE).onKey())
-                .orderBy(METRICS.METRIC.asc())
-                .stream()
-                .map(it ->
-                        new MetricInfo(it.value1(), Optional.ofNullable(it.value2()), Optional.ofNullable(it.value3())))
+    private static Map<String, Float> fetchQuantiles(Repo quantileRepo) {
+        return quantileRepo.db().read().dsl().selectFrom(QUANTILE).stream()
+                .collect(Collectors.toMap(QuantileRecord::getMetric, QuantileRecord::getValue));
+    }
+
+    private static List<MetricInfo> fetchMetrics(Configuration ctx, Map<String, Float> quantiles) {
+        return ctx.dsl().selectFrom(METRICS).orderBy(METRICS.METRIC.asc()).stream()
+                .map(it -> new MetricInfo(
+                        it.getMetric(),
+                        Optional.ofNullable(it.getUnit()),
+                        Optional.ofNullable(quantiles.get(it.getMetric()))))
                 .toList();
     }
 
