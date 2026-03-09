@@ -51,7 +51,7 @@ const history = reactive(useRepoHistory(repo, { n: 16, s: search }));
         </ComboboxPortal>
       </ComboboxRoot>
 
-      <CButton @click="reference = undefined">Clear</CButton>
+      <CButton @click="reference = undefined">Reset to parent</CButton>
     </CControlRow>
   </CControl>
 
