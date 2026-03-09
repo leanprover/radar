@@ -1,5 +1,6 @@
 package org.leanlang.radar.server.api;
 
+import static org.leanlang.radar.codegen.jooq.Tables.COMMIT_RELATIONSHIPS;
 import static org.leanlang.radar.codegen.jooq.Tables.HISTORY;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,6 +55,16 @@ public record ResCompare(Queue queue, Repos repos) {
                     .selectFrom(h1.join(h2).on(h1.POSITION.add(1).eq(h2.POSITION)))
                     .where(h2.CHASH.eq(base))
                     .fetchOne(h1.CHASH);
+
+            if (result == null) {
+                result = ctx.dsl()
+                        .selectFrom(COMMIT_RELATIONSHIPS)
+                        .where(COMMIT_RELATIONSHIPS.CHILD.eq(base))
+                        .orderBy(COMMIT_RELATIONSHIPS.PARENT)
+                        .limit(1)
+                        .fetchOne(COMMIT_RELATIONSHIPS.PARENT);
+            }
+
             return Optional.ofNullable(result);
         }
 
