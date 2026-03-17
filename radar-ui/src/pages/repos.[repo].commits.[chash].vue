@@ -151,6 +151,21 @@ watchEffect(() => {
     </CList>
   </CSection>
 
+  <CSection
+    v-if="compare.isSuccess && compare.data.comparison.newMetrics.length > 0"
+    title="New metrics"
+    collapsible
+    start-open
+  >
+    <PDetailsSection
+      :repo="route.params.repo"
+      :chash="route.params.chash"
+      :reference="queryReference"
+      :messages="compare.data.comparison.newMetrics"
+      :open="compare.data.comparison.newMetrics.length <= 10"
+    />
+  </CSection>
+
   <CSection title="Notable results" collapsible start-open>
     <CLoading v-if="!compare.isSuccess" :error="compare.error" />
     <div

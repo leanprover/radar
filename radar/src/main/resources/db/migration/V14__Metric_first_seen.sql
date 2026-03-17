@@ -1,0 +1,2 @@
+ALTER TABLE metrics
+    ADD COLUMN first_seen_time TEXT NOT NULL DEFAULT '1970-01-01 00:00:00+00:00';

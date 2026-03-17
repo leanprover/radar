@@ -148,6 +148,7 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
 
     public static void formatBody(StringBuilder sb, JsonCommitComparison comparison) {
         formatMessageSection(sb, null, comparison.notes());
+        formatMessageSection(sb, "New metrics", comparison.newMetrics());
         formatMessageSection(sb, "Large changes", comparison.largeChanges());
         formatMessageSection(sb, "Medium changes", comparison.mediumChanges());
         formatMessageSection(sb, "Small changes", comparison.smallChanges());

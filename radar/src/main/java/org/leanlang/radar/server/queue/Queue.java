@@ -332,7 +332,7 @@ public record Queue(Repos repos, Runners runners) {
             MetricsRecord record = metrics.get(entry.metric());
             if (record == null) {
                 MetricsRecord newRecord =
-                        new MetricsRecord(entry.metric(), entry.unit().orElse(null));
+                        new MetricsRecord(entry.metric(), entry.unit().orElse(null), Instant.now());
                 metrics.put(entry.metric(), newRecord);
             } else {
                 entry.unit().ifPresent(record::setUnit);

@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import java.net.URI;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.server.config.validators.RepoRunNamesUnique;
 
@@ -31,8 +32,11 @@ public class ServerConfigRepo {
     public int significantSmallChanges = 20;
     public boolean significantRunFailures = true;
     public @Valid List<ServerConfigRepoMetricFilter> significantMetrics = List.of();
-    public @Valid List<String> notableMetrics = List.of();
     public @Nullable String useQuantilesFrom = null;
+
+    public @Valid List<String> notableMetrics = List.of();
+    public boolean newMetrics = false;
+    public @Nullable Pattern newMetricsOmit = null;
 
     // Other platforms
     public @Valid ServerConfigRepoGithub github = new ServerConfigRepoGithub();

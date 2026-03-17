@@ -11,6 +11,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.runner.supervisor.JsonOutputLine;
 import org.leanlang.radar.server.config.Dirs;
@@ -169,12 +170,20 @@ public final class Repo implements AutoCloseable {
         return config.significantRunFailures;
     }
 
+    public Optional<String> useQuantilesFrom() {
+        return Optional.ofNullable(config.useQuantilesFrom);
+    }
+
     public List<String> notableMetrics() {
         return config.notableMetrics;
     }
 
-    public Optional<String> useQuantilesFrom() {
-        return Optional.ofNullable(config.useQuantilesFrom);
+    public boolean newMetrics() {
+        return config.newMetrics;
+    }
+
+    public Optional<Pattern> newMetricsOmit() {
+        return Optional.ofNullable(config.newMetricsOmit);
     }
 
     public void saveRunLog(String chash, String run, List<JsonOutputLine> lines) throws IOException {

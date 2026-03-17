@@ -5,11 +5,13 @@ import static org.leanlang.radar.codegen.jooq.Tables.METRICS;
 import static org.leanlang.radar.codegen.jooq.Tables.QUANTILE;
 import static org.leanlang.radar.codegen.jooq.Tables.RUNS;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.jooq.Configuration;
 import org.jspecify.annotations.Nullable;
@@ -28,7 +30,8 @@ public record CommitComparerData(
 
         List<MetricInfo> metrics,
         List<String> notableMetrics,
-        Set<String> notableMetricsSet,
+        Optional<Instant> newMetricsCutoff,
+        Optional<Pattern> newMetricsOmit,
 
         int significantLargeChanges,
         int significantMediumChanges,
@@ -51,7 +54,9 @@ public record CommitComparerData(
 
             List<MetricInfo> metrics = fetchMetrics(ctx, quantiles);
             List<String> notableMetrics = repo.notableMetrics();
-            Set<String> notableMetricsSet = repo.notableMetrics().stream().collect(Collectors.toUnmodifiableSet());
+            Optional<Instant> newMetricsCutoff =
+                    repo.newMetrics() ? Optional.of(Instant.now().minus(Duration.ofDays(1))) : Optional.empty();
+            Optional<Pattern> newMetricsOmit = repo.newMetricsOmit();
 
             int significantLargeChanges = repo.significantLargeChanges();
             int significantMediumChanges = repo.significantMediumChanges();
@@ -73,7 +78,8 @@ public record CommitComparerData(
                     enqueuedSecond,
                     metrics,
                     notableMetrics,
-                    notableMetricsSet,
+                    newMetricsCutoff,
+                    newMetricsOmit,
                     significantLargeChanges,
                     significantMediumChanges,
                     significantSmallChanges,
@@ -103,6 +109,7 @@ public record CommitComparerData(
                 .map(it -> new MetricInfo(
                         it.getMetric(),
                         Optional.ofNullable(it.getUnit()),
+                        it.getFirstSeenTime(),
                         Optional.ofNullable(quantiles.get(it.getMetric()))))
                 .toList();
     }

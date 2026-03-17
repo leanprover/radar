@@ -1,11 +1,13 @@
 package org.leanlang.radar.server.compare;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
@@ -18,9 +20,12 @@ import org.leanlang.radar.server.repos.Repos;
 public final class CommitComparer {
     CommitComparerData data;
 
+    private final Set<String> hidden = new HashSet<>();
+
     private final List<String> warnings = new ArrayList<>();
     private final List<JsonMessage> notes = new ArrayList<>();
     private final List<JsonMessage> fatalNotes = new ArrayList<>();
+    private final List<JsonMessage> newMetrics = new ArrayList<>();
     private final List<JsonMessage> largeChanges = new ArrayList<>();
     private final List<JsonMessage> mediumChanges = new ArrayList<>();
     private final List<JsonMessage> smallChanges = new ArrayList<>();
@@ -31,6 +36,7 @@ public final class CommitComparer {
         analyzeRunsForWarnings();
         analyzeRunsForNotes();
         noteNotableMetrics();
+        noteNewMetrics();
         analyzeMeasurements();
     }
 
@@ -98,6 +104,7 @@ public final class CommitComparer {
                     || comparison.second().isEmpty()) continue;
             Float vFirst = comparison.first().get();
             Float vSecond = comparison.second().get();
+
             notes.add(JsonMessageBuilder.metricDeltaDeltaPercentGoodness(
                             metric,
                             vFirst,
@@ -105,6 +112,35 @@ public final class CommitComparer {
                             comparison.unit().orElse(null),
                             data.metricFilters().get(metric).direction)
                     .build());
+            hidden.add(metric);
+        }
+    }
+
+    private void noteNewMetrics() {
+        if (data.newMetricsCutoff().isEmpty()) return;
+        Instant cutoff = data.newMetricsCutoff().get();
+        Pattern pattern = data.newMetricsOmit().orElse(null);
+
+        for (MetricInfo metric : data.metrics()) {
+            if (metric.firstSeen().isBefore(cutoff)) continue;
+            if (pattern != null && pattern.matcher(metric.name()).find()) continue;
+
+            JsonMetricComparison comparison = data.metricComparisons().get(metric.name());
+            if (comparison == null
+                    || comparison.first().isEmpty()
+                    || comparison.second().isEmpty()) continue;
+            Float vFirst = comparison.first().get();
+            Float vSecond = comparison.second().get();
+
+            newMetrics.add(JsonMessageBuilder.metricDeltaDeltaPercentGoodness(
+                            metric.name(),
+                            vFirst,
+                            vSecond,
+                            comparison.unit().orElse(null),
+                            data.metricFilters().get(metric.name()).direction)
+                    .setHidden(hidden.contains(metric.name()))
+                    .build());
+            hidden.add(metric.name());
         }
     }
 
@@ -117,7 +153,7 @@ public final class CommitComparer {
 
             final JsonMessage message = comparison
                     .message()
-                    .setHidden(data.notableMetricsSet().contains(metric.name()))
+                    .setHidden(hidden.contains(metric.name()))
                     .build();
 
             switch (comparison.significance()) {
@@ -147,7 +183,7 @@ public final class CommitComparer {
                 .toList();
 
         return new JsonCommitComparison(
-                significant, warnings, allNotes, largeChanges, mediumChanges, smallChanges, measurements);
+                significant, warnings, allNotes, newMetrics, largeChanges, mediumChanges, smallChanges, measurements);
     }
 
     public static JsonCommitComparison compareCommits(

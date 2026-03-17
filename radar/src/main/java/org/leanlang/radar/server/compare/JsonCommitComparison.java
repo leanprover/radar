@@ -8,6 +8,7 @@ public record JsonCommitComparison(
 
         @JsonProperty(required = true) List<String> warnings,
         @JsonProperty(required = true) List<JsonMessage> notes,
+        @JsonProperty(required = true) List<JsonMessage> newMetrics,
         @JsonProperty(required = true) List<JsonMessage> largeChanges,
         @JsonProperty(required = true) List<JsonMessage> mediumChanges,
         @JsonProperty(required = true) List<JsonMessage> smallChanges,

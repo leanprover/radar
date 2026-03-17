@@ -132,6 +132,7 @@ export interface JsonCommitComparison {
 
   warnings: string[];
   notes: JsonMessage[];
+  newMetrics: JsonMessage[];
   largeChanges: JsonMessage[];
   mediumChanges: JsonMessage[];
   smallChanges: JsonMessage[];
@@ -143,6 +144,7 @@ export const JsonCommitComparison = z.object({
 
   warnings: z.string().array(),
   notes: JsonMessage.array(),
+  newMetrics: JsonMessage.array(),
   largeChanges: JsonMessage.array(),
   mediumChanges: JsonMessage.array(),
   smallChanges: JsonMessage.array(),
