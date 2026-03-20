@@ -1,4 +1,5 @@
 import argparse
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -137,11 +138,11 @@ def check_delta_percent(small: float, medium: float, large: float) -> Step:
 def check_quantile_factor(small: float, medium: float, large: float) -> Step:
     def step(ctx: Context, comp: MetricComparison) -> None:
         v1, v2 = ctx.values(comp.metric)
-        qf = ctx.quantile(comp.metric)
-        if qf == 0:
-            return
+        if v1 == v2:
+            return  # Prevent 0.0/0.0
 
-        f = abs(v2 - v1) / qf
+        qf = ctx.quantile(comp.metric)
+        f = abs(v2 - v1) / qf if qf != 0 else math.inf
         sig = MetricSignificance.with_limits(comp.metric, f, small, medium, large)
 
         if sig is not None:
@@ -176,7 +177,6 @@ def reduce_expected_direction(reference_category: str) -> Step:
 
 
 def reduce_absolute_limits(
-    self,
     small: float | None = None,
     medium: float | None = None,
 ) -> Step:

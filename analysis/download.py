@@ -61,7 +61,7 @@ def get_recent_commits(instance: str, repo: str, n: int) -> list[Commit]:
 def get_metrics_for_commit(instance: str, repo: str, commit: Commit) -> None:
     r = requests.get(f"{instance}/compare/{repo}/parent/{commit.sha}")
     r.raise_for_status()
-    for m in r.json()["comparison"]["metrics"]:
+    for m in r.json()["comparison"]["measurements"]:
         if m.get("second") is not None:
             commit.metrics[m["metric"]] = m["second"]
 
