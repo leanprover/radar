@@ -16,6 +16,7 @@ public final class ServerConfigRepoMetricFilter {
     public @Nullable Float checkQuantileFactorLarge;
 
     public @Nullable String reduceExpectedDirectionReferenceCategory;
+    public @Nullable Float reduceExpectedDirectionFactor;
 
     public @Nullable Float reduceAbsoluteLimitsSmall;
     public @Nullable Float reduceAbsoluteLimitsMedium;

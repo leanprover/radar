@@ -62,8 +62,15 @@ public record MetricComparer(
 
         float mDelta = vSecond - vFirst;
         float rDelta = rvSecond - rvFirst;
-        boolean expected = (rDelta > 0 && mDelta > 0) || (rDelta < 0 && mDelta < 0);
-        if (!expected) return significance;
+        boolean sameDir = (rDelta > 0 && mDelta > 0) || (rDelta < 0 && mDelta < 0);
+        if (!sameDir) return significance;
+
+        Float factor = metricFilter.reduceExpectedDirectionFactor;
+        if (factor != null) {
+            float fM = vFirst != 0 ? Math.abs(mDelta) / vFirst : Float.POSITIVE_INFINITY;
+            float fR = rvFirst != 0 ? Math.abs(rDelta) / rvFirst : Float.POSITIVE_INFINITY;
+            if (fM >= factor * fR) return significance;
+        }
 
         if (significance != MetricComparisonSignificance.SMALL)
             message.addText(" (reduced significance based on *//" + referenceCategory + ")");

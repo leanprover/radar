@@ -155,7 +155,10 @@ def check_quantile_factor(small: float, medium: float, large: float) -> Step:
     return step
 
 
-def reduce_expected_direction(reference_category: str) -> Step:
+def reduce_expected_direction(
+    reference_category: str,
+    factor: float = math.inf,
+) -> Step:
     def step(ctx: Context, comp: MetricComparison) -> None:
         if comp.result is None:
             return
@@ -168,8 +171,16 @@ def reduce_expected_direction(reference_category: str) -> Step:
 
         m_delta = mv2 - mv1
         r_delta = rv2 - rv1
-        expected = (r_delta > 0 and m_delta > 0) or (r_delta < 0 and m_delta < 0)
-        if expected and comp.result.importance > 0:
+        same_dir = (r_delta > 0 and m_delta > 0) or (r_delta < 0 and m_delta < 0)
+        if not same_dir:
+            return
+
+        f_m = abs(m_delta) / mv1 if mv1 != 0 else math.inf
+        f_r = abs(r_delta) / rv1 if rv1 != 0 else math.inf
+        if f_m >= factor * f_r:
+            return
+
+        if comp.result.importance > 0:
             comp.result.add_note(f"{comp.result.importance}→0, expected")
             comp.result.importance = 0
 
