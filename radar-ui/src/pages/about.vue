@@ -66,4 +66,19 @@ useTitle(radarTitle("About"));
       <i class="whitespace-nowrap">bench-after-CI</i> tag workflow.
     </p>
   </CSection>
+
+  <CSection title="Legal" class="max-w-[80ch]">
+    <p>
+      Please review our
+      <a href="https://lean-lang.org/terms/" class="decoration-blue underline decoration-dotted hover:decoration-solid"
+        >Terms of Use</a
+      >
+      and
+      <a
+        href="https://lean-lang.org/privacy/"
+        class="decoration-blue underline decoration-dotted hover:decoration-solid"
+        >Privacy Policy</a
+      >.
+    </p>
+  </CSection>
 </template>
