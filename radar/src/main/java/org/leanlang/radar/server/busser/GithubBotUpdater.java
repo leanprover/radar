@@ -202,6 +202,7 @@ public final class GithubBotUpdater {
         List<String> usersThatReactedWithEye = getUsersThatReactedWithEyes(command);
         JsonCommitComparison comparison = CommitComparer.compareCommits(queue, repos, inRepo, chashFirst, chashSecond);
 
+        boolean isRepeat = db.isRepeatCommand(running);
         db.setCommandRunningFinished(
                 commandId,
                 msgs.msgFinished(
@@ -211,6 +212,7 @@ public final class GithubBotUpdater {
                         chashSecond,
                         command.getCommandAuthorLogin(),
                         usersThatReactedWithEye,
+                        isRepeat,
                         comparison));
     }
 

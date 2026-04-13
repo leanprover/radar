@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import org.jooq.Condition;
 import org.jooq.Configuration;
+import org.jooq.Record1;
 import org.jspecify.annotations.Nullable;
 import org.leanlang.radar.Constants;
 import org.leanlang.radar.codegen.jooq.tables.records.GithubCommandRecord;
@@ -141,6 +142,24 @@ public record GithubBotDb(Repo repo, RepoGh repoGh) {
                 .and(GITHUB_COMMAND.REPLY_TRIES.isNotNull())
                 .and(GITHUB_COMMAND.REPLY_TRIES.lt(Constants.GITHUB_MAX_TRIES))
                 .fetch();
+    }
+
+    public boolean isRepeatCommand(GithubCommandRunningRecord running) {
+        int count = repo.db()
+                .read()
+                .dsl()
+                .selectCount()
+                .from(GITHUB_COMMAND_RUNNING)
+                .where(GITHUB_COMMAND_RUNNING.OWNER.eq(running.getOwner()))
+                .and(GITHUB_COMMAND_RUNNING.REPO.eq(running.getRepo()))
+                .and(
+                        running.getInRepo() == null
+                                ? GITHUB_COMMAND_RUNNING.IN_REPO.isNull()
+                                : GITHUB_COMMAND_RUNNING.IN_REPO.eq(running.getInRepo()))
+                .and(GITHUB_COMMAND_RUNNING.CHASH_FIRST.eq(running.getChashFirst()))
+                .and(GITHUB_COMMAND_RUNNING.CHASH_SECOND.eq(running.getChashSecond()))
+                .fetchSingle(Record1::value1);
+        return count > 1;
     }
 
     private void updateStatusAndReply(Configuration ctx, long commandId, int status, String body) {

@@ -110,6 +110,7 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
             String chashSecond,
             String userLogin,
             List<String> usersThatReactedWithEye,
+            boolean isRepeat,
             JsonCommitComparison comparison) {
 
         StringBuilder sb = new StringBuilder();
@@ -122,8 +123,10 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
                 .append(linkToChash(repoForeign ? repo : null, chashFirst))
                 .append(" are in.");
 
-        if (comparison.significant()) sb.append(" Significant changes detected!");
-        else sb.append(" There are no significant changes.");
+        if (isRepeat) sb.append(" (These commits have already been benchmarked in a previous command.)");
+
+        if (comparison.significant()) sb.append(" There are significant results.");
+        else sb.append(" No significant results found.");
 
         Stream.concat(Stream.of(userLogin), usersThatReactedWithEye.stream()).collect(Collectors.toSet()).stream()
                 .sorted()
