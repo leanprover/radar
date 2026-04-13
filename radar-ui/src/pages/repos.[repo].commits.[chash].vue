@@ -12,6 +12,7 @@ import CSection from "@/components/CSection.vue";
 import PCommitNav from "@/components/pages/commit/PCommitNav.vue";
 import PDetailsSection from "@/components/pages/commit/PDetailsSection.vue";
 import PFormEnqueue from "@/components/pages/commit/PFormEnqueue.vue";
+import PFormResetBotFeed from "@/components/pages/commit/PFormResetBotFeed.vue";
 import PGraphScatter from "@/components/pages/commit/PGraphScatter.vue";
 import PMeasurementsTable from "@/components/pages/commit/PMeasurementsTable.vue";
 import PReference from "@/components/pages/commit/PReference.vue";
@@ -118,6 +119,7 @@ watchEffect(() => {
 
   <CSection v-if="admin.token !== undefined" title="Admin" collapsible>
     <PFormEnqueue :repo="route.params.repo" :chash="route.params.chash" :reference />
+    <PFormResetBotFeed :repo="route.params.repo" :chash="route.params.chash" />
   </CSection>
 
   <CSection title="Reference commit" collapsible>

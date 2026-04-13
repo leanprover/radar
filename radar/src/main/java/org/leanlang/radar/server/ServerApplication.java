@@ -20,6 +20,7 @@ import org.leanlang.radar.server.api.ResAdminRecomputeSignificance;
 import org.leanlang.radar.server.api.ResAdminRepoMetrics;
 import org.leanlang.radar.server.api.ResAdminRepoMetricsDelete;
 import org.leanlang.radar.server.api.ResAdminRepoMetricsRename;
+import org.leanlang.radar.server.api.ResAdminResetRssBotState;
 import org.leanlang.radar.server.api.ResCommit;
 import org.leanlang.radar.server.api.ResCommitRun;
 import org.leanlang.radar.server.api.ResCompare;
@@ -103,6 +104,7 @@ public final class ServerApplication extends Application<ServerConfig> {
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new ResAdminEnqueue(repos, queue));
         environment.jersey().register(new ResAdminMaintain(busser));
+        environment.jersey().register(new ResAdminResetRssBotState(repos));
         environment.jersey().register(new ResAdminRecomputeSignificance(busser));
         environment.jersey().register(new ResAdminRepoMetrics(repos));
         environment.jersey().register(new ResAdminRepoMetricsDelete(repos));
