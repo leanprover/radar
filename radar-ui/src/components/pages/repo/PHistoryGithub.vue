@@ -3,6 +3,8 @@ import type { JsonCommand } from "@/api/repoGithubBot.ts";
 import CList from "@/components/CList.vue";
 import CListItem from "@/components/CListItem.vue";
 import CTimeAgo from "@/components/format/CTimeAgo.vue";
+import CLink from "@/components/link/CLink.vue";
+import CLinkExternal from "@/components/link/CLinkExternal.vue";
 
 const { repo, commands } = defineProps<{ repo: string; commands: JsonCommand[] }>();
 </script>
@@ -17,25 +19,26 @@ const { repo, commands } = defineProps<{ repo: string; commands: JsonCommand[] }
 
         <!-- "command", or "command, bot reply" -->
         <template v-if="command.replyUrl === undefined">
-          <a :href="command.url" target="_blank" class="hover:underline">command</a>
+          <CLinkExternal :href="command.url">command</CLinkExternal>
         </template>
         <template v-else>
-          <a :href="command.url" target="_blank" class="hover:underline">command</a>,
-          <a :href="command.replyUrl" target="_blank" class="hover:underline">bot reply</a>
+          <CLinkExternal :href="command.url">command</CLinkExternal>,
+          <CLinkExternal :href="command.replyUrl">bot reply</CLinkExternal>
         </template>
 
         <!-- "finished <time>" -->
         <template v-if="command.completed">
           {{ " " }}
           <span class="text-foreground-alt text-xs">
-            <RouterLink
-              :to="{
-                name: '/repos.[repo].commits.[chash]',
-                params: { repo, chash: command.chashSecond },
-                query: { parent: command.chashFirst },
-              }"
-              class="hover:underline"
-              >finished</RouterLink
+            <CLink
+              ><RouterLink
+                :to="{
+                  name: '/repos.[repo].commits.[chash]',
+                  params: { repo, chash: command.chashSecond },
+                  query: { parent: command.chashFirst },
+                }"
+                >finished</RouterLink
+              ></CLink
             >
             {{ " " }}
             <CTimeAgo :when="command.completed" />

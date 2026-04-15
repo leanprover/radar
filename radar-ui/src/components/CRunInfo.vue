@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CTimeDurationBetween from "@/components/format/CTimeDurationBetween.vue";
 import CTimeDurationSince from "@/components/format/CTimeDurationSince.vue";
+import CLink from "@/components/link/CLink.vue";
 import { Temporal } from "temporal-polyfill";
 
 export interface Run {
@@ -26,37 +27,30 @@ const {
 </script>
 
 <template>
-  <RouterLink
-    v-if="run.finished && run.finished.exitCode === 0"
-    :to="{ name: '/repos.[repo].commits.[chash].runs.[run]', params: { repo, chash, run: run.name } }"
-    :class="{ 'hover:underline': true, 'text-xs': small, 'text-green': green }"
-  >
-    {{ run.name }} on {{ run.runner }}: success (<CTimeDurationBetween
-      :start="run.finished.startTime"
-      :end="run.finished.endTime"
-    />)
-  </RouterLink>
-  <RouterLink
-    v-else-if="run.finished"
-    :to="{ name: '/repos.[repo].commits.[chash].runs.[run]', params: { repo, chash, run: run.name } }"
-    :class="{ 'text-red hover:underline': true, 'text-xs': small }"
-  >
-    {{ run.name }} on {{ run.runner }}: error (<CTimeDurationBetween
-      :start="run.finished.startTime"
-      :end="run.finished.endTime"
-    />)
-  </RouterLink>
-  <RouterLink
-    v-else-if="run.active"
-    :to="{ name: '/queue.runs.[repo].[chash].[run]', params: { repo, chash, run: run.name } }"
-    :class="{ 'text-blue hover:underline': true, 'text-xs': small }"
-  >
-    {{ run.name }} on {{ run.runner }}: running (<CTimeDurationSince :start="run.active.startTime" />)
-  </RouterLink>
-  <RouterLink
-    v-else
-    :to="{ name: '/queue.runs.[repo].[chash].[run]', params: { repo, chash, run: run.name } }"
-    :class="{ 'text-foreground-alt hover:underline': true, 'text-xs': small }"
-    >{{ run.name }} on {{ run.runner }}: awaiting runner</RouterLink
-  >
+  <CLink v-if="run.finished && run.finished.exitCode === 0" :class="{ 'text-xs': small, 'text-green': green }">
+    <RouterLink :to="{ name: '/repos.[repo].commits.[chash].runs.[run]', params: { repo, chash, run: run.name } }">
+      {{ run.name }} on {{ run.runner }}: success (<CTimeDurationBetween
+        :start="run.finished.startTime"
+        :end="run.finished.endTime"
+      />)
+    </RouterLink>
+  </CLink>
+  <CLink v-else-if="run.finished" :class="{ 'text-red': true, 'text-xs': small }">
+    <RouterLink :to="{ name: '/repos.[repo].commits.[chash].runs.[run]', params: { repo, chash, run: run.name } }">
+      {{ run.name }} on {{ run.runner }}: error (<CTimeDurationBetween
+        :start="run.finished.startTime"
+        :end="run.finished.endTime"
+      />)
+    </RouterLink>
+  </CLink>
+  <CLink v-else-if="run.active" :class="{ 'text-blue': true, 'text-xs': small }">
+    <RouterLink :to="{ name: '/queue.runs.[repo].[chash].[run]', params: { repo, chash, run: run.name } }">
+      {{ run.name }} on {{ run.runner }}: running (<CTimeDurationSince :start="run.active.startTime" />)
+    </RouterLink>
+  </CLink>
+  <CLink v-else :class="{ 'text-foreground-alt': true, 'text-xs': small }">
+    <RouterLink :to="{ name: '/queue.runs.[repo].[chash].[run]', params: { repo, chash, run: run.name } }">
+      {{ run.name }} on {{ run.runner }}: awaiting runner
+    </RouterLink>
+  </CLink>
 </template>

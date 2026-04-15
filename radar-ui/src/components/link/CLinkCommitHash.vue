@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import CLink from "@/components/link/CLink.vue";
+import CLinkExternal from "@/components/link/CLinkExternal.vue";
+
 const {
   repo = undefined,
   url = undefined,
@@ -26,20 +29,16 @@ function linkDiff(url: string, first: string, second: string): string {
 
 <template>
   <span>
-    <RouterLink
-      v-if="repo !== undefined"
-      :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash }, query: { s: queryS } }"
-      class="hover:underline"
+    <CLink v-if="repo !== undefined"
+      ><RouterLink :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash }, query: { s: queryS } }">{{
+        chash
+      }}</RouterLink></CLink
     >
-      {{ chash }}
-    </RouterLink>
     <span v-else>{{ chash }}</span>
     <span v-if="url !== undefined && chashAgainst !== undefined">
-      (<a :href="linkSource(url, chash)" target="_blank" class="hover:underline">source</a>,
-      <a :href="linkDiff(url, chashAgainst, chash)" target="_blank" class="hover:underline">diff</a>)</span
+      (<CLinkExternal :href="linkSource(url, chash)">source</CLinkExternal>,
+      <CLinkExternal :href="linkDiff(url, chashAgainst, chash)">diff</CLinkExternal>)</span
     >
-    <span v-else-if="url !== undefined">
-      (<a :href="linkSource(url, chash)" target="_blank" class="hover:underline">source</a>)</span
-    >
+    <span v-else-if="url !== undefined">(<CLinkExternal :href="linkSource(url, chash)">source</CLinkExternal>)</span>
   </span>
 </template>

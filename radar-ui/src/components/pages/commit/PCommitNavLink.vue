@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { JsonLinkedCommit } from "@/api/commit.ts";
-import { cn } from "@/lib/utils.ts";
+import CLink from "@/components/link/CLink.vue";
 
 const { prefix, repo, search, commit } = defineProps<{
   prefix: string;
@@ -11,11 +11,11 @@ const { prefix, repo, search, commit } = defineProps<{
 </script>
 
 <template>
-  <RouterLink
-    :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash: commit.chash }, query: { s: search } }"
-    :title="commit.title"
-    :class="cn('cursor-pointer truncate italic hover:underline', { 'text-foreground-alt': !commit.tracked })"
-  >
-    {{ prefix }} {{ commit.title }}
-  </RouterLink>
+  <CLink :class="{ 'truncate italic': true, 'text-foreground-alt': !commit.tracked }">
+    <RouterLink
+      :to="{ name: '/repos.[repo].commits.[chash]', params: { repo, chash: commit.chash }, query: { s: search } }"
+      :title="commit.title"
+      >{{ prefix }} {{ commit.title }}</RouterLink
+    >
+  </CLink>
 </template>

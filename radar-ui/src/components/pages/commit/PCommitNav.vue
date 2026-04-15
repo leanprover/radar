@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { JsonLinkedCommit } from "@/api/commit.ts";
+import CLinkExternal from "@/components/link/CLinkExternal.vue";
 import PCommitNavLink from "@/components/pages/commit/PCommitNavLink.vue";
 
 const { repo, chash, search, lakeprofReportUrl } = defineProps<{
@@ -14,9 +15,9 @@ const { repo, chash, search, lakeprofReportUrl } = defineProps<{
 
 <template>
   <div class="grid grid-cols-[auto_1fr] gap-x-[1ch]">
-    <a v-if="lakeprofReportUrl" :href="lakeprofReportUrl + chash" target="_blank" class="col-span-full hover:underline">
+    <CLinkExternal v-if="lakeprofReportUrl" :href="lakeprofReportUrl + chash" class="col-span-full">
       Lakeprof report
-    </a>
+    </CLinkExternal>
 
     <template v-for="commit in parents" :key="commit.chash">
       <div>Parent:</div>

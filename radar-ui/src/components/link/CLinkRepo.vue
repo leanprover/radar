@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { cn } from "@/lib/utils.ts";
-import type { ClassValue } from "clsx";
+import CLink from "@/components/link/CLink.vue";
 
-const { repo, class: clazz = undefined } = defineProps<{ repo: string; class?: ClassValue }>();
+const { repo } = defineProps<{ repo: string }>();
 </script>
 
 <template>
-  <RouterLink :to="{ name: '/repos.[repo]', params: { repo } }" :class="cn('hover:underline', clazz)">
-    {{ repo }}
-  </RouterLink>
+  <CLink
+    ><RouterLink :to="{ name: '/repos.[repo]', params: { repo } }">{{ repo }}</RouterLink></CLink
+  >
 </template>

@@ -3,6 +3,7 @@ import { useRepoGithubBot } from "@/api/repoGithubBot.ts";
 import { useRepos } from "@/api/repos.ts";
 import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
+import CLinkExternal from "@/components/link/CLinkExternal.vue";
 import PHistory from "@/components/pages/repo/PHistory.vue";
 import PHistoryGithub from "@/components/pages/repo/PHistoryGithub.vue";
 import { radarTitle } from "@/lib/utils.ts";
@@ -24,7 +25,7 @@ const info = computed(() => repos.data?.repos.find((it) => it.name === route.par
   <CSection v-else :title="`Repo ${route.params.repo}`" :subtitle="info?.description ?? 'This repo does not exist.'">
     <div v-if="info">
       Source:
-      <a class="cursor-pointer hover:underline" :href="info.url" target="_blank">{{ info.url }}</a>
+      <CLinkExternal :href="info.url">{{ info.url }}</CLinkExternal>
     </div>
   </CSection>
 

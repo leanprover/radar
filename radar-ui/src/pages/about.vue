@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CSection from "@/components/CSection.vue";
+import CLinkExternal from "@/components/link/CLinkExternal.vue";
 import { radarTitle } from "@/lib/utils.ts";
 import { useTitle } from "@vueuse/core";
 
@@ -9,14 +10,11 @@ useTitle(radarTitle("About"));
 <template>
   <CSection title="About Radar" class="max-w-[80ch]">
     <p>
-      Radar (<a
-        href="https://github.com/leanprover/radar"
-        class="decoration-blue underline decoration-dotted hover:decoration-solid"
-        >source</a
-      >) is a continuous benchmarking tool meant to help catch performance regressions and improvements. It
-      automatically benchmarks every commit on the main branch of a repository and compares it to previous commits to
-      detect changes in performance. It also provides comparisons between arbitrary commits, a graph view of metrics
-      over time, and GitHub and Zulip integration.
+      Radar (<CLinkExternal href="https://github.com/leanprover/radar">source</CLinkExternal>) is a continuous
+      benchmarking tool meant to help catch performance regressions and improvements. It automatically benchmarks every
+      commit on the main branch of a repository and compares it to previous commits to detect changes in performance. It
+      also provides comparisons between arbitrary commits, a graph view of metrics over time, and GitHub and Zulip
+      integration.
     </p>
     <p>
       When Radar benchmarks a commit, it runs a repo-specific benchmark suite on one or more benchmark runner machines.
@@ -70,15 +68,9 @@ useTitle(radarTitle("About"));
   <CSection title="Legal" class="max-w-[80ch]">
     <p>
       Please review our
-      <a href="https://lean-lang.org/terms/" class="decoration-blue underline decoration-dotted hover:decoration-solid"
-        >Terms of Use</a
-      >
+      <CLinkExternal href="https://lean-lang.org/terms/">Terms of Use</CLinkExternal>
       and
-      <a
-        href="https://lean-lang.org/privacy/"
-        class="decoration-blue underline decoration-dotted hover:decoration-solid"
-        >Privacy Policy</a
-      >.
+      <CLinkExternal href="https://lean-lang.org/privacy/">Privacy Policy</CLinkExternal>.
     </p>
   </CSection>
 </template>
