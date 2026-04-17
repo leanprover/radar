@@ -35,7 +35,7 @@ public final class Constants {
     /**
      * Maximum number of output lines the runner will keep and send back to the server.
      */
-    public static final int RUNNER_MAX_OUTPUT_LINES = 30000;
+    public static final int RUNNER_MAX_OUTPUT_LINES = 50000;
 
     /**
      * A runner's last status update must be at most this long ago,
