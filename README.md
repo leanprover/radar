@@ -93,6 +93,8 @@ Radar also sets the following environment variables:
 - `RADAR_REPO`: Absolute path to the clone of the repo (same as the first argument).
 - `RADAR_BENCH_REPO`: Absolute path to the bench repo, equivalent to the working directory.
 - `RADAR_OUT`: Absolute path to the output file (equivalent to the second argument).
+- `RADAR_CACHE`: Absolute path to a directory that can be used for caching between runs. Its contents are usually
+  preserved between runs, but may be wiped at any moment.
 
 While the bench script is running, its stdout, stderr, and exit code are recorded by the runner.
 When the exit code is 0, the run is considered successful

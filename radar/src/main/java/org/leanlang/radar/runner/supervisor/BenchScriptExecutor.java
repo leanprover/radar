@@ -51,6 +51,7 @@ public final class BenchScriptExecutor implements AutoCloseable {
         Path repoPath = dirs.tmpRepo().toAbsolutePath();
         Path benchRepoPath = dirs.tmpBenchRepo().toAbsolutePath();
         Path outPath = dirs.tmpResultFile().toAbsolutePath();
+        Path cachePath = dirs.repoCache(job.repo()).toAbsolutePath();
 
         ProcessBuilder builder = new ProcessBuilder(
                         dirs.tmpBenchRepoScript(job.script()).toAbsolutePath().toString(),
@@ -62,6 +63,7 @@ public final class BenchScriptExecutor implements AutoCloseable {
         env.put("RADAR_REPO", repoPath.toString());
         env.put("RADAR_BENCH_REPO", benchRepoPath.toString());
         env.put("RADAR_OUT", outPath.toString());
+        env.put("RADAR_CACHE", cachePath.toString());
 
         Process process = builder.start();
 

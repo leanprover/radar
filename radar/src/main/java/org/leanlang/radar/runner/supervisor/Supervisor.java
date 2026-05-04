@@ -99,6 +99,9 @@ public final class Supervisor {
             lines.addInternal("Clearing tmp directory...");
             FsUtil.removeDirRecursively(dirs.tmp());
 
+            lines.addInternal("Ensuring cache directory exists...");
+            Files.createDirectories(dirs.repoCache(job.repo()));
+
             try {
                 fetchAndCloneRepo(lines, job);
             } catch (Exception e) {

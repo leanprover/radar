@@ -25,6 +25,10 @@ public final class Dirs {
         return cache.resolve("repos").resolve(repo).resolve("bench.git");
     }
 
+    public Path repoCache(String repo) {
+        return cache.resolve("repos").resolve(repo).resolve("cache");
+    }
+
     public List<Path> listAllBareRepos() throws IOException {
         try (Stream<Path> repos = Files.list(cache.resolve("repos"))) {
             return repos.map(it -> it.getFileName().toString())
