@@ -88,6 +88,12 @@ The bench script receives two arguments:
 1. An absolute path to the clone of the repo.
 2. An absolute path to the output file, which does not yet exist.
 
+Radar also sets the following environment variables:
+
+- `RADAR_REPO`: Absolute path to the clone of the repo (same as the first argument).
+- `RADAR_BENCH_REPO`: Absolute path to the bench repo, equivalent to the working directory.
+- `RADAR_OUT`: Absolute path to the output file (equivalent to the second argument).
+
 While the bench script is running, its stdout, stderr, and exit code are recorded by the runner.
 When the exit code is 0, the run is considered successful
 while a nonzero exit code indicates an error.

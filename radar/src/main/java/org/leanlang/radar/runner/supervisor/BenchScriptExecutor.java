@@ -2,6 +2,8 @@ package org.leanlang.radar.runner.supervisor;
 
 import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,12 +47,23 @@ public final class BenchScriptExecutor implements AutoCloseable {
 
     private int runBenchScript() throws Exception {
         log.info("Running bench script");
-        Process process = new ProcessBuilder(
+
+        Path repoPath = dirs.tmpRepo().toAbsolutePath();
+        Path benchRepoPath = dirs.tmpBenchRepo().toAbsolutePath();
+        Path outPath = dirs.tmpResultFile().toAbsolutePath();
+
+        ProcessBuilder builder = new ProcessBuilder(
                         dirs.tmpBenchRepoScript(job.script()).toAbsolutePath().toString(),
-                        dirs.tmpRepo().toAbsolutePath().toString(),
-                        dirs.tmpResultFile().toAbsolutePath().toString())
-                .directory(dirs.tmpBenchRepo().toFile())
-                .start();
+                        repoPath.toString(),
+                        outPath.toString())
+                .directory(benchRepoPath.toFile());
+
+        Map<String, String> env = builder.environment();
+        env.put("RADAR_REPO", repoPath.toString());
+        env.put("RADAR_BENCH_REPO", benchRepoPath.toString());
+        env.put("RADAR_OUT", outPath.toString());
+
+        Process process = builder.start();
 
         int exitCode;
         try (BufferedReader stdoutReader = process.inputReader(StandardCharsets.UTF_8);
