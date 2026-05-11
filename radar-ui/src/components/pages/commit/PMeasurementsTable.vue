@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { JsonMetricComparison } from "@/api/types.ts";
+import CLink from "@/components/link/CLink.vue";
 import CTable from "@/components/table/CTable.vue";
 import CTableCellDelta from "@/components/table/CTableCellDelta.vue";
 import CTableCellValue from "@/components/table/CTableCellValue.vue";
 import CTableHeader from "@/components/table/CTableHeader.vue";
-import { type ColumnDef, type Row } from "@tanstack/vue-table";
+import { type ColumnDef } from "@tanstack/vue-table";
 import { h } from "vue";
-import { useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 
 const { repo, measurements } = defineProps<{ repo: string; measurements: JsonMetricComparison[] }>();
 const filter = defineModel<string>("filter", { required: true });
-const router = useRouter();
 
 const columns: ColumnDef<JsonMetricComparison>[] = [
   {
@@ -125,17 +125,28 @@ const columns: ColumnDef<JsonMetricComparison>[] = [
         align: "right",
       }),
   },
+  {
+    id: "graph",
+    enableSorting: false,
+    header: () => null,
+    cell: ({ row }) =>
+      h(CLink, {}, () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: "/repos.[repo].graph",
+              params: { repo },
+              query: { m: row.original.metric, s: filter.value === "" ? undefined : filter.value },
+            },
+          },
+          () => "graph",
+        ),
+      ),
+  },
 ];
-
-function onClickRow(row: Row<JsonMetricComparison>): void {
-  void router.push({
-    name: "/repos.[repo].graph",
-    params: { repo },
-    query: { m: row.original.metric, s: filter.value === "" ? undefined : filter.value },
-  });
-}
 </script>
 
 <template>
-  <CTable v-model:filter="filter" :columns="columns" :data="measurements" :on-click-row="onClickRow" />
+  <CTable v-model:filter="filter" :columns="columns" :data="measurements" />
 </template>
