@@ -39,6 +39,6 @@ function linkDiff(url: string, first: string, second: string): string {
       (<CLinkExternal :href="linkSource(url, chash)">source</CLinkExternal>,
       <CLinkExternal :href="linkDiff(url, chashAgainst, chash)">diff</CLinkExternal>)</span
     >
-    <span v-else-if="url !== undefined">(<CLinkExternal :href="linkSource(url, chash)">source</CLinkExternal>)</span>
+    <span v-else-if="url !== undefined"> (<CLinkExternal :href="linkSource(url, chash)">source</CLinkExternal>)</span>
   </span>
 </template>
