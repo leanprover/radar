@@ -12,7 +12,7 @@ public record JsonGhPull(
         @JsonProperty(required = true) int number,
         @JsonProperty(required = true) Instant createdAt,
         @JsonProperty(required = true) JsonGhUser user,
-        @JsonProperty(required = true) String author_association,
+        @JsonProperty(required = true) String authorAssociation,
         @JsonProperty(required = true) List<Label> labels,
         @JsonProperty(required = true) Location base,
         @JsonProperty(required = true) Location head) {

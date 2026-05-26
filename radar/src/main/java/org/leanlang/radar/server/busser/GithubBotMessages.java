@@ -30,6 +30,10 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         return "This command can only be used in pull requests.";
     }
 
+    public String msgNotPermitted() {
+        return "You are not permitted to use this command.";
+    }
+
     public String msgDeleted() {
         return "The original message has been deleted.";
     }

@@ -103,6 +103,14 @@ public final class GithubBotUpdater {
             return;
         }
 
+        List<String> allowed = repoGh.config().allowedAuthorAssociations;
+        if (!allowed.isEmpty() && !allowed.contains(comment.authorAssociation())) {
+            // We don't need to accept edits, so STATUS_SUCCEEDED, not STATUS_FAILED.
+            log.debug("Command is by an unauthorized user.");
+            db.setCommandSucceeded(commandId, msgs.msgNotPermitted());
+            return;
+        }
+
         // Unconditionally updating, rather than adding.
         db.addOrUpdateCommand(comment);
 
