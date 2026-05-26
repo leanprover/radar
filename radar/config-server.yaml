@@ -104,3 +104,9 @@ repos:
 runners:
   - name: testrunner
     token: testrunnertoken
+
+legalLinks:
+  - name: Terms of Use
+    url: https://lean-lang.org/terms/
+  - name: Privacy Policy
+    url: https://lean-lang.org/privacy/

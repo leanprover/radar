@@ -40,4 +40,8 @@ public final class ServerConfig extends Configuration {
     @RunnerNamesUnique
     @JsonProperty(required = true)
     public List<ServerConfigRunner> runners;
+
+    @Valid
+    @JsonProperty
+    public List<ServerConfigLegalLink> legalLinks = List.of();
 }

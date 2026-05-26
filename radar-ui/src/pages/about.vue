@@ -1,10 +1,23 @@
 <script setup lang="ts">
+import { useInfo } from "@/api/info.ts";
+import CLoading from "@/components/CLoading.vue";
 import CSection from "@/components/CSection.vue";
 import CLinkExternal from "@/components/link/CLinkExternal.vue";
 import { radarTitle } from "@/lib/utils.ts";
 import { useTitle } from "@vueuse/core";
+import { computed, reactive } from "vue";
 
 useTitle(radarTitle("About"));
+
+const info = reactive(useInfo());
+const legalLinks = computed(() => info.data?.legalLinks ?? []);
+
+function legalLinkPrefix(index: number, total: number): string {
+  if (index === 0) return "";
+  if (total === 2) return " and "; // index must be 1
+  if (index === total - 1) return ", and ";
+  return ", ";
+}
 </script>
 
 <template>
@@ -65,12 +78,13 @@ useTitle(radarTitle("About"));
     </p>
   </CSection>
 
-  <CSection title="Legal" class="max-w-[80ch]">
-    <p>
-      Please review our
-      <CLinkExternal href="https://lean-lang.org/terms/">Terms of Use</CLinkExternal>
-      and
-      <CLinkExternal href="https://lean-lang.org/privacy/">Privacy Policy</CLinkExternal>.
+  <CSection v-if="!info.isSuccess || legalLinks.length > 0" title="Legal" class="max-w-[80ch]">
+    <CLoading v-if="!info.isSuccess" :error="info.error" />
+    <p v-else>
+      Please review our<template v-for="(link, i) in legalLinks" :key="link.url">
+        {{ legalLinkPrefix(i, legalLinks.length) }}
+        <CLinkExternal :href="link.url">{{ link.name }}</CLinkExternal></template
+      >.
     </p>
   </CSection>
 </template>
