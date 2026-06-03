@@ -20,8 +20,9 @@ import type {
 
 declare module 'vue-router' {
   interface TypesConfig {
-    ParamParsers:
-      | never
+    _ParamParsers: {}
+    RouteNamedMap: import('vue-router/auto-routes').RouteNamedMap
+    _RouteFileInfoMap: import('vue-router/auto-routes')._RouteFileInfoMap
   }
 }
 
@@ -125,17 +126,23 @@ declare module 'vue-router/auto-routes' {
         | '/'
       views:
         | never
+      pathParamNames:
+        | never
     }
     'src/pages/[...path].vue': {
       routes:
         | '/[...path]'
       views:
         | never
+      pathParamNames:
+        | 'path'
     }
     'src/pages/about.vue': {
       routes:
         | '/about'
       views:
+        | never
+      pathParamNames:
         | never
     }
     'src/pages/admin.vue': {
@@ -143,11 +150,15 @@ declare module 'vue-router/auto-routes' {
         | '/admin'
       views:
         | never
+      pathParamNames:
+        | never
     }
     'src/pages/queue.vue': {
       routes:
         | '/queue'
       views:
+        | never
+      pathParamNames:
         | never
     }
     'src/pages/queue.runs.[repo].[chash].[run].vue': {
@@ -155,36 +166,53 @@ declare module 'vue-router/auto-routes' {
         | '/queue.runs.[repo].[chash].[run]'
       views:
         | never
+      pathParamNames:
+        | 'chash'
+        | 'repo'
+        | 'run'
     }
     'src/pages/repos.[repo].vue': {
       routes:
         | '/repos.[repo]'
       views:
         | never
+      pathParamNames:
+        | 'repo'
     }
     'src/pages/repos.[repo].admin.vue': {
       routes:
         | '/repos.[repo].admin'
       views:
         | never
+      pathParamNames:
+        | 'repo'
     }
     'src/pages/repos.[repo].commits.[chash].vue': {
       routes:
         | '/repos.[repo].commits.[chash]'
       views:
         | never
+      pathParamNames:
+        | 'chash'
+        | 'repo'
     }
     'src/pages/repos.[repo].commits.[chash].runs.[run].vue': {
       routes:
         | '/repos.[repo].commits.[chash].runs.[run]'
       views:
         | never
+      pathParamNames:
+        | 'chash'
+        | 'repo'
+        | 'run'
     }
     'src/pages/repos.[repo].graph.vue': {
       routes:
         | '/repos.[repo].graph'
       views:
         | never
+      pathParamNames:
+        | 'repo'
     }
   }
 

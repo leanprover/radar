@@ -1,1 +1,3 @@
-strictDepBuilds: false
+allowBuilds:
+  esbuild: false
+  vue-demi: false

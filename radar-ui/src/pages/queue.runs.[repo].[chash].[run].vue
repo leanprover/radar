@@ -14,7 +14,7 @@ import { reactive, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const router = useRouter();
-const route = useRoute("/repos.[repo].commits.[chash].runs.[run]");
+const route = useRoute("/queue.runs.[repo].[chash].[run]");
 
 const repo = useRepo(route.params.repo);
 const commit = reactive(
