@@ -45,7 +45,8 @@ public record QuantileUpdater(Repo repo) {
             }
 
             Duration total = start.until(Instant.now());
-            log.debug("{} quantiles in {} s, on average {} ms/metric", n, total.toSeconds(), total.toMillis() / n);
+            if (n == 0) log.debug("{} quantiles in {} s", n, total.toSeconds());
+            else log.debug("{} quantiles in {} s, on average {} ms/metric", n, total.toSeconds(), total.toMillis() / n);
         });
 
         setLastUpdated(now);
