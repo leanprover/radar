@@ -134,23 +134,22 @@ public record ZulipBotUpdater(
             int mStart = m.start(1);
             int mEnd = m.end(1);
 
-            if (mStart > end)
-                sb.append("[")
-                        .append(title, end, mStart)
-                        .append("](")
-                        .append(url)
-                        .append(")");
+            if (mStart > end) formatLinkedSegment(sb, title.substring(end, mStart), url);
 
             sb.append(linkifier.get()).append(m.group(1));
             end = mEnd;
         }
 
-        if (end < title.length())
-            sb.append("[")
-                    .append(title, end, title.length())
-                    .append("](")
-                    .append(url)
-                    .append(")");
+        if (end < title.length()) formatLinkedSegment(sb, title.substring(end), url);
+    }
+
+    private static void formatLinkedSegment(StringBuilder sb, String segment, URI url) {
+        if (segment.isBlank()) {
+            // Pure whitespace links, e.g. `[ ](...)`, break Zulip's parser.
+            sb.append(segment);
+            return;
+        }
+        sb.append("[").append(segment).append("](").append(url).append(")");
     }
 
     private static void formatWarnings(StringBuilder sb, JsonCommitComparison comparison) {
