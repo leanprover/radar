@@ -52,7 +52,14 @@ public record CommitComparerData(
             boolean enqueuedFirst = fetchInQueue(queue, repo, chashFirst);
             boolean enqueuedSecond = fetchInQueue(queue, repo, chashSecond);
 
-            List<MetricInfo> metrics = fetchMetrics(ctx, quantiles);
+            Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
+            Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
+
+            // In some cases, the set of all metrics is very large but the union of the two commits' metrics is small.
+            // Going through all metrics in those cases leads to bad performance.
+            List<MetricInfo> metrics = fetchMetrics(ctx, quantiles).stream()
+                    .filter(it -> measurementsFirst.containsKey(it.name()) || measurementsSecond.containsKey(it.name()))
+                    .toList();
             List<String> notableMetrics = repo.notableMetrics();
             Optional<Instant> newMetricsCutoff =
                     repo.newMetrics() ? Optional.of(Instant.now().minus(Duration.ofDays(1))) : Optional.empty();
@@ -66,8 +73,6 @@ public record CommitComparerData(
             Map<String, ServerConfigRepoMetricFilter> metricFilters =
                     metrics.stream().collect(Collectors.toMap(MetricInfo::name, it -> repo.metricFilter(it.name())));
 
-            Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
-            Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
             Map<String, JsonMetricComparison> metricComparisons =
                     compareMeasurements(metrics, metricFilters, measurementsFirst, measurementsSecond);
 
