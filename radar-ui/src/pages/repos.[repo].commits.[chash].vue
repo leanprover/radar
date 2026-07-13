@@ -19,11 +19,12 @@ import PReference from "@/components/pages/commit/PReference.vue";
 import { useQueryParamAsString } from "@/lib/query.ts";
 import { escapeMetrics, metricFilterMatches, radarTitle, setsEqual } from "@/lib/utils.ts";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
-import { refDebounced, useIntervalFn, useTitle } from "@vueuse/core";
+import { onKeyStroke, refDebounced, useIntervalFn, useTitle } from "@vueuse/core";
 import { computed, reactive, watch, watchEffect } from "vue";
-import { onBeforeRouteUpdate, useRoute } from "vue-router";
+import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 
 const route = useRoute("/repos.[repo].commits.[chash]");
+const router = useRouter();
 const admin = useAdminStore();
 
 const queryReference = useQueryParamAsString("reference");
@@ -90,6 +91,28 @@ const completedRuns = computed(() => {
 watch(completedRuns, (newValue, oldValue) => {
   if (setsEqual(newValue, oldValue)) return; // No new runs
   void compare.refetch();
+});
+
+// Navigate to the first parent/child commit using the left/right arrow keys, matching the order shown in PCommitNav.
+function isEditableElement(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.tagName === "SELECT" ||
+    target.isContentEditable
+  );
+}
+onKeyStroke(["ArrowLeft", "ArrowRight"], (event) => {
+  if (isEditableElement(event.target) || !commit.isSuccess) return;
+  const targetCommit =
+    event.key === "ArrowLeft" ? commit.data.parents[0] : commit.data.children.find((it) => it.tracked);
+  if (!targetCommit) return;
+  void router.push({
+    name: "/repos.[repo].commits.[chash]",
+    params: { repo: route.params.repo, chash: targetCommit.chash },
+    query: { s: queryFilter.value },
+  });
 });
 
 // For backwards compatibility, translate old links that use ?parent=... into new ones that use ?reference=...
