@@ -82,4 +82,10 @@ public final class Constants {
      * or the issue may have been deleted.
      */
     public static final int GITHUB_MAX_TRIES = 100;
+
+    /**
+     * Maximum number of entries to list in a single section of a GitHub/Zulip bot message
+     * before truncating the rest into an "and X more" line.
+     */
+    public static final int BOT_MESSAGE_MAX_VISIBLE_ENTRIES = 20;
 }

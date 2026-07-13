@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
+import org.leanlang.radar.Constants;
 import org.leanlang.radar.server.compare.JsonCommitComparison;
 import org.leanlang.radar.server.compare.JsonMessage;
 import org.leanlang.radar.server.compare.JsonMessageGoodness;
@@ -181,23 +182,24 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         List<JsonMessage> visible = messages.stream().filter(it -> !it.hidden()).toList();
         int hidden = messages.size() - visible.size();
 
-        if (messages.isEmpty()) return;
-        if (visible.size() > 20) {
-            sb.append("\n\nToo many entries to display here. View the full report on radar instead.");
-            return;
-        }
-        if (visible.isEmpty()) {
-            sb.append("\n\n").append(hidden).append(" hidden");
-            return;
-        }
+        List<JsonMessage> shown = visible.stream()
+                .limit(Constants.BOT_MESSAGE_MAX_VISIBLE_ENTRIES)
+                .toList();
+        int more = visible.size() - shown.size();
 
         sb.append("\n");
-        for (JsonMessage message : visible) {
+        for (JsonMessage message : shown) {
             sb.append("\n- ");
             formatMessage(sb, message);
         }
+        if (more > 0) {
+            sb.append("\n- and ").append(more).append(" more");
+        }
         if (hidden > 0) {
-            sb.append("\n\nand ").append(hidden).append(" hidden");
+            sb.append("\n- ")
+                    .append(shown.isEmpty() ? "" : "and ")
+                    .append(hidden)
+                    .append(" hidden");
         }
     }
 
