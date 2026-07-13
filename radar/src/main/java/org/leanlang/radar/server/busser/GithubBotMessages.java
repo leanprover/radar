@@ -192,7 +192,7 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
         }
 
         sb.append("\n");
-        for (JsonMessage message : messages) {
+        for (JsonMessage message : visible) {
             sb.append("\n- ");
             formatMessage(sb, message);
         }
