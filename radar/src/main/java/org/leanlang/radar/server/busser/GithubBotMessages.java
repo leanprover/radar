@@ -193,13 +193,13 @@ public record GithubBotMessages(RadarLinker radarLinker, GithubLinker githubLink
             formatMessage(sb, message);
         }
         if (more > 0) {
-            sb.append("\n- and ").append(more).append(" more");
+            sb.append("\n- *and ").append(more).append(" more*");
         }
         if (hidden > 0) {
-            sb.append("\n- ")
+            sb.append("\n- *")
                     .append(shown.isEmpty() ? "" : "and ")
                     .append(hidden)
-                    .append(" hidden");
+                    .append(" hidden*");
         }
     }
 
