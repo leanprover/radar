@@ -137,6 +137,14 @@ public final class GithubBotUpdater {
                 .toList();
     }
 
+    private List<String> missingLabels(JsonGhPull pull) {
+        Set<String> labels = pull.labels().stream().map(JsonGhPull.Label::name).collect(Collectors.toSet());
+        return repoGh.config().requiredLabels.stream()
+                .filter(it -> !labels.contains(it))
+                .sorted()
+                .toList();
+    }
+
     private Optional<Pair<String, String>> findComparisonCommits(Repo repo, String base, String head) {
         // GitHub's "base.sha" doesn't seem to correspond to the merge base.
         // Instead, I suspect it's the sha of the base branch at the time the PR was created.
@@ -163,9 +171,10 @@ public final class GithubBotUpdater {
         log.info("Starting bench command for comment {} in #{}", commandId, command.getNumber());
 
         List<String> superfluousLabels = superfluousLabels(pull);
-        if (!superfluousLabels.isEmpty()) {
-            log.info("Bench command is blocked by labels {}", superfluousLabels);
-            db.setCommandWaiting(commandId, msgs.msgLabelMismatch(superfluousLabels, List.of()));
+        List<String> missingLabels = missingLabels(pull);
+        if (!superfluousLabels.isEmpty() || !missingLabels.isEmpty()) {
+            log.info("Bench command is blocked by labels superfluous={} missing={}", superfluousLabels, missingLabels);
+            db.setCommandWaiting(commandId, msgs.msgLabelMismatch(superfluousLabels, missingLabels));
             return;
         }
 
