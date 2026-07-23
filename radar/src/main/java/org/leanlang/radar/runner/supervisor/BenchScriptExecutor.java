@@ -48,7 +48,10 @@ public final class BenchScriptExecutor implements AutoCloseable {
     private int runBenchScript() throws Exception {
         log.info("Running bench script");
 
-        Path repoPath = dirs.tmpRepo().toAbsolutePath();
+        Path repoPath = job.subdir()
+                .map(dirs.tmpRepo()::resolve)
+                .orElseGet(dirs::tmpRepo)
+                .toAbsolutePath();
         Path benchRepoPath = dirs.tmpBenchRepo().toAbsolutePath();
         Path outPath = dirs.tmpResultFile().toAbsolutePath();
         Path cachePath = dirs.repoCache(job.repo()).toAbsolutePath();

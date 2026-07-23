@@ -93,6 +93,10 @@ public final class Repo implements AutoCloseable {
         return source;
     }
 
+    public Optional<String> subdir() {
+        return Optional.ofNullable(config.subdir);
+    }
+
     public String ref() {
         return config.ref;
     }

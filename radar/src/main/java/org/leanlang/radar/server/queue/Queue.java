@@ -257,6 +257,7 @@ public record Queue(Repos repos, Runners runners) {
         return new JsonJob(
                 repo.name(),
                 repo.source().gitUrl(),
+                repo.subdir(),
                 task.chash(),
                 repo.benchSource().gitUrl(),
                 benchChash,

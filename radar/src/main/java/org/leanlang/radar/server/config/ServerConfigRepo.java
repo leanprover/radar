@@ -15,6 +15,7 @@ public class ServerConfigRepo {
 
     // Repo source
     public @JsonProperty(required = true) URI url;
+    public @Nullable String subdir = null;
     public @NotEmpty @JsonProperty(required = true) String ref;
     public boolean refRegex = false;
     public boolean refParentsNone = false;
