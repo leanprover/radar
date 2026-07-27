@@ -89,7 +89,7 @@ public record QuantileUpdater(Repo repo) {
                 .selectFrom(HISTORY.join(MEASUREMENTS).on(MEASUREMENTS.CHASH.eq(HISTORY.CHASH)))
                 .where(MEASUREMENTS.METRIC.eq(metric))
                 .orderBy(HISTORY.POSITION.desc())
-                .limit(400)
+                .limit(repo.quantileCommits())
                 .fetch(MEASUREMENTS.VALUE);
 
         List<Float> deltas = computeDeltas(values);

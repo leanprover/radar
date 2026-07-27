@@ -174,6 +174,10 @@ public final class Repo implements AutoCloseable {
         return config.significantRunFailures;
     }
 
+    public int quantileCommits() {
+        return config.quantileCommits;
+    }
+
     public Optional<String> useQuantilesFrom() {
         return Optional.ofNullable(config.useQuantilesFrom);
     }

@@ -33,6 +33,8 @@ public class ServerConfigRepo {
     public int significantSmallChanges = 20;
     public boolean significantRunFailures = true;
     public @Valid List<ServerConfigRepoMetricFilter> significantMetrics = List.of();
+
+    public int quantileCommits = 100;
     public @Nullable String useQuantilesFrom = null;
 
     public @Valid List<String> notableMetrics = List.of();
