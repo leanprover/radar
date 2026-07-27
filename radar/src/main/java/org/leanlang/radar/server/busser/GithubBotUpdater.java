@@ -41,7 +41,7 @@ public final class GithubBotUpdater {
     private final RepoGh repoGh;
 
     private final GithubBotDb db;
-    private final GithubBotMessages msgs;
+    private final BotMsgBuilderGithub msgs;
 
     public GithubBotUpdater(
             RadarLinker radarLinker, Repos repos, Queue queue, Busser busser, Repo repo, RepoGh repoGh) {
@@ -53,7 +53,7 @@ public final class GithubBotUpdater {
         this.repoGh = repoGh;
 
         this.db = new GithubBotDb(repo, repoGh);
-        this.msgs = new GithubBotMessages(radarLinker, new GithubLinker(repoGh.owner(), repoGh.repo()));
+        this.msgs = new BotMsgBuilderGithub(radarLinker, new GithubLinker(repoGh.owner(), repoGh.repo()));
     }
 
     public void fetch() {

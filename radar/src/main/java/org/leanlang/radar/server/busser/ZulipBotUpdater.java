@@ -115,7 +115,7 @@ public record ZulipBotUpdater(
         sb.append("**");
 
         formatWarnings(sb, comparison);
-        GithubBotMessages.formatBody(sb, comparison);
+        new BotMsgBuilder(radarLinker, repo.name(), childChash).formatBody(sb, comparison);
 
         return sb.toString();
     }
@@ -158,7 +158,7 @@ public record ZulipBotUpdater(
         sb.append("\n")
                 .append("\n> :warning: Warning")
                 .append("\n>")
-                .append("\n> " + GithubBotMessages.WARNINGS_EXPLANATION)
+                .append("\n> " + BotMsgBuilderGithub.WARNINGS_EXPLANATION)
                 .append("\n>");
 
         for (String warning : comparison.warnings()) sb.append("\n> - ").append(warning);

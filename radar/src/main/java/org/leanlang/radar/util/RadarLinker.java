@@ -10,4 +10,8 @@ public record RadarLinker(URI base) {
     public URI comparison(String repo, String first, String second) {
         return base.resolve("/repos/" + repo + "/commits/" + second + "?reference=" + first);
     }
+
+    public URI run(String repo, String chash, String run) {
+        return base.resolve("/repos/" + repo + "/commits/" + chash + "/runs/" + run);
+    }
 }
