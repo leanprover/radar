@@ -22,4 +22,10 @@ public final class ServerConfigRepoGithub {
      * Possible values are presumably the same as for <a href="https://docs.github.com/en/graphql/reference/enums#commentauthorassociation">CommentAuthorAssociation</a>.
      */
     public List<String> allowedAuthorAssociations = List.of();
+
+    /**
+     * Whether the special "!bench mathlib" command is recognized.
+     * This command is a hack, so it's disabled by default.
+     */
+    public boolean mathlibBenchCommand = false;
 }

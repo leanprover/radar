@@ -70,7 +70,8 @@ public record GithubBotDb(Repo repo, RepoGh repoGh) {
                     .fetchOne();
 
             if (record == null) {
-                if (GithubBotCommand.isCommand(comment.body(), repoGh.config().aliasRegex))
+                if (GithubBotCommand.isCommand(
+                        comment.body(), repoGh.config().aliasRegex, repoGh.config().mathlibBenchCommand))
                     record = new GithubCommandRecord();
                 else return;
             } else if (record.getStatus() == STATUS_SUCCEEDED) return;

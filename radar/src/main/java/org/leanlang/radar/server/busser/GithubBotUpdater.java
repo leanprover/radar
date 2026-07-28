@@ -114,7 +114,8 @@ public final class GithubBotUpdater {
         // Unconditionally updating, rather than adding.
         db.addOrUpdateCommand(comment);
 
-        GithubBotCommand parsed = GithubBotCommand.parse(comment.body(), repoGh.config().aliasRegex)
+        GithubBotCommand parsed = GithubBotCommand.parse(
+                        comment.body(), repoGh.config().aliasRegex, repoGh.config().mathlibBenchCommand)
                 .orElse(null);
         if (parsed == null) {
             log.debug("Message contains no command.");

@@ -12,27 +12,31 @@ public sealed interface GithubBotCommand {
 
     record TooManyCommands() implements GithubBotCommand {}
 
-    static boolean isCommand(String body, @Nullable Pattern aliasRegex) {
-        return parse(body, aliasRegex).isPresent();
+    static boolean isCommand(String body, @Nullable Pattern aliasRegex, boolean mathlibBenchCommand) {
+        return parse(body, aliasRegex, mathlibBenchCommand).isPresent();
     }
 
-    static Optional<GithubBotCommand> parse(String body, @Nullable Pattern aliasRegex) {
-        List<GithubBotCommand> commands =
-                body.lines().flatMap(it -> parseLine(it, aliasRegex).stream()).toList();
+    static Optional<GithubBotCommand> parse(String body, @Nullable Pattern aliasRegex, boolean mathlibBenchCommand) {
+        List<GithubBotCommand> commands = body.lines()
+                .flatMap(it -> parseLine(it, aliasRegex, mathlibBenchCommand).stream())
+                .toList();
 
         if (commands.size() > 1) return Optional.of(new TooManyCommands());
         if (commands.isEmpty()) return Optional.empty();
         return Optional.of(commands.getFirst());
     }
 
-    private static Optional<GithubBotCommand> parseLine(String line, @Nullable Pattern aliasRegex) {
+    private static Optional<GithubBotCommand> parseLine(
+            String line, @Nullable Pattern aliasRegex, boolean mathlibBenchCommand) {
         line = line.strip();
 
         String benchPattern =
                 aliasRegex == null ? "!(bench|radar)" : "!(bench|radar)\\s+(?:" + aliasRegex.pattern() + ")";
         if (line.matches(benchPattern)) return Optional.of(new Bench());
 
-        if (line.matches("!(bench|radar)\\s+mathlib4?")) return Optional.of(new BenchMathlib());
+        if (mathlibBenchCommand && line.matches("!(bench|radar)\\s+mathlib4?")) {
+            return Optional.of(new BenchMathlib());
+        }
 
         return Optional.empty();
     }
