@@ -37,7 +37,7 @@
     <picocli.version>4.7.7</picocli.version>
     <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
     <!-- https://github.com/xerial/sqlite-jdbc/releases -->
-    <sqlite-jdbc.version>3.53.2.0</sqlite-jdbc.version>
+    <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
 
     <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-antrun-plugin -->
     <maven-plugin-antrun.version>3.2.0</maven-plugin-antrun.version>
