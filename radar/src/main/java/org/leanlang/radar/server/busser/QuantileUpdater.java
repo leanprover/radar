@@ -121,7 +121,7 @@ public record QuantileUpdater(Repo repo) {
         int top = values.size() - 1;
 
         float x = quantile * top;
-        int index = Math.round(x);
+        int index = (int) Math.floor(x);
         if (index >= top) return Optional.of(values.get(top));
 
         float weight = x - index;
