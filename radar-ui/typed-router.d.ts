@@ -69,8 +69,8 @@ declare module 'vue-router/auto-routes' {
     '/queue.runs.[repo].[chash].[run]': RouteRecordInfo<
       '/queue.runs.[repo].[chash].[run]',
       '/queue/runs/:repo/:chash/:run',
-      { repo: ParamValue<true>, chash: ParamValue<true>, run: ParamValue<true> },
-      { repo: ParamValue<false>, chash: ParamValue<false>, run: ParamValue<false> },
+      { chash: ParamValue<true>, repo: ParamValue<true>, run: ParamValue<true> },
+      { chash: ParamValue<false>, repo: ParamValue<false>, run: ParamValue<false> },
       | never
     >,
     '/repos.[repo]': RouteRecordInfo<
@@ -90,15 +90,15 @@ declare module 'vue-router/auto-routes' {
     '/repos.[repo].commits.[chash]': RouteRecordInfo<
       '/repos.[repo].commits.[chash]',
       '/repos/:repo/commits/:chash',
-      { repo: ParamValue<true>, chash: ParamValue<true> },
-      { repo: ParamValue<false>, chash: ParamValue<false> },
+      { chash: ParamValue<true>, repo: ParamValue<true> },
+      { chash: ParamValue<false>, repo: ParamValue<false> },
       | never
     >,
     '/repos.[repo].commits.[chash].runs.[run]': RouteRecordInfo<
       '/repos.[repo].commits.[chash].runs.[run]',
       '/repos/:repo/commits/:chash/runs/:run',
-      { repo: ParamValue<true>, chash: ParamValue<true>, run: ParamValue<true> },
-      { repo: ParamValue<false>, chash: ParamValue<false>, run: ParamValue<false> },
+      { chash: ParamValue<true>, repo: ParamValue<true>, run: ParamValue<true> },
+      { chash: ParamValue<false>, repo: ParamValue<false>, run: ParamValue<false> },
       | never
     >,
     '/repos.[repo].graph': RouteRecordInfo<
