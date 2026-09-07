@@ -1,6 +1,7 @@
-<script setup lang="ts" generic="T">
-import { type Column, type Table } from "@tanstack/vue-table";
+<script setup lang="ts" generic="T extends RowData">
+import { type Column, type RowData, type Table } from "@tanstack/vue-table";
 import { computed } from "vue";
+import type { AppFeatures } from "./tableFeatures";
 
 const {
   table,
@@ -8,8 +9,8 @@ const {
   title = undefined,
   align = "left",
 } = defineProps<{
-  table: Table<T>;
-  column: Column<T>;
+  table: Table<AppFeatures, T>;
+  column: Column<AppFeatures, T>;
   title?: string;
   align?: "left" | "center" | "right";
 }>();
@@ -21,7 +22,7 @@ const marker = computed(() => {
 });
 
 const index = computed(() => {
-  if (table.getState().sorting.length <= 1) return ""; // Not multisorting
+  if (table.atoms.sorting.get().length <= 1) return ""; // Not multisorting
   if (!column.getIsSorted()) return " ";
   return (column.getSortIndex() + 1).toFixed();
 });

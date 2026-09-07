@@ -1,19 +1,11 @@
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic="T extends RowData">
 import CButton from "@/components/CButton.vue";
 import CControl from "@/components/CControl.vue";
 import CControlFilter from "@/components/CControlFilter.vue";
 import CControlRow from "@/components/CControlRow.vue";
-import {
-  type ColumnDef,
-  type ColumnSort,
-  FlexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  type Row,
-  useVueTable,
-} from "@tanstack/vue-table";
+import { type ColumnDef, type ColumnSort, FlexRender, type Row, type RowData, useTable } from "@tanstack/vue-table";
 import { computed, ref, watch } from "vue";
+import { features, type AppFeatures } from "./tableFeatures";
 
 const {
   columns,
@@ -21,9 +13,9 @@ const {
   onClickRow = undefined,
   initialSort = undefined,
 } = defineProps<{
-  columns: ColumnDef<T>[];
+  columns: ColumnDef<AppFeatures, T>[];
   data: T[];
-  onClickRow?: (row: Row<T>) => void;
+  onClickRow?: (row: Row<AppFeatures, T>) => void;
   initialSort?: ColumnSort;
 }>();
 
@@ -31,7 +23,8 @@ const filter = defineModel<string>("filter", { required: true });
 
 const nColums = computed(() => columns.length);
 
-const tableData = useVueTable({
+const tableData = useTable({
+  features,
   columns,
   get data() {
     return data;
@@ -39,9 +32,6 @@ const tableData = useVueTable({
   initialState: {
     sorting: initialSort ? [initialSort] : [],
   },
-  getCoreRowModel: getCoreRowModel(),
-  getSortedRowModel: getSortedRowModel(),
-  getPaginationRowModel: getPaginationRowModel(),
 });
 
 const pageSizes = [5, 100, 500, 1000, 5000];
@@ -56,13 +46,13 @@ function goToFirstPage() {
 }
 
 function goToPreviousPage() {
-  const index = tableData.getState().pagination.pageIndex;
+  const index = tableData.atoms.pagination.get().pageIndex;
   const nextIndex = Math.max(index - 1, 0);
   tableData.setPageIndex(nextIndex);
 }
 
 function goToNextPage() {
-  const index = tableData.getState().pagination.pageIndex;
+  const index = tableData.atoms.pagination.get().pageIndex;
   const nextIndex = Math.min(index + 1, tableData.getPageCount() - 1);
   tableData.setPageIndex(nextIndex);
 }
@@ -81,7 +71,7 @@ function goToLastPage() {
       <CControlRow>
         <CButton @click="goToFirstPage()">First</CButton>
         <CButton @click="goToPreviousPage()">Prev</CButton>
-        <div>Page {{ tableData.getState().pagination.pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>
+        <div>Page {{ tableData.atoms.pagination.get().pageIndex + 1 }} / {{ tableData.getPageCount() }}</div>
         <CButton @click="goToNextPage()">Next</CButton>
         <CButton @click="goToLastPage()">Last</CButton>
         <label class="ml-auto">
@@ -119,7 +109,7 @@ function goToLastPage() {
           ]"
           @click.stop.prevent="onClickRow && onClickRow(row)"
         >
-          <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="py-[1px] pl-4 first:pl-0">
+          <td v-for="cell in row.getAllCells()" :key="cell.id" class="py-[1px] pl-4 first:pl-0">
             <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
           </td>
         </tr>

@@ -5,6 +5,7 @@ import CTable from "@/components/table/CTable.vue";
 import CTableCellDelta from "@/components/table/CTableCellDelta.vue";
 import CTableCellValue from "@/components/table/CTableCellValue.vue";
 import CTableHeader from "@/components/table/CTableHeader.vue";
+import type { AppFeatures } from "@/components/table/tableFeatures";
 import { type ColumnDef } from "@tanstack/vue-table";
 import { h } from "vue";
 import { RouterLink } from "vue-router";
@@ -12,11 +13,11 @@ import { RouterLink } from "vue-router";
 const { repo, measurements } = defineProps<{ repo: string; measurements: JsonMetricComparison[] }>();
 const filter = defineModel<string>("filter", { required: true });
 
-const columns: ColumnDef<JsonMetricComparison>[] = [
+const columns: ColumnDef<AppFeatures, JsonMetricComparison>[] = [
   {
     id: "metric",
     accessorFn: (it) => it.metric.split("//")[0] ?? it.metric,
-    sortingFn: "textCaseSensitive",
+    sortFn: "textCaseSensitive",
     sortDescFirst: true,
     header: ({ table, column }) =>
       h(CTableHeader<JsonMetricComparison>, {
@@ -34,7 +35,7 @@ const columns: ColumnDef<JsonMetricComparison>[] = [
   {
     id: "submetric",
     accessorFn: (it) => it.metric.split("//")[1],
-    sortingFn: "textCaseSensitive",
+    sortFn: "textCaseSensitive",
     sortDescFirst: true,
     header: ({ table, column }) =>
       h(CTableHeader<JsonMetricComparison>, {
