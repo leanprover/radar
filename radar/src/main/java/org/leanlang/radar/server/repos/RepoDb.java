@@ -40,6 +40,11 @@ public final class RepoDb implements AutoCloseable {
         hikariConfig.setDataSource(sqLiteDataSource);
         hikariConfig.setPoolName("db-pool-" + name);
 
+        // For some reason, the mathlib pool is getting exhausted leading to errors.
+        // This may help us diagnose what's going on.
+        // TODO Remove once we understand the issue
+        hikariConfig.setLeakDetectionThreshold(10_000);
+
         // Create and migrate DB file
         Files.createDirectories(path.getParent());
         Flyway.configure().dataSource(sqLiteDataSource).load().migrate();
