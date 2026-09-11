@@ -47,10 +47,7 @@ public record ResRepoGithubWebhook(Repos repos, Busser busser) {
             return;
         }
 
-        if (!GithubBotCommand.isCommand(
-                info.comment.body(),
-                repo.gh().get().config().aliasRegex,
-                repo.gh().get().config().mathlibBenchCommand)) {
+        if (!GithubBotCommand.isCommand(info.comment.body(), repo.gh().get().config().aliasRegex)) {
             log.debug("Webhook comment body is not a command");
             return;
         }

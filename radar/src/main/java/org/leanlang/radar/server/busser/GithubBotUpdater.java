@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -36,19 +34,15 @@ public final class GithubBotUpdater {
 
     private final Repos repos;
     private final Queue queue;
-    private final Busser busser;
     private final Repo repo;
     private final RepoGh repoGh;
 
     private final GithubBotDb db;
     private final BotMsgBuilderGithub msgs;
 
-    public GithubBotUpdater(
-            RadarLinker radarLinker, Repos repos, Queue queue, Busser busser, Repo repo, RepoGh repoGh) {
-
+    public GithubBotUpdater(RadarLinker radarLinker, Repos repos, Queue queue, Repo repo, RepoGh repoGh) {
         this.repos = repos;
         this.queue = queue;
-        this.busser = busser;
         this.repo = repo;
         this.repoGh = repoGh;
 
@@ -114,8 +108,7 @@ public final class GithubBotUpdater {
         // Unconditionally updating, rather than adding.
         db.addOrUpdateCommand(comment);
 
-        GithubBotCommand parsed = GithubBotCommand.parse(
-                        comment.body(), repoGh.config().aliasRegex, repoGh.config().mathlibBenchCommand)
+        GithubBotCommand parsed = GithubBotCommand.parse(comment.body(), repoGh.config().aliasRegex)
                 .orElse(null);
         if (parsed == null) {
             log.debug("Message contains no command.");
@@ -126,7 +119,6 @@ public final class GithubBotUpdater {
         switch (parsed) {
             case GithubBotCommand.TooManyCommands p -> db.setCommandFailed(commandId, msgs.msgTooManyCommands());
             case GithubBotCommand.Bench p -> startBenchCommand(command, pull);
-            case GithubBotCommand.BenchMathlib p -> startMathlibBenchCommand(command, pull);
         }
     }
 
@@ -275,58 +267,5 @@ public final class GithubBotUpdater {
             log.error("Reply failed", e);
             db.replyFailed(commandId, replyId, replyBody, replyTries);
         }
-    }
-
-    // Hack territory
-
-    private void startMathlibBenchCommand(GithubCommandRecord command, JsonGhPull pull) {
-        if (!repo.name().equals("lean4")) {
-            log.info("Mathlib bench command issued in {}", repo.name());
-            db.setCommandFailed(command.getCommandIdLong(), msgs.msgRepoIsNotMathlib("lean4"));
-            return;
-        }
-
-        Repo repoMathlib = repos.repo("mathlib4-nightly-testing");
-        Long commandId = command.getCommandIdLong();
-        log.info("Starting mathlib bench command for comment {} in #{}", commandId, command.getNumber());
-        try {
-            busser.fetchRepoCallOnlyIfYouKnowWhatYoureDoing(repoMathlib.name());
-        } catch (GitAPIException e) {
-            log.error("Failed to fetch mathlib", e);
-            return;
-        }
-
-        Set<String> labels = pull.labels().stream().map(JsonGhPull.Label::name).collect(Collectors.toSet());
-        List<String> superfluousLabels = superfluousLabels(pull);
-        List<String> missingLabels = Stream.of("toolchain-available", "mathlib4-nightly-available")
-                .filter(it -> !labels.contains(it))
-                .sorted()
-                .toList();
-
-        if (!superfluousLabels.isEmpty() || !missingLabels.isEmpty()) {
-            log.info(
-                    "Mathlib bench command is blocked by labels superfluous={} missing={}",
-                    superfluousLabels,
-                    missingLabels);
-            db.setCommandWaiting(commandId, msgs.msgLabelMismatch(superfluousLabels, missingLabels));
-            return;
-        }
-
-        String base = "nightly-testing";
-        String head = "lean-pr-testing-" + pull.number();
-        Pair<String, String> commits =
-                findComparisonCommits(repoMathlib, base, head).orElse(null);
-        if (commits == null) {
-            log.info("Failed to find appropriate commits for comparison in {}", repoMathlib.name());
-            db.setCommandFailed(commandId, msgs.msgFailedToFindMergeBase());
-            return;
-        }
-
-        db.setCommandRunningStarted(
-                commandId,
-                msgs.msgInProgress(repoMathlib, true, commits.left(), commits.right()),
-                repoMathlib.name(),
-                commits.left(),
-                commits.right());
     }
 }

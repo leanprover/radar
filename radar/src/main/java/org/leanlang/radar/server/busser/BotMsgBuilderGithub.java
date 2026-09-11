@@ -40,10 +40,6 @@ public record BotMsgBuilderGithub(RadarLinker radarLinker, GithubLinker githubLi
                 + EDIT_POSSIBLE;
     }
 
-    public String msgRepoIsNotMathlib(String repo) {
-        return "This command can only be used in the " + repo + " repository." + EDIT_POSSIBLE;
-    }
-
     public String msgLabelMismatch(List<String> superfluousLabels, List<String> missingLabels) {
         StringBuilder sb = new StringBuilder();
 

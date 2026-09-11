@@ -66,11 +66,6 @@ function legalLinkPrefix(index: number, total: number): string {
       as long as the command is in a line of its own. Multiple commands must be issued in separate comments.
     </p>
     <p>
-      In the lean4 repository, a variation of this command called <i class="whitespace-nowrap">!bench mathlib</i> is
-      available. Instead of running the lean4 benchmark suite, it benchmarks the nightly mathlib against the pull
-      request's changes.
-    </p>
-    <p>
       In the mathlib4 repository, if the tag <i class="whitespace-nowrap">awaiting-CI</i> is present, radar waits until
       its is gone before starting to benchmark the pull request. You can use the tag if there is a high likelihood that
       CI won't pass but you still want to get benchmark results automatically. This replaces the old
