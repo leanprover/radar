@@ -125,12 +125,8 @@ public record Queue(Repos repos, Runners runners) {
     public Optional<Task> getTask(String repoName, String chash) {
         Repo repo = repos.repo(repoName);
         return repo.db().readTransactionResult(ctx -> {
-            QueueRecord record = repo.db()
-                    .read()
-                    .dsl()
-                    .selectFrom(QUEUE)
-                    .where(QUEUE.CHASH.eq(chash))
-                    .fetchOne();
+            QueueRecord record =
+                    ctx.dsl().selectFrom(QUEUE).where(QUEUE.CHASH.eq(chash)).fetchOne();
             if (record == null) return Optional.empty();
 
             Map<RunId, Run.Active> activeRuns = getActiveRuns();
@@ -238,14 +234,9 @@ public record Queue(Repos repos, Runners runners) {
         }
     }
 
-    public boolean isEnqueued(String repoName, String chash) {
-        Repo repo = repos.repo(repoName);
-        QueueRecord record = repo.db()
-                .read()
-                .dsl()
-                .selectFrom(QUEUE)
-                .where(QUEUE.CHASH.eq(chash))
-                .fetchOne();
+    public boolean isEnqueued(Configuration ctx, String chash) {
+        QueueRecord record =
+                ctx.dsl().selectFrom(QUEUE).where(QUEUE.CHASH.eq(chash)).fetchOne();
         return record != null;
     }
 

@@ -49,8 +49,8 @@ public record CommitComparerData(
         return repo.db().readTransactionResult(ctx -> {
             List<RunsRecord> runsFirst = fetchRuns(ctx, chashFirst);
             List<RunsRecord> runsSecond = fetchRuns(ctx, chashSecond);
-            boolean enqueuedFirst = fetchInQueue(queue, repo, chashFirst);
-            boolean enqueuedSecond = fetchInQueue(queue, repo, chashSecond);
+            boolean enqueuedFirst = fetchInQueue(ctx, queue, chashFirst);
+            boolean enqueuedSecond = fetchInQueue(ctx, queue, chashSecond);
 
             Map<String, MeasurementsRecord> measurementsFirst = fetchMeasurements(ctx, chashFirst);
             Map<String, MeasurementsRecord> measurementsSecond = fetchMeasurements(ctx, chashSecond);
@@ -99,9 +99,9 @@ public record CommitComparerData(
         return ctx.dsl().selectFrom(RUNS).where(RUNS.CHASH.eq(chash)).fetch();
     }
 
-    private static boolean fetchInQueue(Queue queue, Repo repo, @Nullable String chash) {
+    private static boolean fetchInQueue(Configuration ctx, Queue queue, @Nullable String chash) {
         if (chash == null) return false;
-        return queue.isEnqueued(repo.name(), chash);
+        return queue.isEnqueued(ctx, chash);
     }
 
     private static Map<String, Float> fetchQuantiles(Repo quantileRepo) {
