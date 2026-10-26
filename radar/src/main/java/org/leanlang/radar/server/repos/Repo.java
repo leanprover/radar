@@ -174,6 +174,18 @@ public final class Repo implements AutoCloseable {
         return config.significantRunFailures;
     }
 
+    public Optional<Pattern> hideLargeChanges() {
+        return Optional.ofNullable(config.hideLargeChanges);
+    }
+
+    public Optional<Pattern> hideMediumChanges() {
+        return Optional.ofNullable(config.hideMediumChanges);
+    }
+
+    public Optional<Pattern> hideSmallChanges() {
+        return Optional.ofNullable(config.hideSmallChanges);
+    }
+
     public int quantileCommits() {
         return config.quantileCommits;
     }

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -151,9 +152,18 @@ public final class CommitComparer {
                     .orElse(null);
             if (comparison == null) continue;
 
+            Optional<Pattern> hidePattern =
+                    switch (comparison.significance()) {
+                        case SMALL -> data.hideSmallChanges();
+                        case MEDIUM -> data.hideMediumChanges();
+                        case LARGE -> data.hideLargeChanges();
+                    };
+            boolean hide =
+                    hidePattern.map(it -> it.matcher(metric.name()).find()).orElse(false);
+
             final JsonMessage message = comparison
                     .message()
-                    .setHidden(hidden.contains(metric.name()))
+                    .setHidden(hidden.contains(metric.name()) || hide)
                     .build();
 
             switch (comparison.significance()) {

@@ -187,7 +187,6 @@ watchEffect(() => {
       :chash="route.params.chash"
       :reference="queryReference"
       :messages="compare.data.comparison.newMetrics"
-      :open="compare.data.comparison.newMetrics.length <= 10"
     />
   </CSection>
 
@@ -210,7 +209,6 @@ watchEffect(() => {
         :chash="route.params.chash"
         :reference="queryReference"
         :messages="compare.data.comparison.notes"
-        :open="compare.data.comparison.notes.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
@@ -218,7 +216,6 @@ watchEffect(() => {
         :reference="queryReference"
         title="Large changes"
         :messages="compare.data.comparison.largeChanges"
-        :open="compare.data.comparison.largeChanges.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
@@ -226,7 +223,6 @@ watchEffect(() => {
         :reference="queryReference"
         title="Medium changes"
         :messages="compare.data.comparison.mediumChanges"
-        :open="compare.data.comparison.mediumChanges.length <= 10"
       />
       <PDetailsSection
         :repo="route.params.repo"
@@ -234,7 +230,6 @@ watchEffect(() => {
         :reference="queryReference"
         title="Small changes"
         :messages="compare.data.comparison.smallChanges"
-        :open="compare.data.comparison.smallChanges.length <= 10"
       />
     </template>
   </CSection>

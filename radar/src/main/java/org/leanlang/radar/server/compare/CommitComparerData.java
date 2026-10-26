@@ -38,6 +38,10 @@ public record CommitComparerData(
         int significantSmallChanges,
         boolean significantRunFailures,
 
+        Optional<Pattern> hideLargeChanges,
+        Optional<Pattern> hideMediumChanges,
+        Optional<Pattern> hideSmallChanges,
+
         Map<String, ServerConfigRepoMetricFilter> metricFilters,
         Map<String, JsonMetricComparison> metricComparisons) {
 
@@ -70,6 +74,10 @@ public record CommitComparerData(
             int significantSmallChanges = repo.significantSmallChanges();
             boolean significantRunFailures = repo.significantRunFailures();
 
+            Optional<Pattern> hideLargeChanges = repo.hideLargeChanges();
+            Optional<Pattern> hideMediumChanges = repo.hideMediumChanges();
+            Optional<Pattern> hideSmallChanges = repo.hideSmallChanges();
+
             Map<String, ServerConfigRepoMetricFilter> metricFilters =
                     metrics.stream().collect(Collectors.toMap(MetricInfo::name, it -> repo.metricFilter(it.name())));
 
@@ -89,6 +97,9 @@ public record CommitComparerData(
                     significantMediumChanges,
                     significantSmallChanges,
                     significantRunFailures,
+                    hideLargeChanges,
+                    hideMediumChanges,
+                    hideSmallChanges,
                     metricFilters,
                     metricComparisons);
         });

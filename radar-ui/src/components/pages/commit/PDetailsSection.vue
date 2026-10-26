@@ -68,7 +68,9 @@ const hidden = computed(() => messages.filter((it) => it.hidden));
     </CList>
 
     <details v-if="hidden.length > 0" class="-mt-2">
-      <summary class="cursor-pointer select-none">and {{ hidden.length }} hidden</summary>
+      <summary class="cursor-pointer select-none">
+        <template v-if="visible.length > 0">and </template>{{ hidden.length }} hidden
+      </summary>
 
       <CList>
         <CListItem
