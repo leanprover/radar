@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { postAdminMaintain } from "@/api/adminMaintain.ts";
-import CButton from "@/components/CButton.vue";
+import CActionButton from "@/components/CActionButton.vue";
 import CControl from "@/components/CControl.vue";
 import CControlRow from "@/components/CControlRow.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
@@ -17,13 +17,22 @@ async function onClick(aggressive: boolean) {
 <template>
   <CControl>
     <CControlRow>
-      <CButton class="w-fit" :disabled="admin.token === undefined || repo === undefined" @click="onClick(false)">
+      <CActionButton
+        class="w-fit"
+        :disabled="admin.token === undefined || repo === undefined"
+        :action="() => onClick(false)"
+      >
         Perform normal maintenance
-      </CButton>
+      </CActionButton>
 
-      <CButton class="w-fit" :disabled="admin.token === undefined || repo === undefined" @click="onClick(true)">
+      <CActionButton
+        class="w-fit"
+        :disabled="admin.token === undefined || repo === undefined"
+        :action="() => onClick(true)"
+        confirm="Perform aggressive maintenance? This may take a long time."
+      >
         Perform aggressive maintenance
-      </CButton>
+      </CActionButton>
     </CControlRow>
   </CControl>
 </template>

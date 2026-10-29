@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { postAdminRecomputeSignificance } from "@/api/adminRecomputeSignificance.ts";
-import CButton from "@/components/CButton.vue";
+import CActionButton from "@/components/CActionButton.vue";
 import CControl from "@/components/CControl.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
 
@@ -15,8 +15,8 @@ async function onClick() {
 
 <template>
   <CControl>
-    <CButton class="w-fit" :disabled="admin.token === undefined" @click="onClick()">
+    <CActionButton class="w-fit" :disabled="admin.token === undefined" :action="onClick">
       Recompute significance of all commits
-    </CButton>
+    </CActionButton>
   </CControl>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { postAdminResetRssBotState } from "@/api/adminResetRssBotState.ts";
-import CButton from "@/components/CButton.vue";
+import CActionButton from "@/components/CActionButton.vue";
 import CControl from "@/components/CControl.vue";
 import CControlCol from "@/components/CControlCol.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
@@ -19,7 +19,7 @@ async function onClick() {
   <CControl class="max-w-[80ch]">
     <CControlCol>
       <div>
-        <CButton @click="onClick()"> Reset RSS bot state </CButton>
+        <CActionButton :disabled="admin.token === undefined" :action="onClick"> Reset RSS bot state </CActionButton>
       </div>
       <details>
         <summary>Explanation</summary>

@@ -2,7 +2,7 @@
 import { invalidateAdminRepoMetrics, type JsonMetric, useAdminRepoMetrics } from "@/api/adminRepoMetrics.ts";
 import { postAdminRepoMetricsDelete } from "@/api/adminRepoMetricsDelete.ts";
 import { postAdminRepoMetricsRename } from "@/api/adminRepoMetricsRename.ts";
-import CButton from "@/components/CButton.vue";
+import CActionButton from "@/components/CActionButton.vue";
 import CControlFilter from "@/components/CControlFilter.vue";
 import CControlPages from "@/components/CControlPages.vue";
 import CControlRow from "@/components/CControlRow.vue";
@@ -113,16 +113,20 @@ async function onDeleteMetrics() {
     </div>
 
     <CControlRow>
-      <CButton
-        :disabled="visibleMetrics.length === 0 || !allReplacementsUnique"
+      <CActionButton
+        :disabled="admin.token === undefined || visibleMetrics.length === 0 || !allReplacementsUnique"
         :title="allReplacementsUnique ? '' : 'Not all replacements are unique'"
-        @click="onRenameMetrics()"
+        :action="onRenameMetrics"
       >
         Rename {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
-      </CButton>
-      <CButton :disabled="visibleMetrics.length === 0" @click="onDeleteMetrics()">
+      </CActionButton>
+      <CActionButton
+        :disabled="admin.token === undefined || visibleMetrics.length === 0"
+        :action="onDeleteMetrics"
+        :confirm="`Delete ${visibleMetrics.length} metric(s)? This cannot be undone.`"
+      >
         Delete {{ visibleMetrics.length }} <CPlural :n="visibleMetrics.length">metric</CPlural>
-      </CButton>
+      </CActionButton>
     </CControlRow>
   </div>
 </template>

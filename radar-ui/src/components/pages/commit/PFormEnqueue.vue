@@ -2,7 +2,7 @@
 import { postAdminEnqueue } from "@/api/adminEnqueue.ts";
 import { invalidateCommit } from "@/api/commit.ts";
 import { invalidateCompare } from "@/api/compare.ts";
-import CButton from "@/components/CButton.vue";
+import CActionButton from "@/components/CActionButton.vue";
 import CControl from "@/components/CControl.vue";
 import CControlCol from "@/components/CControlCol.vue";
 import { useAdminStore } from "@/stores/useAdminStore.ts";
@@ -28,7 +28,7 @@ async function onClick() {
   <CControl class="max-w-[80ch]">
     <CControlCol>
       <div>
-        <CButton @click="onClick()"> Enqueue </CButton>
+        <CActionButton :disabled="admin.token === undefined" :action="onClick"> Enqueue </CActionButton>
         with priority <input v-model="enqueuePriority" type="number" class="bg-background w-[8ch] px-1" />
       </div>
       <details>
