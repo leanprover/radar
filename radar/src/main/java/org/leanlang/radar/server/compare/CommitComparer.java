@@ -152,12 +152,11 @@ public final class CommitComparer {
                     .orElse(null);
             if (comparison == null) continue;
 
-            Optional<Pattern> hidePattern =
-                    switch (comparison.significance()) {
-                        case SMALL -> data.hideSmallChanges();
-                        case MEDIUM -> data.hideMediumChanges();
-                        case LARGE -> data.hideLargeChanges();
-                    };
+            Optional<Pattern> hidePattern = switch (comparison.significance()) {
+                case SMALL -> data.hideSmallChanges();
+                case MEDIUM -> data.hideMediumChanges();
+                case LARGE -> data.hideLargeChanges();
+            };
             boolean hide =
                     hidePattern.map(it -> it.matcher(metric.name()).find()).orElse(false);
 

@@ -53,8 +53,9 @@ public record ResRepoHistory(Repos repos) {
         int skip = Math.max(skipOptional.orElse(0), 0);
         Optional<String> query = queryOptional.filter(it -> !it.isEmpty());
 
-        return repo.db().readTransactionResult(ctx -> query.map(s -> searchHistory(ctx, skip, n, s))
-                .orElseGet(() -> getChronologicalHistory(ctx, skip, n)));
+        return repo.db()
+                .readTransactionResult(ctx -> query.map(s -> searchHistory(ctx, skip, n, s))
+                        .orElseGet(() -> getChronologicalHistory(ctx, skip, n)));
     }
 
     private static SelectSelectStep<

@@ -21,9 +21,11 @@ public record ResAdminResetRssBotState(Repos repos) {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void post(@Auth Admin admin, JsonPostInput input) {
-        repos.repo(input.repo).db().writeTransaction(ctx -> ctx.dsl()
-                .deleteFrom(ZULIP_FEED)
-                .where(ZULIP_FEED.CHASH.eq(input.chash))
-                .execute());
+        repos.repo(input.repo)
+                .db()
+                .writeTransaction(ctx -> ctx.dsl()
+                        .deleteFrom(ZULIP_FEED)
+                        .where(ZULIP_FEED.CHASH.eq(input.chash))
+                        .execute());
     }
 }

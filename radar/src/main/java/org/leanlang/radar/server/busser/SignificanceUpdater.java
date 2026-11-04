@@ -110,11 +110,12 @@ public record SignificanceUpdater(Queue queue, Repos repos, Repo repo) {
             JsonCommitComparison comparison = CommitComparer.compareCommits(queue, repos, repo, prevHash, curHash);
             boolean significant = comparison.significant();
             log.info("Adding commit {} to feed as {}", curHash, significant ? "significant" : "insignificant");
-            repo.db().writeTransaction(ctx -> ctx.dsl()
-                    .insertInto(SIGNIFICANCE_FEED, SIGNIFICANCE_FEED.CHASH, SIGNIFICANCE_FEED.SIGNIFICANT)
-                    .values(curHash, significant ? 1 : 0)
-                    .onDuplicateKeyIgnore()
-                    .execute());
+            repo.db()
+                    .writeTransaction(ctx -> ctx.dsl()
+                            .insertInto(SIGNIFICANCE_FEED, SIGNIFICANCE_FEED.CHASH, SIGNIFICANCE_FEED.SIGNIFICANT)
+                            .values(curHash, significant ? 1 : 0)
+                            .onDuplicateKeyIgnore()
+                            .execute());
         }
     }
 }

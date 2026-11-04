@@ -96,11 +96,12 @@ public record ZulipBotUpdater(
             log.info("Sent no message for insignificant commit {}", childChash);
         }
 
-        repo.db().writeTransaction(ctx -> ctx.dsl()
-                .insertInto(ZULIP_FEED, ZULIP_FEED.CHASH)
-                .values(childChash)
-                .onDuplicateKeyIgnore()
-                .execute());
+        repo.db()
+                .writeTransaction(ctx -> ctx.dsl()
+                        .insertInto(ZULIP_FEED, ZULIP_FEED.CHASH)
+                        .values(childChash)
+                        .onDuplicateKeyIgnore()
+                        .execute());
     }
 
     /*

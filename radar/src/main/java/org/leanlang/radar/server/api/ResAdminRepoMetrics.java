@@ -38,21 +38,21 @@ public record ResAdminRepoMetrics(Repos repos) {
     public JsonGet get(@PathParam("repo") String repoName) {
         Repo repo = repos.repo(repoName);
 
-        return repo.db()
-                .readTransactionResult(ctx -> {
-                    String latestChash = ctx.dsl()
-                            .selectFrom(HISTORY)
-                            .whereExists(DSL.selectOne().from(RUNS).where(RUNS.CHASH.eq(HISTORY.CHASH)))
-                            .andNotExists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
-                            .orderBy(HISTORY.POSITION.desc())
-                            .limit(1)
-                            .fetchOne(HISTORY.CHASH);
+        return repo.db().readTransactionResult(ctx -> {
+            String latestChash = ctx.dsl()
+                    .selectFrom(HISTORY)
+                    .whereExists(DSL.selectOne().from(RUNS).where(RUNS.CHASH.eq(HISTORY.CHASH)))
+                    .andNotExists(DSL.selectOne().from(QUEUE).where(QUEUE.CHASH.eq(HISTORY.CHASH)))
+                    .orderBy(HISTORY.POSITION.desc())
+                    .limit(1)
+                    .fetchOne(HISTORY.CHASH);
 
-                    Set<String> latestMetrics;
-                    if (latestChash == null) {
-                        latestMetrics = Set.of();
-                    } else {
-                        latestMetrics = ctx
+            Set<String> latestMetrics;
+            if (latestChash == null) {
+                latestMetrics = Set.of();
+            } else {
+                latestMetrics =
+                        ctx
                                 .dsl()
                                 .select(MEASUREMENTS.METRIC)
                                 .from(MEASUREMENTS)
@@ -60,25 +60,25 @@ public record ResAdminRepoMetrics(Repos repos) {
                                 .stream()
                                 .map(Record1::value1)
                                 .collect(Collectors.toUnmodifiableSet());
-                    }
+            }
 
-                    Map<String, Integer> metricCounts = ctx
-                            .dsl()
-                            .select(MEASUREMENTS.METRIC, DSL.count())
-                            .from(HISTORY.join(MEASUREMENTS).on(MEASUREMENTS.CHASH.eq(HISTORY.CHASH)))
-                            .groupBy(MEASUREMENTS.METRIC)
-                            .stream()
-                            .collect(Collectors.toMap(Record2::value1, Record2::value2));
+            Map<String, Integer> metricCounts = ctx
+                    .dsl()
+                    .select(MEASUREMENTS.METRIC, DSL.count())
+                    .from(HISTORY.join(MEASUREMENTS).on(MEASUREMENTS.CHASH.eq(HISTORY.CHASH)))
+                    .groupBy(MEASUREMENTS.METRIC)
+                    .stream()
+                    .collect(Collectors.toMap(Record2::value1, Record2::value2));
 
-                    List<JsonMetric> metrics = ctx.dsl().selectFrom(METRICS).stream()
-                            .map(it -> new JsonMetric(
-                                    it.getMetric(),
-                                    Optional.ofNullable(it.getUnit()),
-                                    latestMetrics.contains(it.getMetric()),
-                                    metricCounts.getOrDefault(it.getMetric(), 0)))
-                            .toList();
+            List<JsonMetric> metrics = ctx.dsl().selectFrom(METRICS).stream()
+                    .map(it -> new JsonMetric(
+                            it.getMetric(),
+                            Optional.ofNullable(it.getUnit()),
+                            latestMetrics.contains(it.getMetric()),
+                            metricCounts.getOrDefault(it.getMetric(), 0)))
+                    .toList();
 
-                    return new JsonGet(metrics);
-                });
+            return new JsonGet(metrics);
+        });
     }
 }

@@ -269,37 +269,41 @@ public record GithubBotDb(Repo repo, RepoGh repoGh) {
     }
 
     public void replySent(long commandId, @Nullable String replyBody, @Nullable Integer replyTries, long newReplyId) {
-        repo.db().writeTransaction(ctx -> ctx.dsl()
-                .update(GITHUB_COMMAND)
-                .set(GITHUB_COMMAND.REPLY_ID_LONG, newReplyId)
-                .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
-                .where(replyCondition(commandId, null, replyBody, replyTries))
-                .execute());
+        repo.db()
+                .writeTransaction(ctx -> ctx.dsl()
+                        .update(GITHUB_COMMAND)
+                        .set(GITHUB_COMMAND.REPLY_ID_LONG, newReplyId)
+                        .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
+                        .where(replyCondition(commandId, null, replyBody, replyTries))
+                        .execute());
     }
 
     public void replyUpdated(
             long commandId, @Nullable Long replyId, @Nullable String replyBody, @Nullable Integer replyTries) {
-        repo.db().writeTransaction(ctx -> ctx.dsl()
-                .update(GITHUB_COMMAND)
-                .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
-                .where(replyCondition(commandId, replyId, replyBody, replyTries))
-                .execute());
+        repo.db()
+                .writeTransaction(ctx -> ctx.dsl()
+                        .update(GITHUB_COMMAND)
+                        .set(GITHUB_COMMAND.REPLY_TRIES, (Integer) null)
+                        .where(replyCondition(commandId, replyId, replyBody, replyTries))
+                        .execute());
     }
 
     public void replyFailed(
             long commandId, @Nullable Long replyId, @Nullable String replyBody, @Nullable Integer replyTries) {
-        repo.db().writeTransaction(ctx -> ctx.dsl()
-                .update(GITHUB_COMMAND)
-                .set(GITHUB_COMMAND.REPLY_TRIES, GITHUB_COMMAND.REPLY_TRIES.add(1))
-                .set(GITHUB_COMMAND.REPLY_ID_LONG, (Long) null)
-                .where(replyCondition(commandId, replyId, replyBody, replyTries))
-                .execute());
+        repo.db()
+                .writeTransaction(ctx -> ctx.dsl()
+                        .update(GITHUB_COMMAND)
+                        .set(GITHUB_COMMAND.REPLY_TRIES, GITHUB_COMMAND.REPLY_TRIES.add(1))
+                        .set(GITHUB_COMMAND.REPLY_ID_LONG, (Long) null)
+                        .where(replyCondition(commandId, replyId, replyBody, replyTries))
+                        .execute());
     }
 
     public void replyDisappeared(long commandId) {
-        repo.db().writeTransaction(ctx -> ctx.dsl()
-                .deleteFrom(GITHUB_COMMAND)
-                .where(condOwnerRepoId(commandId))
-                .execute());
+        repo.db()
+                .writeTransaction(ctx -> ctx.dsl()
+                        .deleteFrom(GITHUB_COMMAND)
+                        .where(condOwnerRepoId(commandId))
+                        .execute());
     }
 }

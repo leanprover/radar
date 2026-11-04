@@ -19,8 +19,9 @@ public record RepoMaintainer(Repo repo) {
     private void dbVacuum() {
         log.info("Vacuuming");
         try {
-            repo.db().writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(ctx -> ctx.dsl()
-                    .execute("VACUUM"));
+            repo.db()
+                    .writeWithoutTransactionDoNotUseUnlessYouKnowWhatYouAreDoing(
+                            ctx -> ctx.dsl().execute("VACUUM"));
         } catch (Throwable e) {
             log.error("Failed to vacuum", e);
         }
