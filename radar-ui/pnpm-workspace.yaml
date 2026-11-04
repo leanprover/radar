@@ -1,3 +1,4 @@
 allowBuilds:
   esbuild: false
   vue-demi: false
+minimumReleaseAge: 10080 # 1 week

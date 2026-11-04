@@ -3,14 +3,6 @@ import { fetchJson } from "@/api/utils.ts";
 import { useQuery } from "@tanstack/vue-query";
 import * as z from "zod";
 
-export type JsonActiveRun = z.infer<typeof JsonActiveRun>;
-const JsonActiveRun = z.object({
-  repo: z.string(),
-  chash: z.string(),
-  name: z.string(),
-  startTime: Timestamp,
-});
-
 export type JsonRunner = z.infer<typeof JsonRunner>;
 const JsonRunner = z.object({
   name: z.string(),

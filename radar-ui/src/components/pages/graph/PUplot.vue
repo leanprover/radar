@@ -32,6 +32,9 @@ const options = computed<uPlot.Options>(() => ({
       values: (_, vals) => vals.map((it) => formatValue(it)),
     },
     {
+      // uPlot.Axis.Side is an ambient const enum that doesn't exist at runtime,
+      // so it can't be referenced directly. 1 is Side.Right.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment
       side: 1,
       scale: "yright",
       size: 70,
